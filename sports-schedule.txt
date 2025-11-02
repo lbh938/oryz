@@ -1,0 +1,107 @@
+# Planning des matches sportifs
+# Format: JOUR | Chaînes | Matches (Heure   Nom | URL)
+
+SUNDAY
+
+HD1 ENGLISH
+
+HD2 ENGLISH
+
+HD3 GERMAN
+
+HD4 FRENCH
+
+HD5 ENGLISH
+
+HD6 SPANISH
+
+HD7 ITALIAN
+
+HD8 SPANISH
+
+HD9 GREEK & SPANISH
+
+HD10 SPANISH
+
+HD11 SPANISH
+
+BR1 BRAZILIAN
+
+BR2 BRAZILIAN
+
+BR3 BRAZILIAN
+
+BR4 BRAZILIAN
+
+BR5 BRAZILIAN
+
+BR6 BRAZILIAN
+
+19:00   AEK Athens x Panaitolikos | https://sportzonline.live/channels/hd/hd9.php
+
+19:00   Estudiantes x Boca Juniors | https://sportzonline.live/channels/hd/hd11.php
+
+19:00   Estudiantes x Boca Juniors | https://sportzonline.live/channels/pt/sporttv5.php
+
+19:00   Corinthians x Grêmio | https://sportzonline.live/channels/bra/br4.php
+
+19:00   Bahia x RB Bragantino | https://sportzonline.live/channels/bra/br5.php
+
+19:00   Ceará x Fluminense | https://sportzonline.live/channels/bra/br3.php
+
+19:45   Milan x Roma | https://sportzonline.live/channels/hd/hd5.php
+
+19:45   Milan x Roma | https://sportzonline.live/channels/hd/hd7.php
+
+19:45   Milan x Roma | https://sportzonline.live/channels/hd/hd3.php
+
+19:45   Milan x Roma | https://sportzonline.live/channels/pt/sporttv3.php
+
+19:45   Milan x Roma | https://sportzonline.live/channels/bra/br2.php
+
+19:45   Brest x Olympique Lyonnais | https://sportzonline.live/channels/hd/hd4.php
+
+20:00   Real Betis x Mallorca | https://sportzonline.live/channels/hd/hd2.php
+
+20:00   Real Betis x Mallorca | https://sportzonline.live/channels/hd/hd6.php
+
+20:00   Real Betis x Mallorca | https://sportzonline.live/channels/pt/eleven1.php
+
+20:00   Real Zaragoza x Deportivo La Coruña | https://sportzonline.live/channels/pt/eleven3.php
+
+20:30   Porto x Sporting Braga | https://sportzonline.live/channels/pt/sporttv1.php
+
+20:30   Atlético Grau x Alianza Atlético | https://sportzonline.live/channels/hd/hd10.php
+
+20:30   Coquimbo Unido x Unión La Calera | https://sportzonline.live/channels/hd/hd8.php
+
+20:30   NBA: New Orleans Pelicans @ Oklahoma City Thunder | https://sportzonline.live/channels/pt/sporttv2.php
+
+21:15   NFL: Kansas City Chiefs @ Buffalo Bills | https://sportzonline.live/channels/hd/hd1.php
+
+21:15   NFL: Kansas City Chiefs @ Buffalo Bills | https://sportzonline.live/channels/pt/eleven2.php
+
+21:30   Juventude x Palmeiras | https://sportzonline.live/channels/bra/br1.php
+
+21:30   Internacional x Atlético Mineiro | https://sportzonline.live/channels/bra/br6.php
+
+23:00   Sport Boys x UTC Cajamarca | https://sportzonline.live/channels/hd/hd11.php
+
+23:00   Cienciano x Juan Pablo II College | https://sportzonline.live/channels/hd/hd10.php
+
+23:00   Querétaro x Mazatlán | https://sportzonline.live/channels/hd/hd9.php
+
+23:30   Everton x Unión Española | https://sportzonline.live/channels/hd/hd8.php
+
+23:30   River Plate x Gimnasia La Plata | https://sportzonline.live/channels/hd/hd6.php
+
+23:30   River Plate x Gimnasia La Plata | https://sportzonline.live/channels/pt/sporttv2.php
+
+23:30   Vasco da Gama x São Paulo | https://sportzonline.live/channels/bra/br5.php
+
+00:00   NBA: Chicago Bulls @ New York Knicks | https://sportzonline.live/channels/pt/sporttv1.php
+
+01:10   NFL: Seattle Seahawks @ Washington Commanders | https://sportzonline.live/channels/hd/hd1.php
+
+01:45   Austin x Los Angeles FC | https://sportzonline.live/channels/hd/hd5.php
+

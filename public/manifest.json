@@ -1,0 +1,28 @@
+{
+  "name": "ORYZ STREAM",
+  "short_name": "ORYZ",
+  "description": "Regardez vos sports préférés en direct 24/7 avec ORYZ. Qualité HD, faible latente, expérience premium.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121212",
+  "theme_color": "#0F4C81",
+  "icons": [
+    {
+      "src": "/40CDFF18-DF00-4FC7-A503-F8A063E334E6.PNG",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/40CDFF18-DF00-4FC7-A503-F8A063E334E6.PNG",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["sports", "entertainment"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

@@ -1,0 +1,392 @@
+'use client';
+
+import { useState, useRef, useCallback } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { Upload, X, Loader2, Check, Image as ImageIcon, Crop, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import Cropper from 'react-easy-crop';
+import { Button } from '@/components/ui/button';
+
+interface ImageCropUploadProps {
+  bucket: 'hero-images' | 'channel-images' | 'movie-images';
+  onUploadComplete?: (url: string) => void;
+  currentImage?: string;
+  label?: string;
+  maxSizeMB?: number;
+  aspectRatio?: number; // 21/9 pour hero, 16/9 pour channels, etc.
+}
+
+export function ImageCropUpload({ 
+  bucket, 
+  onUploadComplete, 
+  currentImage,
+  label = "Image",
+  maxSizeMB = 10,
+  aspectRatio = 16 / 9
+}: ImageCropUploadProps) {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  
+  // Cropper states
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClient();
+
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation de la taille
+    const maxSize = maxSizeMB * 1024 * 1024;
+    if (file.size > maxSize) {
+      setError(`Le fichier est trop volumineux. Maximum ${maxSizeMB}MB.`);
+      return;
+    }
+
+    // Validation du type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Format non supporté. Utilisez JPG, PNG, WEBP ou GIF.');
+      return;
+    }
+
+    setError(null);
+    setSuccess(false);
+
+    // Charger l'image pour le cropper
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setOriginalImage(reader.result as string);
+      setShowCropper(true);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setRotation(0);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', error => reject(error));
+      image.src = url;
+    });
+
+  const getCroppedImg = async (
+    imageSrc: string,
+    pixelCrop: any,
+    rotation = 0
+  ): Promise<Blob> => {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('No 2d context');
+    }
+
+    const maxSize = Math.max(image.width, image.height);
+    const safeArea = 2 * ((maxSize / 2) * Math.sqrt(2));
+
+    canvas.width = safeArea;
+    canvas.height = safeArea;
+
+    ctx.translate(safeArea / 2, safeArea / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.translate(-safeArea / 2, -safeArea / 2);
+
+    ctx.drawImage(
+      image,
+      safeArea / 2 - image.width * 0.5,
+      safeArea / 2 - image.height * 0.5
+    );
+
+    const data = ctx.getImageData(0, 0, safeArea, safeArea);
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    ctx.putImageData(
+      data,
+      0 - safeArea / 2 + image.width * 0.5 - pixelCrop.x,
+      0 - safeArea / 2 + image.height * 0.5 - pixelCrop.y
+    );
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        resolve(blob as Blob);
+      }, 'image/jpeg', 0.95);
+    });
+  };
+
+  const handleCropConfirm = async () => {
+    if (!originalImage || !croppedAreaPixels) return;
+
+    setUploading(true);
+    setShowCropper(false);
+
+    try {
+      // Créer l'image recadrée
+      const croppedBlob = await getCroppedImg(originalImage, croppedAreaPixels, rotation);
+      
+      // Preview local
+      const previewUrl = URL.createObjectURL(croppedBlob);
+      setPreview(previewUrl);
+
+      // Upload vers Supabase
+      const fileExt = 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, croppedBlob, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg'
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+
+      if (onUploadComplete) {
+        onUploadComplete(publicUrl);
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setError(err.message || 'Erreur lors de l\'upload');
+      setPreview(currentImage || null);
+    } finally {
+      setUploading(false);
+      setOriginalImage(null);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setShowCropper(false);
+    setOriginalImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemove = () => {
+    setPreview(null);
+    setError(null);
+    setSuccess(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-label font-semibold text-white">
+        {label}
+      </label>
+
+      {/* Cropper Modal */}
+      {showCropper && originalImage && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="bg-[#1a1a1a] border border-[#333333] rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-[#333333]">
+              <div className="flex items-center gap-3">
+                <Crop className="h-5 w-5 text-[#3498DB]" />
+                <h3 className="text-lg font-display font-bold text-white">Recadrer l'image</h3>
+              </div>
+              <button
+                onClick={handleCropCancel}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Cropper */}
+            <div className="relative flex-1 bg-black" style={{ minHeight: '400px' }}>
+              <Cropper
+                image={originalImage}
+                crop={crop}
+                zoom={zoom}
+                rotation={rotation}
+                aspect={aspectRatio}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onRotationChange={setRotation}
+                onCropComplete={onCropComplete}
+              />
+            </div>
+
+            {/* Controls */}
+            <div className="p-4 border-t border-[#333333] space-y-4">
+              {/* Zoom */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <label className="text-white/70 font-label flex items-center gap-2">
+                    <ZoomIn className="h-4 w-4" />
+                    Zoom
+                  </label>
+                  <span className="text-white font-mono">{zoom.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                  className="w-full h-2 bg-[#333333] rounded-lg appearance-none cursor-pointer accent-[#3498DB]"
+                />
+              </div>
+
+              {/* Rotation */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <label className="text-white/70 font-label flex items-center gap-2">
+                    <RotateCw className="h-4 w-4" />
+                    Rotation
+                  </label>
+                  <span className="text-white font-mono">{rotation}°</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={360}
+                  step={1}
+                  value={rotation}
+                  onChange={(e) => setRotation(Number(e.target.value))}
+                  className="w-full h-2 bg-[#333333] rounded-lg appearance-none cursor-pointer accent-[#3498DB]"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleCropCancel}
+                  variant="outline"
+                  className="flex-1 border-[#333333] text-white hover:bg-[#333333]"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={handleCropConfirm}
+                  disabled={uploading}
+                  className="flex-1 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-bold"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Upload...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 mr-2" />
+                      Confirmer
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview ou Upload Area */}
+      {preview ? (
+        <div className="relative group">
+          <img
+            src={preview}
+            alt="Preview"
+            className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
+          />
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          {success && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+              <div className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg">
+                <Check className="h-5 w-5" />
+                <span className="font-label font-semibold">Uploadé !</span>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="w-full h-48 border-2 border-dashed border-[#3498DB] rounded-lg bg-[#0F4C81]/10 hover:bg-[#0F4C81]/20 transition-colors flex flex-col items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="h-10 w-10 text-[#3498DB] animate-spin" />
+              <span className="text-sm font-label text-white">Upload en cours...</span>
+            </>
+          ) : (
+            <>
+              <div className="p-4 bg-[#3498DB]/20 rounded-full">
+                <ImageIcon className="h-8 w-8 text-[#3498DB]" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-label font-semibold text-white mb-1">
+                  Cliquez pour uploader
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, WEBP ou GIF (max {maxSizeMB}MB)
+                </p>
+                <p className="text-xs text-[#3498DB] mt-1">
+                  Recadrage automatique au format {aspectRatio === 21/9 ? '21:9' : aspectRatio === 16/9 ? '16:9' : aspectRatio === 1 ? '1:1' : 'personnalisé'}
+                </p>
+              </div>
+            </>
+          )}
+        </button>
+      )}
+
+      {/* Input caché */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+
+      {/* Messages d'erreur */}
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-600/10 border border-red-600 rounded-lg">
+          <X className="h-4 w-4 text-red-600" />
+          <span className="text-sm text-red-600 font-sans">{error}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+

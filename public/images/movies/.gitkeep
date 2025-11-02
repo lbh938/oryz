@@ -1,0 +1,29 @@
+# Dossier pour les miniatures de films
+
+Placez vos images de films ici.
+
+## Images requises actuellement :
+
+- `venom-2.jpg` - Venom: Let There Be Carnage (2021)
+- `venom-3.jpg` - Venom: The Last Dance (à venir)
+
+## Format recommandé :
+
+- **Ratio** : 2:3 (portrait, comme une affiche de film)
+- **Dimensions** : 300x450px ou 400x600px
+- **Format** : JPG, PNG ou WEBP
+- **Taille** : < 500KB
+
+## Nommage :
+
+Utilisez des noms descriptifs en minuscules avec tirets :
+- `titre-du-film.jpg`
+- `venom-2.jpg`
+- `avatar-2.jpg`
+
+## Source d'images :
+
+- [TMDB (The Movie Database)](https://www.themoviedb.org/)
+- [IMDb](https://www.imdb.com/)
+- Recherche Google Images (avec licence appropriée)
+

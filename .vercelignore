@@ -1,0 +1,4 @@
+# Ne pas ignorer le service worker
+!public/sw.js
+!public/manifest.json
+

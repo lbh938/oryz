@@ -1,0 +1,14 @@
+<svg width="300" height="450" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F4C81;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3498DB;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="450" fill="url(#grad)"/>
+  <text x="150" y="200" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">VENOM</text>
+  <text x="150" y="240" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle">Let There Be Carnage</text>
+  <text x="150" y="280" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)" text-anchor="middle">2021</text>
+  <text x="150" y="380" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.5)" text-anchor="middle">Placeholder - Ajoutez venom-2.jpg</text>
+</svg>
+
