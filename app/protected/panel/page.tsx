@@ -855,6 +855,7 @@ export default function AdminPage() {
               </div>
             </div>
             )}
+          </div>
 
           {/* Top Pages */}
           <div className="space-y-6">
