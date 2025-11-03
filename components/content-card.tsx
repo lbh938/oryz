@@ -59,13 +59,13 @@ export function ContentCard({ content }: ContentCardProps) {
           </div>
         </div>
 
-        <div className="p-3 sm:p-4 flex flex-col flex-1">
-          <h3 className="font-display font-bold text-white text-sm sm:text-base line-clamp-2 group-hover:text-[#3498DB] transition-colors mb-2">
-            {content.name}
-          </h3>
+            <div className="p-2 sm:p-4 flex flex-col flex-1">
+              <h3 className="font-display font-bold text-white text-xs sm:text-base line-clamp-2 group-hover:text-[#3498DB] transition-colors mb-1 sm:mb-2">
+                {content.name}
+              </h3>
           
-          {/* Info supplémentaire */}
-          <div className="flex items-center gap-2 text-xs text-white/60 font-sans mb-2">
+              {/* Info supplémentaire */}
+              <div className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs text-white/60 font-sans mb-1 sm:mb-2">
             {content.year && <span>{content.year}</span>}
             {content.duration && (
               <>
@@ -84,18 +84,18 @@ export function ContentCard({ content }: ContentCardProps) {
             )}
           </div>
 
-          {/* Genre ou Description */}
-          <div className="flex-1 min-h-0">
-            {content.genre && content.genre.length > 0 ? (
-              <p className="text-xs text-white/50 font-sans line-clamp-1">
-              {content.genre.slice(0, 2).join(', ')}
-            </p>
-            ) : (
-              <p className="text-xs text-white/50 font-sans line-clamp-2">
-              {content.description}
-            </p>
-          )}
-          </div>
+              {/* Genre ou Description */}
+              <div className="flex-1 min-h-0">
+                {content.genre && content.genre.length > 0 ? (
+                  <p className="text-[10px] sm:text-xs text-white/50 font-sans line-clamp-1">
+                    {content.genre.slice(0, 2).join(', ')}
+                  </p>
+                ) : (
+                  <p className="text-[10px] sm:text-xs text-white/50 font-sans line-clamp-1 sm:line-clamp-2">
+                    {content.description}
+                  </p>
+                )}
+              </div>
         </div>
       </Card>
     </Link>

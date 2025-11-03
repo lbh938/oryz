@@ -97,9 +97,9 @@ export function RecommendedChannels() {
         </Link>
       </div>
 
-      {/* Loading State - Mobile optimized */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
+          {/* Loading State - Mobile optimized */}
+          {isLoading ? (
+            <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-5">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
               <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden h-full flex flex-col">
@@ -113,8 +113,8 @@ export function RecommendedChannels() {
           ))}
         </div>
       ) : (
-        /* Channels Grid - Utilise ContentCard comme dans la page films */
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
+        /* Channels Grid - Cartes plus petites sur mobile */
+        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-4 md:gap-5 lg:gap-6">
           {recommendations.map((channel) => {
             // Convertir le channel en format ContentItem pour ContentCard
             const contentItem = {

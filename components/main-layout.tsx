@@ -93,8 +93,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <main className="min-h-screen flex flex-col bg-background">
-      {/* Navigation - ORYZ Style */}
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
+      {/* Navigation - ORYZ Style - Gris opaque */}
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-[#1a1a1a] border-b border-[#333333] shadow-lg shadow-black/10">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2 sm:gap-6 h-14 sm:h-20">
             {/* Logo à gauche */}
@@ -112,7 +112,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             {/* Bouton Favoris avec badge - Desktop only */}
             <Link 
               href="/favorites" 
-              className="relative flex-shrink-0 hidden md:flex items-center justify-center h-12 w-12 rounded-lg border-2 border-[#3498DB]/50 bg-white/5 backdrop-blur-xl text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white transition-all group"
+              className="relative flex-shrink-0 hidden md:flex items-center justify-center h-12 w-12 rounded-lg border-2 border-[#3498DB]/50 bg-[#1a1a1a] text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white transition-all group"
             >
               <Heart className="h-5 w-5 group-hover:fill-current transition-all" />
               {favoritesCount > 0 && (
@@ -130,7 +130,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                   /* Utilisateur connecté - avec avatar */
                   <Button 
                     variant="outline" 
-                    className="border-[#3498DB]/50 bg-white/5 backdrop-blur-xl text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-4 transition-all" 
+                    className="border-[#3498DB]/50 bg-[#1a1a1a] text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-4 transition-all" 
                     asChild
                   >
                     <Link href="/protected" className="flex items-center gap-2">
@@ -157,7 +157,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 ) : (
                   /* Non connecté */
                   <>
-                    <Button variant="outline" className="border-[#3498DB]/50 bg-white/5 backdrop-blur-xl text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-6 transition-all" asChild>
+                    <Button variant="outline" className="border-[#3498DB]/50 bg-[#1a1a1a] text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-6 transition-all" asChild>
                       <Link href="/auth/sign-up">Inscription</Link>
                     </Button>
                     <Button className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold rounded-lg h-11 px-6 shadow-lg shadow-[#3498DB]/30 transition-all" asChild>

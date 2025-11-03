@@ -87,9 +87,9 @@ export default function CategoryPage() {
       <section className="container max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 md:pt-8">
         <div className="mb-4 sm:mb-6 md:mb-8 hidden lg:block">
           <div className="flex items-center gap-8 xl:gap-12 overflow-x-auto whitespace-nowrap scrollbar-hide">
-            <Link href="/" className="group relative text-white text-base xl:text-lg font-display font-bold transition-colors duration-200 hover:text-[#3498DB] uppercase">
+            <Link href="/" className={`group relative text-white text-base xl:text-lg font-display font-bold transition-colors duration-200 hover:text-[#3498DB] uppercase ${slug === 'home' ? 'text-[#3498DB]' : ''}`}>
               HOME
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#3498DB] transition-all duration-200 group-hover:w-full"></span>
+              <span className={`absolute bottom-0 left-0 h-0.5 bg-[#3498DB] transition-all duration-200 ${slug === 'home' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
             <Link href="/category/foot" className={`group relative text-white text-base xl:text-lg font-display font-bold transition-colors duration-200 hover:text-[#3498DB] uppercase ${slug === 'foot' ? 'text-[#3498DB]' : ''}`}>
               FOOT EN DIRECTE

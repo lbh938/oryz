@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Menu, X, LogIn, UserPlus, User, Settings, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
