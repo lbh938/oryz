@@ -76,6 +76,71 @@ export async function getActiveHeroConfig(): Promise<HeroConfig | null> {
 }
 
 /**
+ * Récupérer tous les heroes (actifs et inactifs) pour l'admin
+ */
+export async function getAllHeroes(): Promise<HeroConfig[]> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('hero_config')
+    .select('*')
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching all heroes:', error);
+    return [];
+  }
+
+  return data || [];
+}
+
+/**
+ * Créer un nouveau hero
+ */
+export async function createHero(
+  config: Omit<HeroConfig, 'id' | 'created_at' | 'updated_at'>
+): Promise<{ success: boolean; id?: string; error?: string }> {
+  const supabase = createClient();
+
+  try {
+    // Obtenir le dernier ordre d'affichage
+    const { data: lastHero } = await supabase
+      .from('hero_config')
+      .select('display_order')
+      .order('display_order', { ascending: false })
+      .limit(1)
+      .single();
+
+    const nextOrder = lastHero ? (lastHero.display_order || 0) + 1 : 1;
+
+    const { data, error } = await supabase
+      .from('hero_config')
+      .insert({
+        title: config.title,
+        subtitle: config.subtitle,
+        cta_text: config.cta_text,
+        cta_url: config.cta_url,
+        image_url: config.image_url,
+        is_active: config.is_active !== undefined ? config.is_active : true,
+        display_order: config.display_order || nextOrder
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating hero:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, id: data.id };
+  } catch (error) {
+    console.error('Exception creating hero:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+/**
  * Mettre à jour la configuration du hero
  */
 export async function updateHeroConfig(
@@ -139,6 +204,78 @@ export async function updateHeroConfig(
     return true;
   } catch (error) {
     console.error('Exception updating hero config:', error);
+    return false;
+  }
+}
+
+/**
+ * Supprimer un hero
+ */
+export async function deleteHero(heroId: string): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    const { error } = await supabase
+      .from('hero_config')
+      .delete()
+      .eq('id', heroId);
+
+    if (error) {
+      console.error('Error deleting hero:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exception deleting hero:', error);
+    return false;
+  }
+}
+
+/**
+ * Mettre à jour l'ordre d'affichage d'un hero
+ */
+export async function updateHeroOrder(heroId: string, displayOrder: number): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    const { error } = await supabase
+      .from('hero_config')
+      .update({ display_order: displayOrder, updated_at: new Date().toISOString() })
+      .eq('id', heroId);
+
+    if (error) {
+      console.error('Error updating hero order:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exception updating hero order:', error);
+    return false;
+  }
+}
+
+/**
+ * Activer/désactiver un hero
+ */
+export async function toggleHeroActive(heroId: string, isActive: boolean): Promise<boolean> {
+  const supabase = createClient();
+
+  try {
+    const { error } = await supabase
+      .from('hero_config')
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq('id', heroId);
+
+    if (error) {
+      console.error('Error toggling hero active:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exception toggling hero active:', error);
     return false;
   }
 }

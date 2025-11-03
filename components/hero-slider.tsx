@@ -61,8 +61,8 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
 
   return (
     <div className="relative w-full group" data-hero>
-      {/* Hero Content - Plus haut sur mobile */}
-      <div className="relative h-[280px] sm:h-[250px] md:h-[300px] lg:h-[350px] xl:h-[400px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+      {/* Hero Content */}
+      <div className="relative h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
         {/* Background Images avec transition fluide */}
         {heroes.map((hero, index) => (
           <div

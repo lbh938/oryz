@@ -5,7 +5,12 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import {
   getActiveHeroConfig,
+  getAllHeroes,
+  createHero,
   updateHeroConfig,
+  deleteHero,
+  updateHeroOrder,
+  toggleHeroActive,
   getActiveVisitorsCount,
   getTopPages24h,
   getTopPages7d,
@@ -29,7 +34,8 @@ import { TestNotificationAll } from '@/components/admin/test-notification-all';
 import { NotificationDebugPanel } from '@/components/admin/notification-debug-panel';
 import {
   Save, Users, Eye, TrendingUp, Calendar,
-  Loader2, Lock, AlertCircle, CheckCircle2, KeyRound, LogOut, Home, ArrowLeft
+  Loader2, Lock, AlertCircle, CheckCircle2, KeyRound, LogOut, Home, ArrowLeft,
+  Plus, Edit, Trash2, ArrowUp, ArrowDown, X
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -48,6 +54,9 @@ export default function AdminPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Hero Config State
+  const [heroes, setHeroes] = useState<HeroConfig[]>([]);
+  const [editingHero, setEditingHero] = useState<HeroConfig | null>(null);
+  const [isCreatingHero, setIsCreatingHero] = useState(false);
   const [heroConfig, setHeroConfig] = useState<HeroConfig>({
     title: '',
     subtitle: '',
@@ -111,8 +120,8 @@ export default function AdminPage() {
     setIsLoading(true);
 
     try {
-      const [hero, visitors, pages24h, pages7d, stats, sandboxSetting] = await Promise.all([
-        getActiveHeroConfig(),
+      const [allHeroes, visitors, pages24h, pages7d, stats, sandboxSetting] = await Promise.all([
+        getAllHeroes(),
         getActiveVisitorsCount(),
         getTopPages24h(),
         getTopPages7d(),
@@ -120,9 +129,7 @@ export default function AdminPage() {
         getAppSetting('iframe_sandbox_enabled')
       ]);
 
-      if (hero) {
-        setHeroConfig(hero);
-      }
+      setHeroes(allHeroes);
 
       setActiveVisitors(visitors);
       setTopPages24h(pages24h);
@@ -174,21 +181,121 @@ export default function AdminPage() {
     }
   };
 
-  // Sauvegarder le hero
+  // Ouvrir le formulaire de création
+  const handleCreateHero = () => {
+    setIsCreatingHero(true);
+    setEditingHero(null);
+    setHeroConfig({
+      title: '',
+      subtitle: '',
+      cta_text: '',
+      cta_url: '',
+      image_url: ''
+    });
+  };
+
+  // Ouvrir le formulaire d'édition
+  const handleEditHero = (hero: HeroConfig) => {
+    setEditingHero(hero);
+    setIsCreatingHero(false);
+    setHeroConfig({
+      title: hero.title,
+      subtitle: hero.subtitle,
+      cta_text: hero.cta_text,
+      cta_url: hero.cta_url,
+      image_url: hero.image_url
+    });
+  };
+
+  // Annuler l'édition/création
+  const handleCancelHero = () => {
+    setIsCreatingHero(false);
+    setEditingHero(null);
+    setHeroConfig({
+      title: '',
+      subtitle: '',
+      cta_text: '',
+      cta_url: '',
+      image_url: ''
+    });
+  };
+
+  // Sauvegarder le hero (création ou modification)
   const handleSaveHero = async () => {
     setIsSaving(true);
     setSaveStatus('idle');
 
-    const success = await updateHeroConfig(heroConfig);
+    try {
+      let success = false;
+      if (editingHero?.id) {
+        // Modifier un hero existant
+        success = await updateHeroConfig(heroConfig, editingHero.id);
+      } else {
+        // Créer un nouveau hero
+        const result = await createHero(heroConfig);
+        success = result.success;
+      }
 
-    if (success) {
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 3000);
-    } else {
+      if (success) {
+        setSaveStatus('success');
+        await loadData(); // Recharger la liste
+        setTimeout(() => {
+          setSaveStatus('idle');
+          handleCancelHero();
+        }, 2000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      console.error('Error saving hero:', error);
       setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Supprimer un hero
+  const handleDeleteHero = async (heroId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce hero ?')) {
+      return;
     }
 
-    setIsSaving(false);
+    const success = await deleteHero(heroId);
+    if (success) {
+      await loadData(); // Recharger la liste
+    } else {
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  // Changer l'ordre d'un hero
+  const handleMoveHero = async (heroId: string, direction: 'up' | 'down') => {
+    const heroIndex = heroes.findIndex(h => h.id === heroId);
+    if (heroIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? heroIndex - 1 : heroIndex + 1;
+    if (targetIndex < 0 || targetIndex >= heroes.length) return;
+
+    const hero = heroes[heroIndex];
+    const targetHero = heroes[targetIndex];
+    
+    const tempOrder = hero.display_order || 0;
+    const newOrder = targetHero.display_order || 0;
+
+    await Promise.all([
+      updateHeroOrder(heroId, newOrder),
+      updateHeroOrder(targetHero.id!, tempOrder)
+    ]);
+
+    await loadData(); // Recharger la liste
+  };
+
+  // Activer/désactiver un hero
+  const handleToggleHeroActive = async (heroId: string, isActive: boolean) => {
+    const success = await toggleHeroActive(heroId, isActive);
+    if (success) {
+      await loadData(); // Recharger la liste
+    }
   };
 
   // Déconnexion
@@ -462,14 +569,168 @@ export default function AdminPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          {/* Hero Editor */}
+          {/* Heroes List */}
           <div className="space-y-6">
             <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 uppercase">
-                Modifier le Hero
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
+                  Gestion des Heroes
+                </h2>
+                <Button
+                  onClick={handleCreateHero}
+                  className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau Hero
+                </Button>
+              </div>
 
-              <div className="space-y-4">
+              {/* Liste des heroes */}
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {heroes.map((hero, index) => (
+                  <div
+                    key={hero.id}
+                    className={`p-4 rounded-lg border ${
+                      hero.is_active
+                        ? 'bg-[#333333]/50 border-[#3498DB]/30'
+                        : 'bg-[#333333]/30 border-[#333333] opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Image thumbnail */}
+                      {hero.image_url && (
+                        <div className="w-20 h-12 rounded overflow-hidden flex-shrink-0 bg-[#1a1a1a]">
+                          <img
+                            src={hero.image_url}
+                            alt={hero.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-display font-bold text-sm line-clamp-1">
+                              {hero.title || 'Sans titre'}
+                            </h3>
+                            <p className="text-white/60 font-sans text-xs line-clamp-1 mt-1">
+                              {hero.subtitle || 'Sans sous-titre'}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2">
+                              {hero.is_active ? (
+                                <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400 border border-green-600/30">
+                                  Actif
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded text-xs bg-gray-600/20 text-gray-400 border border-gray-600/30">
+                                  Inactif
+                                </span>
+                              )}
+                              <span className="text-xs text-white/40">
+                                Ordre: {hero.display_order || 0}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Button
+                              onClick={() => handleMoveHero(hero.id!, 'up')}
+                              disabled={index === 0}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                              title="Déplacer vers le haut"
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleMoveHero(hero.id!, 'down')}
+                              disabled={index === heroes.length - 1}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                              title="Déplacer vers le bas"
+                            >
+                              <ArrowDown className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleEditHero(hero)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+                              title="Modifier"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleToggleHeroActive(hero.id!, !hero.is_active)}
+                              variant="ghost"
+                              size="icon"
+                              className={`h-8 w-8 ${
+                                hero.is_active
+                                  ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
+                                  : 'text-green-400 hover:text-green-300 hover:bg-green-400/10'
+                              }`}
+                              title={hero.is_active ? 'Désactiver' : 'Activer'}
+                            >
+                              <Eye className={`h-4 w-4 ${hero.is_active ? '' : 'opacity-50'}`} />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteHero(hero.id!)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-400/70 hover:text-red-400 hover:bg-red-400/10"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {heroes.length === 0 && (
+                  <div className="text-center py-8 text-white/60">
+                    <p className="font-sans">Aucun hero configuré</p>
+                    <Button
+                      onClick={handleCreateHero}
+                      className="mt-4 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Créer le premier hero
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Formulaire de création/édition */}
+            {(isCreatingHero || editingHero) && (
+              <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
+                    {editingHero ? 'Modifier le Hero' : 'Nouveau Hero'}
+                  </h2>
+                  <Button
+                    onClick={handleCancelHero}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
                 <div>
                   <Label htmlFor="title" className="text-white font-label">
                     Titre
