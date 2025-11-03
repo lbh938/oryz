@@ -47,7 +47,7 @@ export function LiveMatches() {
   };
 
   return (
-    <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8" data-live-matches>
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div className="flex items-center gap-3">
           <div className="relative">

@@ -14,7 +14,6 @@ import { LikeButton } from '@/components/like-button';
 import { useSourceDetection } from '@/hooks/use-source-detection';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import { useAdBlocker } from '@/hooks/use-ad-blocker';
-import { MainLayout } from '@/components/main-layout';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,8 +73,28 @@ export default function WatchPage({ params }: WatchPageProps) {
   // Si c'est un match sportif, utiliser l'URL fournie directement
   if (sportUrl) {
     return (
-      <MainLayout>
-        <div className="pb-8 sm:pb-12">
+      <div className="min-h-screen bg-background">
+        <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
+          <div className="container max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex justify-between items-center h-14 sm:h-16">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-[#3498DB]/10 hover:text-[#3498DB]"
+                  onClick={() => window.history.back()}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+                  <img src="/logo.png" alt="ORYZ STREAM" className="h-7 sm:h-8 md:h-9 w-auto" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div className="pt-16 sm:pt-20 pb-8 sm:pb-12">
           <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
                   {sportMatchName && (
               <div className="mb-6">
@@ -94,7 +113,7 @@ export default function WatchPage({ params }: WatchPageProps) {
             </div>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
@@ -105,19 +124,24 @@ export default function WatchPage({ params }: WatchPageProps) {
   const hasMultipleSources = content.sources && content.sources.length > 1;
 
   return (
-    <MainLayout>
-      {/* Navigation secondaire avec bouton retour */}
-      <div className="fixed top-14 sm:top-20 left-0 right-0 z-30 bg-transparent pointer-events-none">
+    <div className="min-h-screen bg-background">
+      {/* Navigation - ORYZ Style */}
+      <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center gap-4 pointer-events-auto">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full hover:bg-[#3498DB]/10 hover:text-[#3498DB] bg-black/20 backdrop-blur-sm"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+          <div className="flex justify-between items-center h-14 sm:h-16">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="rounded-full hover:bg-[#3498DB]/10 hover:text-[#3498DB]"
+                onClick={() => window.history.back()}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <Link href="/" className="flex items-center gap-2 font-bold text-xl">
+                <img src="/logo.png" alt="ORYZ STREAM" className="h-7 sm:h-8 md:h-9 w-auto" />
+              </Link>
+            </div>
             <div className="flex items-center gap-2">
               {content.isLive && (
                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
@@ -139,10 +163,10 @@ export default function WatchPage({ params }: WatchPageProps) {
             </div>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Main Content */}
-      <div className="pb-8 sm:pb-12">
+      <div className="pt-16 sm:pt-20 pb-8 sm:pb-12">
         <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
           {/* Source Selector - Dropdown pour les séries avec beaucoup d'épisodes */}
           {hasMultipleSources && (
@@ -328,6 +352,6 @@ export default function WatchPage({ params }: WatchPageProps) {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }

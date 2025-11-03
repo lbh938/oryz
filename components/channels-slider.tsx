@@ -90,7 +90,7 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-slider data-channels>
       {/* Header avec titre et boutons de navigation */}
       {(showTitle || channels.length > cardsVisible) && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">

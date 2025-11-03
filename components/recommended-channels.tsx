@@ -78,7 +78,7 @@ export function RecommendedChannels() {
   }
 
   return (
-    <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8" data-recommended>
       {/* Header - Mobile optimized */}
       <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6 px-1">
         <div className="flex items-center gap-2 sm:gap-3">

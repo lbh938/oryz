@@ -129,17 +129,17 @@ export function useAdBlocker(isActive: boolean = true) {
       'zedo.com',
     ];
 
-    // Patterns d'identifiants et classes suspectes
+    // Patterns d'identifiants et classes suspectes (mais exclure "content-card", "channel-card", etc.)
     const adPatterns = [
-      /ad(s)?[_-]?[a-z0-9_-]*/i,
+      /^ad(s)?[_-]?[a-z0-9_-]*$/i, // Commence par "ad" et n'est pas "ad" dans un mot plus long
       /advertising/i,
       /advertisement/i,
       /adsense/i,
       /adsbygoogle/i,
-      /advert/i,
-      /sponsor/i,
-      /promo/i,
-      /banner/i,
+      /^(?!.*(card|content|channel|movie)).*advert.*$/i, // "advert" mais pas dans un contexte de carte de contenu
+      /^(?!.*(card|content|channel|movie)).*sponsor.*$/i, // "sponsor" mais pas dans un contexte de carte
+      /^(?!.*(card|content|channel|movie)).*promo.*$/i, // "promo" mais pas dans un contexte de carte
+      /^(?!.*(card|content|channel|movie)).*banner.*$/i, // "banner" mais pas dans un contexte de carte
       /popup/i,
       /pop-up/i,
       /popunder/i,
@@ -209,11 +209,34 @@ export function useAdBlocker(isActive: boolean = true) {
     };
 
     // Observer pour bloquer les éléments DOM suspects
+    // MAIS JAMAIS bloquer le contenu de l'application
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const element = node as HTMLElement;
+            
+            // PROTECTION MAXIMALE : Ne JAMAIS bloquer le contenu de l'app
+            // Vérifier IMMÉDIATEMENT si c'est dans une section, main, ou conteneur de l'app
+            if (element.closest('section') || 
+                element.closest('main') || 
+                element.closest('[class*="container"]') ||
+                element.closest('[data-hero]') ||
+                element.closest('[data-hero-section]') ||
+                element.closest('[data-slider]') ||
+                element.closest('[data-channels]') ||
+                element.closest('[data-channels-section]') ||
+                element.closest('[data-live-matches]') ||
+                element.closest('[data-recommended]') ||
+                element.closest('[data-content-card]') ||
+                element.closest('[class*="HeroSlider"]') ||
+                element.closest('[class*="ChannelsSlider"]') ||
+                element.closest('[class*="LiveMatches"]') ||
+                element.closest('[class*="RecommendedChannels"]') ||
+                element.closest('a[href*="/watch/"]') ||
+                element.closest('a[href*="/category/"]')) {
+              return; // IGNORER IMMÉDIATEMENT - Ne pas analyser plus loin
+            }
             
             // Vérifier les patterns suspects
             const id = element.id || '';
@@ -234,9 +257,9 @@ export function useAdBlocker(isActive: boolean = true) {
               element.querySelector('video') ||
               element.querySelector('audio');
             
-            // Vérifier si c'est un élément de pub
             const isSuspicious = 
               !isVideoElement &&
+              // Vérifier les patterns suspects
               (adPatterns.some(pattern => 
                 pattern.test(id) || 
                 pattern.test(className) || 
@@ -291,13 +314,15 @@ export function useAdBlocker(isActive: boolean = true) {
       });
     });
 
-    // Observer les changements dans le DOM
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['id', 'class', 'src']
-    });
+    // Observer les changements dans le DOM - mais avec délai pour laisser l'app se charger
+    setTimeout(() => {
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['id', 'class', 'src']
+      });
+    }, 1000); // Attendre 1 seconde pour laisser l'app charger
 
     // Bloquer les scripts de pub déjà présents
     const blockExistingAds = () => {
@@ -315,8 +340,8 @@ export function useAdBlocker(isActive: boolean = true) {
         iframeElement.remove();
       });
 
-      // Divs suspects - mais exclure les players vidéo
-      const suspiciousDivs = document.querySelectorAll('[id*="ad"]:not([id*="video"]):not([id*="player"]), [class*="ad"]:not([class*="video"]):not([class*="player"])');
+      // Divs suspects - mais exclure les players vidéo, les cartes de contenu ET toutes les sections de l'app
+      const suspiciousDivs = document.querySelectorAll('[id*="ad"]:not([id*="video"]):not([id*="player"]):not([id*="card"]), [class*="ad"]:not([class*="video"]):not([class*="player"]):not([class*="card"])');
       suspiciousDivs.forEach((div) => {
         // Ne pas bloquer les éléments vidéo ou les conteneurs vidéo
         const divElement = div as HTMLElement;
@@ -332,18 +357,47 @@ export function useAdBlocker(isActive: boolean = true) {
           divElement.closest('.vjs-player') ||
           divElement.closest('video-js');
         
-        if (!isVideoContainer) {
+        // Ne JAMAIS bloquer si c'est dans une section de l'app
+        const isAppContent = 
+          divElement.closest('section') ||
+          divElement.closest('main') ||
+          divElement.closest('[class*="container"]') ||
+          divElement.closest('[data-hero]') ||
+          divElement.closest('[data-hero-section]') ||
+          divElement.closest('[data-slider]') ||
+          divElement.closest('[data-channels]') ||
+          divElement.closest('[data-channels-section]') ||
+          divElement.closest('[data-live-matches]') ||
+          divElement.closest('[data-recommended]') ||
+          divElement.closest('[data-content-card]') ||
+          divElement.closest('.content-card') ||
+          divElement.closest('[class*="Card"]') ||
+          divElement.closest('[class*="HeroSlider"]') ||
+          divElement.closest('[class*="ChannelsSlider"]') ||
+          divElement.closest('[class*="LiveMatches"]') ||
+          divElement.closest('[class*="RecommendedChannels"]') ||
+          divElement.closest('a[href*="/watch/"]') ||
+          divElement.closest('a[href*="/category/"]') ||
+          divElement.closest('[data-channel]') ||
+          divElement.closest('[data-movie]') ||
+          divElement.closest('[data-content]');
+        
+        if (!isVideoContainer && !isAppContent) {
           divElement.style.display = 'none';
           blockedElements.current.add(divElement);
         }
       });
     };
 
-    // Bloquer les pubs existantes au chargement
-    blockExistingAds();
+    let intervalId: NodeJS.Timeout | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
 
-    // Bloquer périodiquement les nouvelles pubs
-    const interval = setInterval(blockExistingAds, 2000);
+    // Bloquer les pubs existantes au chargement - mais avec délai pour laisser l'app se charger
+    timeoutId = setTimeout(() => {
+      blockExistingAds();
+      // Bloquer périodiquement les nouvelles pubs
+      intervalId = setInterval(blockExistingAds, 2000);
+    }, 2000); // Attendre 2 secondes pour laisser l'app charger complètement
 
     // Cleanup
     return () => {
@@ -351,7 +405,8 @@ export function useAdBlocker(isActive: boolean = true) {
       XMLHttpRequest.prototype.open = originalXHROpen;
       XMLHttpRequest.prototype.send = originalXHRSend;
       observer.disconnect();
-      clearInterval(interval);
+      if (intervalId) clearInterval(intervalId);
+      if (timeoutId) clearTimeout(timeoutId);
       blockedDomains.current.clear();
       blockedElements.current.clear();
     };
