@@ -2,33 +2,48 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Upload, X, Loader2, Check, Image as ImageIcon, Crop, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, X, Loader2, Check, Image as ImageIcon, Crop, RotateCw, ZoomIn, ZoomOut, Smartphone, Monitor } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import { Button } from '@/components/ui/button';
 
 interface ImageCropUploadProps {
   bucket: 'hero-images' | 'channel-images' | 'movie-images';
   onUploadComplete?: (url: string) => void;
+  onUploadCompleteMobile?: (url: string) => void; // Callback pour mobile
+  onUploadCompleteDesktop?: (url: string) => void; // Callback pour desktop
   currentImage?: string;
+  currentMobileImage?: string; // Image mobile actuelle
+  currentDesktopImage?: string; // Image desktop actuelle
   label?: string;
   maxSizeMB?: number;
   aspectRatio?: number; // 21/9 pour hero, 16/9 pour channels, etc.
+  mobileAspectRatio?: number; // Aspect ratio pour mobile (optionnel)
+  allowSeparateMobileDesktop?: boolean; // Permettre deux versions séparées
 }
 
 export function ImageCropUpload({ 
   bucket, 
-  onUploadComplete, 
+  onUploadComplete,
+  onUploadCompleteMobile,
+  onUploadCompleteDesktop,
   currentImage,
+  currentMobileImage,
+  currentDesktopImage,
   label = "Image",
   maxSizeMB = 10,
-  aspectRatio = 16 / 9
+  aspectRatio = 16 / 9,
+  mobileAspectRatio,
+  allowSeparateMobileDesktop = false
 }: ImageCropUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImage || null);
+  const [previewMobile, setPreviewMobile] = useState<string | null>(currentMobileImage || null);
+  const [previewDesktop, setPreviewDesktop] = useState<string | null>(currentDesktopImage || null);
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
+  const [croppingMode, setCroppingMode] = useState<'mobile' | 'desktop' | 'single'>('single'); // Mode de recadrage
   
   // Cropper states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -38,6 +53,12 @@ export function ImageCropUpload({
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
+  
+  // Aspect ratio actuel selon le mode
+  const currentAspectRatio = 
+    allowSeparateMobileDesktop && croppingMode === 'mobile' && mobileAspectRatio
+      ? mobileAspectRatio
+      : aspectRatio;
 
   const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -68,6 +89,13 @@ export function ImageCropUpload({
     const reader = new FileReader();
     reader.onloadend = () => {
       setOriginalImage(reader.result as string);
+      // Si on permet mobile/desktop séparé, demander quel mode choisir
+      if (allowSeparateMobileDesktop) {
+        // Demander le mode
+        setCroppingMode('desktop'); // Par défaut, commencer par desktop
+      } else {
+        setCroppingMode('single');
+      }
       setShowCropper(true);
       setCrop({ x: 0, y: 0 });
       setZoom(1);
@@ -135,19 +163,17 @@ export function ImageCropUpload({
     if (!originalImage || !croppedAreaPixels) return;
 
     setUploading(true);
-    setShowCropper(false);
 
     try {
       // Créer l'image recadrée
       const croppedBlob = await getCroppedImg(originalImage, croppedAreaPixels, rotation);
       
-      // Preview local
-      const previewUrl = URL.createObjectURL(croppedBlob);
-      setPreview(previewUrl);
-
       // Upload vers Supabase
       const fileExt = 'jpg';
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const suffix = allowSeparateMobileDesktop 
+        ? (croppingMode === 'mobile' ? '-mobile' : '-desktop')
+        : '';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${suffix}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { data, error: uploadError } = await supabase.storage
@@ -167,19 +193,64 @@ export function ImageCropUpload({
         .from(bucket)
         .getPublicUrl(filePath);
 
+      // Preview local
+      const previewUrl = URL.createObjectURL(croppedBlob);
+
+      if (allowSeparateMobileDesktop) {
+        if (croppingMode === 'mobile') {
+          setPreviewMobile(previewUrl);
+          if (onUploadCompleteMobile) {
+            onUploadCompleteMobile(publicUrl);
+          }
+          // Demander si on veut aussi recadrer pour desktop
+          const continueDesktop = window.confirm('Image mobile sauvegardée ! Voulez-vous recadrer aussi pour desktop ?');
+          if (continueDesktop) {
+            setCroppingMode('desktop');
+            setCrop({ x: 0, y: 0 });
+            setZoom(1);
+            setRotation(0);
+            setCroppedAreaPixels(null);
+            setUploading(false);
+            return; // Ne pas fermer le cropper
+          }
+        } else {
+          setPreviewDesktop(previewUrl);
+          if (onUploadCompleteDesktop) {
+            onUploadCompleteDesktop(publicUrl);
+          }
+        }
+      } else {
+        setPreview(previewUrl);
+        if (onUploadComplete) {
+          onUploadComplete(publicUrl);
+        }
+      }
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
 
-      if (onUploadComplete) {
-        onUploadComplete(publicUrl);
+      // Fermer le cropper seulement si on a fini
+      if (!allowSeparateMobileDesktop || (allowSeparateMobileDesktop && croppingMode === 'desktop')) {
+        setShowCropper(false);
+        setOriginalImage(null);
       }
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || 'Erreur lors de l\'upload');
-      setPreview(currentImage || null);
+      if (allowSeparateMobileDesktop) {
+        if (croppingMode === 'mobile') {
+          setPreviewMobile(currentMobileImage || null);
+        } else {
+          setPreviewDesktop(currentDesktopImage || null);
+        }
+      } else {
+        setPreview(currentImage || null);
+      }
     } finally {
       setUploading(false);
-      setOriginalImage(null);
+      if (!showCropper) {
+        setOriginalImage(null);
+      }
     }
   };
 
@@ -214,7 +285,41 @@ export function ImageCropUpload({
             <div className="flex items-center justify-between p-4 border-b border-[#333333]">
               <div className="flex items-center gap-3">
                 <Crop className="h-5 w-5 text-[#3498DB]" />
-                <h3 className="text-lg font-display font-bold text-white">Recadrer l'image</h3>
+                <h3 className="text-lg font-display font-bold text-white">
+                  {allowSeparateMobileDesktop 
+                    ? `Recadrer pour ${croppingMode === 'mobile' ? 'Mobile' : 'Desktop'}`
+                    : 'Recadrer l\'image'}
+                </h3>
+                {allowSeparateMobileDesktop && (
+                  <div className="flex items-center gap-2 ml-4">
+                    <Button
+                      variant={croppingMode === 'mobile' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setCroppingMode('mobile');
+                        setCrop({ x: 0, y: 0 });
+                        setZoom(1);
+                      }}
+                      className={croppingMode === 'mobile' ? 'bg-[#3498DB]' : ''}
+                    >
+                      <Smartphone className="h-4 w-4 mr-1" />
+                      Mobile
+                    </Button>
+                    <Button
+                      variant={croppingMode === 'desktop' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => {
+                        setCroppingMode('desktop');
+                        setCrop({ x: 0, y: 0 });
+                        setZoom(1);
+                      }}
+                      className={croppingMode === 'desktop' ? 'bg-[#3498DB]' : ''}
+                    >
+                      <Monitor className="h-4 w-4 mr-1" />
+                      Desktop
+                    </Button>
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleCropCancel}
@@ -231,7 +336,7 @@ export function ImageCropUpload({
                 crop={crop}
                 zoom={zoom}
                 rotation={rotation}
-                aspect={aspectRatio}
+                aspect={currentAspectRatio}
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onRotationChange={setRotation}
@@ -314,7 +419,98 @@ export function ImageCropUpload({
       )}
 
       {/* Preview ou Upload Area */}
-      {preview ? (
+      {allowSeparateMobileDesktop ? (
+        /* Mode mobile/desktop séparé */
+        <div className="space-y-4">
+          {/* Mobile */}
+          <div>
+            <label className="block text-xs font-label font-semibold text-white/70 mb-2 flex items-center gap-2">
+              <Smartphone className="h-4 w-4" />
+              Version Mobile
+            </label>
+            {previewMobile ? (
+              <div className="relative group">
+                <img
+                  src={previewMobile}
+                  alt="Preview Mobile"
+                  className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewMobile(null);
+                    if (onUploadCompleteMobile) {
+                      onUploadCompleteMobile('');
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.click();
+                    setCroppingMode('mobile');
+                  }
+                }}
+                disabled={uploading}
+                className="w-full h-48 border-2 border-dashed border-[#3498DB] rounded-lg bg-[#0F4C81]/10 hover:bg-[#0F4C81]/20 transition-colors flex flex-col items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Smartphone className="h-8 w-8 text-[#3498DB]" />
+                <span className="text-sm font-label text-white">Cliquez pour uploader mobile</span>
+              </button>
+            )}
+          </div>
+
+          {/* Desktop */}
+          <div>
+            <label className="block text-xs font-label font-semibold text-white/70 mb-2 flex items-center gap-2">
+              <Monitor className="h-4 w-4" />
+              Version Desktop
+            </label>
+            {previewDesktop ? (
+              <div className="relative group">
+                <img
+                  src={previewDesktop}
+                  alt="Preview Desktop"
+                  className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreviewDesktop(null);
+                    if (onUploadCompleteDesktop) {
+                      onUploadCompleteDesktop('');
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  if (fileInputRef.current) {
+                    fileInputRef.current.click();
+                    setCroppingMode('desktop');
+                  }
+                }}
+                disabled={uploading}
+                className="w-full h-48 border-2 border-dashed border-[#3498DB] rounded-lg bg-[#0F4C81]/10 hover:bg-[#0F4C81]/20 transition-colors flex flex-col items-center justify-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Monitor className="h-8 w-8 text-[#3498DB]" />
+                <span className="text-sm font-label text-white">Cliquez pour uploader desktop</span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : preview ? (
         <div className="relative group">
           <img
             src={preview}

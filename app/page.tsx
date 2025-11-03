@@ -20,7 +20,7 @@ export default async function Home() {
   return (
     <MainLayout>
       {/* Hero Featured Section */}
-      <section className="container max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 md:pt-8 pb-4 sm:pb-6" data-hero-section>
+      <section className="container max-w-7xl mx-auto px-0 sm:px-4 md:px-6 pt-4 sm:pt-6 md:pt-8 pb-4 sm:pb-6" data-hero-section>
         {/* Catégories - Desktop uniquement */}
         <div className="mb-4 sm:mb-6 md:mb-8 hidden lg:block">
           <div className="flex items-center gap-8 xl:gap-12 overflow-x-auto whitespace-nowrap scrollbar-hide">

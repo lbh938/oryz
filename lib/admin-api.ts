@@ -12,6 +12,8 @@ export interface HeroConfig {
   cta_text: string;
   cta_url: string;
   image_url: string;
+  image_mobile_url?: string; // Image spécifique pour mobile
+  image_desktop_url?: string; // Image spécifique pour desktop
   is_active?: boolean;
   display_order?: number;
   created_at?: string;
@@ -209,12 +211,50 @@ export async function updateHeroConfig(
 }
 
 /**
- * Supprimer un hero
+ * Supprimer un hero et son image du storage
  */
 export async function deleteHero(heroId: string): Promise<boolean> {
   const supabase = createClient();
 
   try {
+    // 1. Récupérer toutes les images du hero avant suppression
+    const { data: hero } = await supabase
+      .from('hero_config')
+      .select('image_url, image_mobile_url, image_desktop_url')
+      .eq('id', heroId)
+      .single();
+
+    // Fonction helper pour supprimer une image du storage
+    const deleteImageFromStorage = async (imageUrl: string | null | undefined) => {
+      if (!imageUrl) return;
+      
+      try {
+        const urlWithoutParams = imageUrl.split('?')[0];
+        const storageMatch = urlWithoutParams.match(/\/hero-images\/(.+)$/);
+        
+        if (storageMatch && storageMatch[1]) {
+          const filePath = storageMatch[1];
+          const { error: storageError } = await supabase.storage
+            .from('hero-images')
+            .remove([filePath]);
+          
+          if (storageError) {
+            console.warn('Error deleting hero image from storage:', storageError);
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Exception deleting hero image from storage:', storageErr);
+      }
+    };
+
+    // 2. Supprimer toutes les images du storage
+    await Promise.all([
+      deleteImageFromStorage(hero?.image_url),
+      deleteImageFromStorage(hero?.image_mobile_url),
+      deleteImageFromStorage(hero?.image_desktop_url)
+    ]);
+
+    // 3. Supprimer le hero de la base de données
     const { error } = await supabase
       .from('hero_config')
       .delete()

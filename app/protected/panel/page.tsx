@@ -789,10 +789,16 @@ export default function AdminPage() {
                 <ImageCropUpload
                   bucket="hero-images"
                   currentImage={heroConfig.image_url}
-                  label="Image Hero (21:9 recommandé)"
+                  currentMobileImage={heroConfig.image_mobile_url}
+                  currentDesktopImage={heroConfig.image_desktop_url}
+                  label="Image Hero"
                   onUploadComplete={(url) => setHeroConfig({ ...heroConfig, image_url: url })}
+                  onUploadCompleteMobile={(url) => setHeroConfig({ ...heroConfig, image_mobile_url: url })}
+                  onUploadCompleteDesktop={(url) => setHeroConfig({ ...heroConfig, image_desktop_url: url })}
                   maxSizeMB={10}
                   aspectRatio={21 / 9}
+                  mobileAspectRatio={16 / 9} // Format plus vertical pour mobile
+                  allowSeparateMobileDesktop={true}
                 />
 
                 <div>

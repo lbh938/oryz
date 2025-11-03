@@ -564,15 +564,15 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
         </h3>
 
         {/* Bouton Déconnexion */}
-        <div className="flex items-center justify-between p-4 bg-[#1a1a1a] rounded-lg border border-[#3498DB]/20">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 bg-[#1a1a1a] rounded-lg border border-[#3498DB]/20">
+          <div className="flex-1 min-w-0">
             <p className="text-white font-semibold">Se déconnecter</p>
             <p className="text-xs text-white/60 mt-1">Fermer votre session actuelle</p>
           </div>
           <Button
             onClick={handleLogout}
             variant="outline"
-            className="border-[#3498DB]/30 text-[#3498DB] hover:bg-[#3498DB]/10"
+            className="w-full sm:w-auto border-[#3498DB]/30 text-[#3498DB] hover:bg-[#3498DB]/10 whitespace-nowrap"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Déconnexion
@@ -580,8 +580,8 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
         </div>
 
         {/* Bouton Suppression de compte */}
-        <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-lg border border-red-500/20">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 p-4 bg-red-500/5 rounded-lg border border-red-500/20">
+          <div className="flex-1 min-w-0">
             <p className="text-white font-semibold">Supprimer mon compte</p>
             <p className="text-xs text-red-400 mt-1">
               ⚠️ Action irréversible - toutes vos données seront perdues
@@ -591,7 +591,7 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
             onClick={handleDeleteAccount}
             disabled={isDeleting}
             variant="outline"
-            className="border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500"
+            className="w-full sm:w-auto border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500 whitespace-nowrap"
           >
             {isDeleting ? (
               <>

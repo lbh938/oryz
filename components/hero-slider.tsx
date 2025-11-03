@@ -14,6 +14,18 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Détecter si on est sur mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Auto-play avec transition fluide
   useEffect(() => {
@@ -61,8 +73,8 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
 
   return (
     <div className="relative w-full group" data-hero>
-      {/* Hero Content */}
-      <div className="relative h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+      {/* Hero Content - Full width sur mobile, sans zoom */}
+      <div className="relative h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
         {/* Background Images avec transition fluide */}
         {heroes.map((hero, index) => (
           <div
@@ -74,17 +86,29 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
               transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
             }}
           >
-            {hero.image_url && (
-              <img
-                src={hero.image_url}
-                alt={hero.title}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-                loading={index === currentIndex || index === currentIndex + 1 || index === currentIndex - 1 ? 'eager' : 'lazy'}
-              />
-            )}
+            {/* Utiliser l'image mobile ou desktop selon le type d'écran, fallback sur image_url */}
+            {(() => {
+              // Priorité: image_mobile_url/image_desktop_url > image_url
+              const imageUrl = isMobile 
+                ? (hero.image_mobile_url || hero.image_url)
+                : (hero.image_desktop_url || hero.image_url);
+              
+              return imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={hero.title}
+                  className="absolute inset-0 w-full h-full object-contain sm:object-cover"
+                  style={{
+                    transform: 'none',
+                    scale: '1',
+                  }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                  loading={index === currentIndex || index === currentIndex + 1 || index === currentIndex - 1 ? 'eager' : 'lazy'}
+                />
+              ) : null;
+            })()}
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
             
