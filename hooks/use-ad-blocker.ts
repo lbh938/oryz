@@ -180,9 +180,7 @@ export function useAdBlocker(isActive: boolean = true) {
     const originalXHROpen = XMLHttpRequest.prototype.open;
     const originalXHRSend = XMLHttpRequest.prototype.send;
     
-    XMLHttpRequest.prototype.open = function(...args: Parameters<typeof XMLHttpRequest.prototype.open>) {
-      const url = args[1] as string;
-      
+    XMLHttpRequest.prototype.open = function(method: string, url: string | URL, async?: boolean, username?: string | null, password?: string | null) {
       if (typeof url === 'string') {
         try {
           const urlObj = new URL(url, window.location.origin);
@@ -205,7 +203,12 @@ export function useAdBlocker(isActive: boolean = true) {
         }
       }
       
-      return originalXHROpen.apply(this, args);
+      // Passer les arguments avec la valeur par défaut pour async (true)
+      if (async !== undefined) {
+        return originalXHROpen.call(this, method, url, async, username, password);
+      } else {
+        return originalXHROpen.call(this, method, url, true, username, password);
+      }
     };
 
     // Observer pour bloquer les éléments DOM suspects
@@ -297,13 +300,15 @@ export function useAdBlocker(isActive: boolean = true) {
               // Empêcher les événements
               if (element.addEventListener) {
                 const originalAddEventListener = element.addEventListener.bind(element);
-                element.addEventListener = function(...args: any[]) {
+                element.addEventListener = function(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions) {
                   // Bloquer les événements de pub mais permettre les événements de vidéo
-                  const eventType = args[0] as string;
-                  if (!eventType.includes('video') && !eventType.includes('player')) {
+                  if (!type.includes('video') && !type.includes('player')) {
                     return;
                   }
-                  return originalAddEventListener.apply(this, args);
+                  if (listener === null) {
+                    return;
+                  }
+                  return originalAddEventListener(type, listener, options);
                 };
               }
               

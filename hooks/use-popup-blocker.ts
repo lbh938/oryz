@@ -103,11 +103,13 @@ export function usePopupBlocker(isActive: boolean = true) {
             showBlockedNotification();
             return false;
           }
-        } catch (e) {
-          // Bloquer si l'URL est invalide
-          e.preventDefault();
-          e.stopPropagation();
-        }
+            } catch (e) {
+              // Bloquer si l'URL est invalide
+              if (e instanceof Event) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }
       }
     };
 

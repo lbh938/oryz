@@ -100,7 +100,6 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             allowFullScreen
             style={{ border: 'none' }}
             referrerPolicy="no-referrer-when-downgrade"
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
             onLoad={() => {
               setLoading(false);
             }}
