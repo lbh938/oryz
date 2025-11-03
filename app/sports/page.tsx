@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration } from '@/lib/sports-schedule';
+import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration, SportMatch } from '@/lib/sports-schedule';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, ExternalLink, Play, ChevronDown } from 'lucide-react';
@@ -43,6 +43,52 @@ export default function SportsPage() {
   const [currentHour, currentMin] = currentTime.split(':').map(Number);
   const currentMinutes = currentHour * 60 + currentMin;
   
+  // Fonction pour filtrer les matchs en diffusion pour un jour donné
+  const getLiveMatchesForDay = (day: DayType): SportMatch[] => {
+    const dayMatches = getMatchesByDay(day);
+    const dayIndex = DAYS.indexOf(day);
+    
+    return dayMatches.filter(match => {
+      const matchTime = match.time;
+      const [matchHour, matchMin] = matchTime.split(':').map(Number);
+      const matchMinutes = matchHour * 60 + matchMin;
+      const maxDuration = getMatchMaxDuration(match.name);
+      
+      // Si c'est aujourd'hui, vérifier si le match est en cours
+      if (dayIndex === currentDayIndex) {
+        const diff = currentMinutes - matchMinutes;
+        // Match en cours si l'heure actuelle est >= heure du match et <= durée max
+        if (diff >= 0 && diff <= maxDuration) {
+          return true; // Match en diffusion
+        }
+        return false; // Match terminé ou pas encore commencé
+      }
+      
+      // Si c'est un jour futur, aucun match n'est en diffusion
+      if (dayIndex > currentDayIndex || (dayIndex === 0 && currentDayIndex === 6)) {
+        return false;
+      }
+      
+      // Si c'est un jour passé, vérifier si les matchs sont encore en cours
+      let diff: number;
+      if (dayIndex < currentDayIndex) {
+        // Jour passé récent (hier par exemple)
+        const daysDiff = currentDayIndex - dayIndex;
+        diff = (daysDiff * 24 * 60) + currentMinutes - matchMinutes;
+      } else {
+        // Dimanche passé (dayIndex = 0, currentDayIndex pourrait être 1-6)
+        const daysDiff = 7 - currentDayIndex + dayIndex;
+        diff = (daysDiff * 24 * 60) + currentMinutes - matchMinutes;
+      }
+      
+      // Match encore en diffusion si le temps écoulé <= durée max
+      if (diff >= 0 && diff <= maxDuration) {
+        return true; // Match encore en diffusion
+      }
+      return false; // Match terminé
+    });
+  };
+
   const matches = allMatches.filter(match => {
     const matchTime = match.time;
     const [matchHour, matchMin] = matchTime.split(':').map(Number);
@@ -121,11 +167,18 @@ export default function SportsPage() {
                   >
                     <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     {DAY_NAMES_FR[day]}
-                    {dayMatches.length > 0 && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/20 text-xs">
-                        {dayMatches.length}
-                      </span>
-                    )}
+                    {(() => {
+                      const liveMatchesForDay = getLiveMatchesForDay(day);
+                      const liveCount = liveMatchesForDay.length;
+                      if (liveCount > 0) {
+                        return (
+                          <span className="ml-2 px-1.5 py-0.5 rounded-full bg-red-600/80 text-white text-xs font-bold">
+                            {liveCount}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
                   </Button>
                 );
               })}
