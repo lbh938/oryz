@@ -103,7 +103,7 @@ export function usePopupBlocker(isActive: boolean = true) {
             showBlockedNotification();
             return false;
           }
-        } catch (e) {
+        } catch (error) {
           // Bloquer si l'URL est invalide
           e.preventDefault();
           e.stopPropagation();
