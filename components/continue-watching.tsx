@@ -66,8 +66,8 @@ export function ContinueWatching() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-[#333333] rounded-xl aspect-video mb-2"></div>
-              <div className="h-3 bg-[#333333] rounded w-3/4"></div>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl aspect-video mb-2"></div>
+              <div className="h-3 bg-white/5 backdrop-blur-xl rounded w-3/4"></div>
             </div>
           ))}
         </div>
@@ -80,7 +80,7 @@ export function ContinueWatching() {
               href={`/watch/${channel.id}`}
               className="group block"
             >
-              <div className="relative overflow-hidden rounded-xl bg-[#333333] border border-[#333333] hover:border-[#3498DB] transition-all duration-300 hover:shadow-xl hover:shadow-[#3498DB]/20">
+              <div className="relative overflow-hidden rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#3498DB] transition-all duration-300 hover:shadow-xl hover:shadow-[#3498DB]/20">
                 {/* Thumbnail */}
                 <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
                   <img

@@ -387,25 +387,5 @@ export const channels: Channel[] = [
       }
     ]
   },
-  {
-    id: '17',
-    name: 'DAZN IT',
-    description: 'Sports en streaming Italie - Football, boxe et événements majeurs',
-    thumbnail: '/images/channels/DAZN.jpg',
-    url: 'https://ar.kora-plus.top/frame.php?ch=daznit_1&p=12&token=ca053014-8310-4f36-9643-591d3f09b27b&kt=1762113478',
-    category: 'Sports',
-    isLive: true,
-    useIframe: true,
-    quality: 'HD',
-    isPopular: true,
-    viewCount: 18900,
-    sources: [
-      {
-        name: 'Source 1',
-        url: 'https://ar.kora-plus.top/frame.php?ch=daznit_1&p=12&token=ca053014-8310-4f36-9643-591d3f09b27b&kt=1762113478',
-        provider: 'KoraPlus'
-      }
-    ]
-  },
 ];
 

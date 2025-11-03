@@ -217,12 +217,18 @@ html, body {
   }
   body {
     @apply bg-background text-foreground font-sans;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
   button {
     font-family: var(--font-montserrat), sans-serif;
+  }
+  a, button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 

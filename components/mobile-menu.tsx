@@ -57,20 +57,20 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
         />
       )}
 
-      {/* Menu Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-80 bg-background border-l border-border z-50 transform transition-transform duration-300 lg:hidden ${
+      {/* Menu Sidebar - Glass morphism */}
+      <div className={`fixed top-0 right-0 h-full w-80 bg-white/5 backdrop-blur-2xl border-l border-white/10 shadow-2xl shadow-black/20 z-50 transform transition-transform duration-300 lg:hidden ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="p-6 border-b border-border">
+          <div className="p-6 border-b border-white/10">
             <div className="flex items-center justify-between mb-4">
               <img src="/logo.png" alt="ORYZ STREAM" className="h-8 w-auto" />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
-                className="text-foreground hover:bg-muted"
+                className="text-white hover:bg-white/10"
               >
                 <X className="h-6 w-6" />
               </Button>
@@ -97,10 +97,10 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-label font-semibold text-foreground truncate">
+                  <p className="text-sm font-label font-semibold text-white truncate">
                     {userProfile?.username || user.email?.split('@')[0]}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-white/60">
                     Connecté
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
             <div className="space-y-6">
               {/* Catégories */}
               <div>
-                <h3 className="text-sm font-label font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-label font-semibold text-white/60 uppercase tracking-wider mb-4">
                   Navigation
                 </h3>
                 <div className="space-y-2">
@@ -122,7 +122,7 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
                       key={category.name}
                       href={category.href}
                       onClick={() => setIsOpen(false)}
-                      className="block px-4 py-3 rounded-lg text-foreground hover:bg-[#3498DB] hover:text-white transition-colors font-display font-bold text-lg uppercase"
+                      className="block px-4 py-3 rounded-lg text-white hover:bg-[#3498DB]/20 hover:text-[#3498DB] transition-colors font-display font-bold text-lg uppercase"
                     >
                       {category.name}
                     </Link>
@@ -132,21 +132,21 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
 
               {/* Liens supplémentaires */}
               <div>
-                <h3 className="text-sm font-label font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                <h3 className="text-sm font-label font-semibold text-white/60 uppercase tracking-wider mb-4">
                   Autres
                 </h3>
                 <div className="space-y-2">
                   <Link
                     href="/channels"
                     onClick={() => setIsOpen(false)}
-                    className="block px-4 py-3 rounded-lg text-foreground hover:bg-[#3498DB] hover:text-white transition-colors font-label font-medium"
+                    className="block px-4 py-3 rounded-lg text-white hover:bg-[#3498DB]/20 hover:text-[#3498DB] transition-colors font-label font-medium"
                   >
                     Toutes les chaînes
                   </Link>
                   <Link
                     href="/favorites"
                     onClick={() => setIsOpen(false)}
-                    className="block px-4 py-3 rounded-lg text-foreground hover:bg-[#3498DB] hover:text-white transition-colors font-label font-medium"
+                    className="block px-4 py-3 rounded-lg text-white hover:bg-[#3498DB]/20 hover:text-[#3498DB] transition-colors font-label font-medium"
                   >
                     ❤️ Favoris
                   </Link>
@@ -156,7 +156,7 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
           </nav>
 
           {/* Footer avec boutons auth */}
-          <div className="p-6 border-t border-border">
+          <div className="p-6 border-t border-white/10">
             {user ? (
               /* Utilisateur connecté */
               <div className="space-y-3">
