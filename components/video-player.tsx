@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import { logger } from '@/lib/logger';
+import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import 'video.js/dist/video-js.css';
 import '@videojs/themes/dist/sea/index.css';
 import { AlertCircle } from 'lucide-react';
@@ -20,6 +21,9 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
   const [error, setError] = useState<string | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>(src);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Activer le bloqueur de pop-ups pendant la lecture
+  usePopupBlocker(true);
 
   // Fetch the actual stream URL if channelId is provided
   useEffect(() => {

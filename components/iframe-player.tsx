@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 
 interface IframePlayerProps {
   src: string;
@@ -11,6 +12,9 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  
+  // Activer le bloqueur de pop-ups pendant la lecture
+  usePopupBlocker(true);
 
   // Détecter et traiter différents types d'URLs
   let proxyUrl = src;
@@ -94,7 +98,12 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             allowFullScreen
             style={{ border: 'none' }}
             referrerPolicy="no-referrer-when-downgrade"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
             onLoad={() => {
+              setLoading(false);
+            }}
+            onError={() => {
+              setError(true);
               setLoading(false);
             }}
           />

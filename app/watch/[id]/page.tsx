@@ -12,6 +12,7 @@ import { addToWatchHistory } from '@/lib/watch-history';
 import { ShareButton } from '@/components/share-button';
 import { LikeButton } from '@/components/like-button';
 import { useSourceDetection } from '@/hooks/use-source-detection';
+import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +51,9 @@ export default function WatchPage({ params }: WatchPageProps) {
       addToWatchHistory(id);
     }
   }, [id]);
+
+  // Activer le bloqueur de pop-ups sur toute la page de visionnage
+  usePopupBlocker(true);
 
   // Préparer les URLs pour la détection (doit être appelé AVANT tous les returns conditionnels)
   const content = id ? getContentById(id) : null;
