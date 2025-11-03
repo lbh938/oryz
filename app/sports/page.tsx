@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch } from '@/lib/sports-schedule';
+import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration } from '@/lib/sports-schedule';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, ExternalLink, Play, ChevronDown } from 'lucide-react';
@@ -33,7 +33,54 @@ export default function SportsPage() {
     return DAYS[today.getDay()] as DayType;
   });
 
-  const matches = getMatchesByDay(selectedDay);
+  const allMatches = getMatchesByDay(selectedDay);
+  
+  // Filtrer les matchs terminés
+  const now = new Date();
+  const currentDayIndex = now.getDay();
+  const selectedDayIndex = DAYS.indexOf(selectedDay);
+  const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+  const [currentHour, currentMin] = currentTime.split(':').map(Number);
+  const currentMinutes = currentHour * 60 + currentMin;
+  
+  const matches = allMatches.filter(match => {
+    const matchTime = match.time;
+    const [matchHour, matchMin] = matchTime.split(':').map(Number);
+    const matchMinutes = matchHour * 60 + matchMin;
+    const maxDuration = getMatchMaxDuration(match.name);
+    
+    // Si c'est aujourd'hui, vérifier si le match est terminé
+    if (selectedDayIndex === currentDayIndex) {
+      const diff = currentMinutes - matchMinutes;
+      // Le match est terminé s'il a dépassé sa durée maximale
+      if (diff < 0) return true; // Match à venir, on l'affiche
+      if (diff > maxDuration) return false; // Match terminé, on le cache
+      return true; // Match en cours ou à venir
+    }
+    
+    // Si c'est un jour futur, afficher tous les matchs
+    if (selectedDayIndex > currentDayIndex || (selectedDayIndex === 0 && currentDayIndex === 6)) {
+      return true;
+    }
+    
+    // Si c'est un jour passé, vérifier si les matchs sont terminés
+    // Pour un jour passé, on calcule le temps écoulé
+    let diff: number;
+    if (selectedDayIndex < currentDayIndex) {
+      // Jour passé récent (hier par exemple)
+      const daysDiff = currentDayIndex - selectedDayIndex;
+      diff = (daysDiff * 24 * 60) + currentMinutes - matchMinutes;
+    } else {
+      // Dimanche passé (selectedDayIndex = 0, currentDayIndex pourrait être 1-6)
+      const daysDiff = 7 - currentDayIndex + selectedDayIndex;
+      diff = (daysDiff * 24 * 60) + currentMinutes - matchMinutes;
+    }
+    
+    // Si le match a dépassé sa durée maximale, on le cache
+    if (diff > maxDuration) return false;
+    return true;
+  });
+  
   const groupedMatches = groupMatchesByTimeAndName(matches);
 
   // Créer un ID unique pour chaque match (basé sur le nom)
@@ -96,7 +143,7 @@ export default function SportsPage() {
                 return (
                   <Card
                     key={`${match.name}-${index}`}
-                    className="overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/20 transition-all duration-300 border-[#333333] bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] group relative h-full flex flex-col"
+                    className="overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 border-white/10 bg-white/5 backdrop-blur-xl group relative h-full flex flex-col"
                   >
                     <div className="p-4 sm:p-6 relative flex flex-col flex-1">
                       {/* Badge LIVE en haut à droite */}

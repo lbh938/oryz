@@ -10,8 +10,8 @@ interface ChannelCardProps {
 export function ChannelCard({ channel }: ChannelCardProps) {
   return (
     <Link href={`/watch/${channel.id}`} className="block">
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group">
-        <div className="relative aspect-video bg-gray-900 overflow-hidden">
+      <Card className="overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 cursor-pointer border-white/10 bg-white/5 backdrop-blur-xl group">
+        <div className="relative aspect-video bg-gradient-to-br from-black/20 to-black/40 overflow-hidden rounded-t-2xl">
           <img
             src={channel.thumbnail}
             alt={channel.name}

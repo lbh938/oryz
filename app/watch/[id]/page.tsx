@@ -68,7 +68,7 @@ export default function WatchPage({ params }: WatchPageProps) {
   if (sportUrl) {
     return (
       <div className="min-h-screen bg-background">
-        <nav className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur-xl border-b border-border">
+        <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
           <div className="container max-w-7xl mx-auto px-4 sm:px-6">
             <div className="flex justify-between items-center h-14 sm:h-16">
               <div className="flex items-center gap-4">
@@ -90,9 +90,9 @@ export default function WatchPage({ params }: WatchPageProps) {
 
         <div className="pt-16 sm:pt-20 pb-8 sm:pb-12">
           <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-            {sportMatchName && (
+                  {sportMatchName && (
               <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent mb-2">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent mb-2">
                   {sportMatchName}
                 </h1>
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold w-fit">
@@ -102,7 +102,7 @@ export default function WatchPage({ params }: WatchPageProps) {
               </div>
             )}
 
-            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/50">
+            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
               <IframePlayer src={sportUrl} />
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function WatchPage({ params }: WatchPageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation - ORYZ Style */}
-      <nav className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur-xl border-b border-border">
+      <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-4">
@@ -171,16 +171,16 @@ export default function WatchPage({ params }: WatchPageProps) {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="outline" 
-                      className="min-w-[200px] sm:min-w-[250px] justify-between bg-card border-border hover:border-[#3498DB] hover:bg-[#3498DB]/10"
+                      className="min-w-[200px] sm:min-w-[250px] justify-between bg-[#1a1a1a] border-[#333333] hover:border-[#3498DB]/50 hover:bg-[#3498DB]/10"
                     >
-                      <span className="truncate text-sm font-medium">
+                      <span className="truncate text-sm font-label">
                         {content.sources[selectedSource]?.name || 'Sélectionner un épisode'}
                       </span>
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
-                    className="w-[200px] sm:w-[250px] max-h-[400px] overflow-y-auto scrollbar-thin"
+                    className="w-[200px] sm:w-[250px] max-h-[400px] overflow-y-auto scrollbar-thin bg-[#1a1a1a] border-[#333333]"
                     align="center"
                   >
                     {content.sources.map((source, index) => (
@@ -199,26 +199,26 @@ export default function WatchPage({ params }: WatchPageProps) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-              <div className="inline-flex items-center gap-1 p-1 rounded-full bg-card border border-border">
-                {content.sources?.map((source, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedSource(index)}
-                    className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                      selectedSource === index
-                        ? 'bg-gradient-to-r from-[#0F4C81] to-[#3498DB] text-white shadow-lg'
-                        : 'text-muted-foreground hover:text-[#3498DB]'
-                    }`}
-                  >
-                    {source.name}
-                  </button>
-                ))}
-              </div>
+                <div className="inline-flex items-center gap-1 p-1 rounded-full bg-[#1a1a1a] border border-[#333333]">
+                  {content.sources?.map((source, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedSource(index)}
+                      className={`px-2.5 py-1.5 rounded-full text-xs font-label transition-all whitespace-nowrap ${
+                        selectedSource === index
+                          ? 'bg-gradient-to-r from-[#0F4C81] to-[#3498DB] text-white shadow-lg'
+                          : 'text-white/70 hover:text-[#3498DB]'
+                      }`}
+                    >
+                      {source.name}
+                    </button>
+                  ))}
+                </div>
               )}
               <Button
                 variant="outline"
                 size="icon"
-                className="rounded-full border-border hover:border-[#3498DB] hover:bg-[#3498DB]/10 hover:text-[#3498DB] h-8 w-8"
+                  className="rounded-full border-[#333333] bg-[#1a1a1a] hover:border-[#3498DB]/50 hover:bg-[#3498DB]/10 hover:text-[#3498DB] h-8 w-8"
                 onClick={() => window.location.reload()}
                 title="Recharger le lecteur"
               >
@@ -229,7 +229,7 @@ export default function WatchPage({ params }: WatchPageProps) {
 
           {/* Player */}
           <div className="mb-8">
-            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-border/50 relative">
+            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 relative">
               {/* Badge indicateur de qualité (HLS) */}
               {!sourceDetection.isLoading && useHLS && (
                 <div className="absolute top-3 right-3 z-10">
@@ -265,23 +265,23 @@ export default function WatchPage({ params }: WatchPageProps) {
             {/* Title & Badges */}
             <div className="flex flex-col gap-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent">
                   {content.name}
                 </h1>
                 <div className="flex items-center gap-2 flex-wrap">
                   {content.isLive && (
-                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold">
+                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-label font-bold">
                       <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                       LIVE
                     </span>
                   )}
                   {content.isNew && (
-                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-bold">
+                    <span className="px-3 py-1 rounded-full bg-green-600 text-white text-xs font-label font-bold">
                       NOUVEAU
                     </span>
                   )}
                   {content.isPopular && (
-                    <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-bold border border-white/20">
+                    <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-label font-bold border border-white/20">
                       POPULAIRE
                     </span>
                   )}
@@ -290,45 +290,45 @@ export default function WatchPage({ params }: WatchPageProps) {
 
               {/* Meta Info - Year, Duration, Rating - Sans icônes */}
               {(content.year || content.duration || content.rating) && (
-                <div className="flex items-center gap-4 sm:gap-6 flex-wrap text-sm text-white/70">
+                <div className="flex items-center gap-4 sm:gap-6 flex-wrap text-sm text-white/70 font-sans">
                   {content.year && (
-                    <span className="font-medium">{content.year}</span>
+                    <span className="font-sans font-medium">{content.year}</span>
                   )}
                   {content.duration && (
-                    <span className="font-medium">{content.duration}</span>
+                    <span className="font-sans font-medium">{content.duration}</span>
                   )}
                   {content.rating && (
-                    <span className="font-medium">{content.rating.toFixed(1)}/10</span>
+                    <span className="font-sans font-medium">{content.rating.toFixed(1)}/10</span>
                   )}
                   {hasMultipleSources && (
-                    <span className="font-medium">{content.sources?.length} {content.sources?.length === 1 ? 'source' : 'sources'}</span>
+                    <span className="font-sans font-medium">{content.sources?.length} {content.sources?.length === 1 ? 'source' : 'sources'}</span>
                   )}
                 </div>
               )}
 
-              {/* Genres */}
-              {content.genre && content.genre.length > 0 && (
+            {/* Genres */}
+            {content.genre && content.genre.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-white/50 font-sans font-medium">Genres:</span>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs text-white/50 font-medium">Genres:</span>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {content.genre.map((genre, index) => (
-                      <span
-                        key={index}
-                        className="px-2.5 py-1 rounded-md bg-[#3498DB]/20 text-[#3498DB] text-xs font-medium border border-[#3498DB]/30"
-                      >
-                        {genre}
+                  {content.genre.map((genre, index) => (
+                    <span
+                      key={index}
+                      className="px-2.5 py-1 rounded-md bg-[#3498DB]/20 backdrop-blur-xl text-[#3498DB] text-xs font-label font-medium border border-[#3498DB]/30"
+                    >
+                      {genre}
                   </span>
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
             </div>
 
             {/* Description */}
             {content.description && (
               <div className="space-y-2">
-                <h2 className="text-lg sm:text-xl font-bold text-white">Synopsis</h2>
-                <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-3xl">
+                <h2 className="text-lg sm:text-xl font-display font-bold text-white">Synopsis</h2>
+                <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-3xl font-sans">
                   {content.description}
                 </p>
               </div>
@@ -337,8 +337,8 @@ export default function WatchPage({ params }: WatchPageProps) {
             {/* Category */}
             {content.category && (
               <div className="flex items-center gap-2">
-                <span className="text-xs text-white/50 font-medium">Catégorie:</span>
-                <span className="px-2.5 py-1 rounded-md bg-[#0F4C81]/30 text-[#3498DB] text-xs font-medium">
+                <span className="text-xs text-white/50 font-sans font-medium">Catégorie:</span>
+                <span className="px-2.5 py-1 rounded-md bg-[#0F4C81]/30 backdrop-blur-xl text-[#3498DB] text-xs font-label font-medium border border-[#3498DB]/20">
                   {content.category}
                 </span>
             </div>

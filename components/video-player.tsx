@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
+import { logger } from '@/lib/logger';
 import 'video.js/dist/video-js.css';
 import '@videojs/themes/dist/sea/index.css';
 import { AlertCircle } from 'lucide-react';
@@ -30,10 +31,7 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
           const response = await fetch(`/api/stream/${channelId}`);
           const data = await response.json();
           
-          console.log('API Response:', data);
-          
           if (data.success && data.streamUrl) {
-            console.log('Stream URL found:', data.streamUrl);
             setStreamUrl(data.streamUrl);
           } else {
             setError(
@@ -64,12 +62,14 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
 
       const player = videojs(videoElement, {
         ...options,
-        autoplay: true,
+        autoplay: 'muted', // Commencer muet pour contourner les restrictions navigateur
+        muted: true, // Commencer muet
         controls: true,
         fluid: true,
         responsive: true,
         preload: 'auto',
         liveui: true,
+        playsinline: true, // Important pour mobile
         html5: {
           vhs: {
             overrideNative: true,
@@ -106,9 +106,57 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
         setError(null);
       });
 
-      // Optional: You can also listen to player events
+      // Démuter automatiquement après le premier play (meilleure stratégie)
+      let hasUnmuted = false;
+      
+      // Méthode 1: Démuter au premier clic utilisateur sur le lecteur (plus fiable)
+      const unmuteOnInteraction = () => {
+        if (!hasUnmuted && player.muted()) {
+          try {
+            player.muted(false);
+            hasUnmuted = true;
+            logger.debug('Video unmuted on user interaction');
+          } catch (e) {
+            logger.debug('Could not unmute on interaction');
+          }
+        }
+      };
+
+      // Écouter les interactions utilisateur
+      player.on('click', unmuteOnInteraction);
+      player.on('useractive', unmuteOnInteraction);
       player.on('play', () => {
-        console.log('Video is playing');
+        logger.debug('Video is playing');
+        // Démuter automatiquement après la lecture commence
+        if (!hasUnmuted && player.muted()) {
+          setTimeout(() => {
+            try {
+              player.muted(false);
+              hasUnmuted = true;
+              logger.debug('Video automatically unmuted');
+            } catch (e) {
+              logger.debug('Could not unmute automatically');
+            }
+          }, 1000);
+        }
+      });
+
+      // Méthode 2: Essayer de démuter quand la vidéo est prête (fallback)
+      player.ready(() => {
+        // Attendre que la vidéo soit vraiment prête
+        player.one('canplay', () => {
+          setTimeout(() => {
+            if (player.muted() && !hasUnmuted) {
+              try {
+                player.muted(false);
+                hasUnmuted = true;
+                logger.debug('Video unmuted on ready');
+              } catch (e) {
+                logger.debug('Could not unmute on ready');
+              }
+            }
+          }, 1500);
+        });
       });
     }
 

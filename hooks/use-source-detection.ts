@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export type SourceType = 'hls' | 'iframe' | 'unknown';
 
@@ -52,8 +53,6 @@ export function useSourceDetection(originalUrl: string): SourceDetection {
         originalUrl.includes('supervideo.cc') ||
         originalUrl.includes('supervideo.my')
       ) {
-        console.log('🔍 Détection Supervideo, utilisation Omega player (bloque les pop-ups)...');
-        
         // Utiliser Omega player via API movix pour Supervideo
         // Omega est un lecteur qui bloque naturellement les pop-ups automatiquement
         // Format : https://api.movix.club/api/omega?url=ENCODED_URL
@@ -65,7 +64,6 @@ export function useSourceDetection(originalUrl: string): SourceDetection {
           isLoading: false,
           error: null,
         });
-        console.log('✅ Utilisation Omega player pour Supervideo (bloque les pop-ups):', omegaUrl);
         return;
       }
 

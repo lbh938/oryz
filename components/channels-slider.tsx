@@ -148,13 +148,13 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles" }: Cha
                 href={`/watch/${channel.id}`}
                 className="block h-full"
               >
-                <div className="group/card relative overflow-hidden rounded-xl bg-[#333333] border border-[#333333] hover:border-[#3498DB] transition-all duration-300 hover:shadow-xl hover:shadow-[#3498DB]/20 h-full flex flex-col">
-                  {/* Thumbnail - Plus grande */}
-                  <div className="relative flex-1 overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+                <div className="group/card relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
+                  {/* Thumbnail */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-black/20 to-black/40 rounded-t-2xl flex-shrink-0">
                     <img
                       src={channel.thumbnail}
                       alt={channel.name}
-                      className={`w-full h-full ${channel.name.includes('RMC') ? 'object-contain' : 'object-cover'} group-hover/card:scale-110 transition-transform duration-700`}
+                      className={`w-full h-full ${channel.name.includes('RMC') ? 'object-contain' : 'object-cover'} group-hover/card:scale-110 transition-transform duration-500`}
                     />
                     
                     {/* Bouton Favori */}
@@ -164,28 +164,29 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles" }: Cha
                       size="sm"
                     />
                     
-                    {/* LIVE Badge */}
-                    {channel.isLive && (
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-600 text-white text-xs font-label font-bold shadow-lg">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                        LIVE
-                      </div>
-                    )}
+                    {/* Badges */}
+                    <div className="absolute top-2 left-2 right-2 flex items-start justify-between z-10">
+                      {channel.isLive && (
+                        <div className="flex items-center gap-1.5 bg-red-600 text-white px-2 py-1 rounded-md text-xs font-label font-bold">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                          LIVE
+                        </div>
+                      )}
+                    </div>
                     
                     {/* Badges (Nouveau, Populaire, HD) */}
-                    <div className="absolute bottom-2 left-2 right-2">
+                    <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between z-10">
                       <ChannelBadges channel={channel} variant="compact" />
                     </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-3 sm:p-3 md:p-4">
-                    <h3 className="font-display font-bold text-xs sm:text-sm text-white uppercase relative inline-block">
+                  <div className="p-3 sm:p-4 flex flex-col flex-1">
+                    <h3 className="font-display font-bold text-white text-sm sm:text-base line-clamp-2 group-hover/card:text-[#3498DB] transition-colors mb-2">
                       {channel.name}
-                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#3498DB] transition-all duration-300 group-hover/card:w-full"></span>
                     </h3>
                     {channel.viewCount && (
-                      <p className="text-xs text-muted-foreground font-sans mt-1">
+                      <p className="text-xs text-white/60 font-sans mt-auto">
                         {channel.viewCount.toLocaleString()} vues
                       </p>
                     )}

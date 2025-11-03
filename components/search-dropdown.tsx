@@ -71,7 +71,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                 setIsOpen(true);
               }
             }}
-            className="w-full pl-7 sm:pl-12 h-8 sm:h-12 text-xs sm:text-base rounded-lg bg-muted border-border placeholder:text-muted-foreground focus:border-[#3498DB] focus:ring-[#3498DB] font-label"
+            className="w-full pl-7 sm:pl-12 h-8 sm:h-12 text-xs sm:text-base rounded-lg bg-[#1a1a1a] border border-[#333333] placeholder:text-white/50 focus:border-[#3498DB]/50 focus:ring-[#3498DB]/30 font-label"
           />
         </div>
       </form>
@@ -86,10 +86,10 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
                 key={item.id}
                 href={`/watch/${item.id}`}
                 onClick={handleResultClick}
-                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-[#3498DB]/10 transition-colors group"
+                className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg hover:bg-[#3498DB]/20 transition-colors group"
               >
                 {/* Image */}
-                <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-md overflow-hidden bg-[#333333]">
+                <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-md overflow-hidden bg-[#1a1a1a] border border-[#333333]">
                   {item.thumbnail ? (
                     <Image
                       src={item.thumbnail}

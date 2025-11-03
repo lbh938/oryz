@@ -83,7 +83,7 @@ export function LiveMatches() {
           return (
             <Card
               key={`${match.name}-${index}`}
-              className="overflow-hidden hover:shadow-2xl hover:shadow-red-500/20 transition-all duration-300 border-[#333333] bg-gradient-to-br from-[#1a1a1a] to-[#0f0f0f] group relative h-full flex flex-col"
+              className="overflow-hidden hover:shadow-2xl hover:shadow-red-500/30 hover:border-white/20 transition-all duration-300 border-white/10 bg-white/5 backdrop-blur-xl group relative h-full flex flex-col"
             >
               {/* Badge LIVE */}
               <div className="absolute top-3 right-3 z-10">

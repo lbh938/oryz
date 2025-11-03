@@ -97,38 +97,36 @@ export function RecommendedChannels() {
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-[#333333] rounded-xl aspect-video mb-2"></div>
-              <div className="h-3 bg-[#333333] rounded w-3/4"></div>
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden h-full flex flex-col">
+                <div className="aspect-[3/4] bg-gradient-to-br from-black/20 to-black/40 rounded-t-2xl"></div>
+                <div className="p-3 sm:p-4 flex flex-col flex-1">
+                  <div className="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-white/5 rounded w-1/2 mt-auto"></div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
       ) : (
         /* Channels Grid */
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
           {recommendations.map((channel) => (
             <Link 
               key={channel.id}
               href={`/watch/${channel.id}`}
-              className="group block"
+              className="block group"
             >
-              <div className="relative overflow-hidden rounded-xl bg-[#333333] border border-[#333333] hover:border-[#3498DB] transition-all duration-300 hover:shadow-xl hover:shadow-[#3498DB]/20">
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
                 {/* Thumbnail */}
-                <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+                <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-black/20 to-black/40 rounded-t-2xl flex-shrink-0">
                   <img
                     src={channel.thumbnail}
                     alt={channel.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  
-                  {/* Badge "Recommandé" */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                    <div className="flex items-center gap-1 text-[#3498DB] text-xs">
-                      <span className="font-label font-bold">Pour vous</span>
-                    </div>
-                  </div>
                   
                   {/* Bouton Favori */}
                   <FavoriteButton 
@@ -137,21 +135,34 @@ export function RecommendedChannels() {
                     size="sm"
                   />
                   
-                  {/* LIVE Badge */}
-                  {channel.isLive && (
-                    <div className="absolute top-2 left-2 flex items-center gap-1 px-2 py-1 rounded-full bg-red-600 text-white text-xs font-label font-bold shadow-lg">
-                      <span className="w-1 h-1 bg-white rounded-full animate-pulse" />
-                      LIVE
+                  {/* Badges */}
+                  <div className="absolute top-2 left-2 right-2 flex items-start justify-between z-10">
+                    {channel.isLive && (
+                      <div className="flex items-center gap-1.5 bg-red-600 text-white px-2 py-1 rounded-md text-xs font-label font-bold">
+                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                        LIVE
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Badges bas */}
+                  <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between z-10">
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#3498DB]/80 backdrop-blur-sm text-white text-xs font-label font-bold">
+                      Pour vous
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-2 sm:p-3">
-                  <h3 className="font-display font-bold text-xs sm:text-sm text-white uppercase line-clamp-1 relative inline-block">
+                <div className="p-3 sm:p-4 flex flex-col flex-1">
+                  <h3 className="font-display font-bold text-white text-sm sm:text-base line-clamp-2 group-hover:text-[#3498DB] transition-colors mb-2">
                     {channel.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#3498DB] transition-all duration-300 group-hover:w-full"></span>
                   </h3>
+                  {channel.viewCount && (
+                    <p className="text-xs text-white/60 font-sans mt-auto">
+                      {channel.viewCount.toLocaleString()} vues
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>

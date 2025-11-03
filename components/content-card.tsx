@@ -12,8 +12,8 @@ interface ContentCardProps {
 export function ContentCard({ content }: ContentCardProps) {
   return (
     <Link href={`/watch/${content.id}`} className="block group">
-      <Card className="overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/20 transition-all duration-300 cursor-pointer border-[#333333] bg-[#1a1a1a]">
-        <div className="relative aspect-[3/4] bg-[#0a0a0a] overflow-hidden">
+      <Card className="overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 cursor-pointer border-white/10 bg-white/5 backdrop-blur-xl h-full flex flex-col">
+        <div className="relative aspect-[3/4] bg-gradient-to-br from-black/20 to-black/40 overflow-hidden rounded-t-2xl flex-shrink-0">
           <Image
             src={content.thumbnail}
             alt={content.name}
@@ -58,13 +58,13 @@ export function ContentCard({ content }: ContentCardProps) {
           </div>
         </div>
 
-        <div className="p-3">
-          <h3 className="font-display font-bold text-white text-sm sm:text-base line-clamp-1 group-hover:text-[#3498DB] transition-colors mb-1">
+        <div className="p-3 sm:p-4 flex flex-col flex-1">
+          <h3 className="font-display font-bold text-white text-sm sm:text-base line-clamp-2 group-hover:text-[#3498DB] transition-colors mb-2">
             {content.name}
           </h3>
           
           {/* Info supplémentaire */}
-          <div className="flex items-center gap-2 text-xs text-white/60 font-sans mb-1">
+          <div className="flex items-center gap-2 text-xs text-white/60 font-sans mb-2">
             {content.year && <span>{content.year}</span>}
             {content.duration && (
               <>
@@ -83,19 +83,18 @@ export function ContentCard({ content }: ContentCardProps) {
             )}
           </div>
 
-          {/* Genre */}
-          {content.genre && content.genre.length > 0 && (
-            <p className="text-xs text-white/40 font-sans line-clamp-1">
-              {content.genre.slice(0, 2).join(', ')}
-            </p>
-          )}
-
-          {/* Description courte */}
-          {!content.genre && (
-            <p className="text-xs text-white/40 font-sans line-clamp-2">
-              {content.description}
-            </p>
-          )}
+          {/* Genre ou Description */}
+          <div className="flex-1 min-h-0">
+            {content.genre && content.genre.length > 0 ? (
+              <p className="text-xs text-white/50 font-sans line-clamp-1">
+                {content.genre.slice(0, 2).join(', ')}
+              </p>
+            ) : (
+              <p className="text-xs text-white/50 font-sans line-clamp-2">
+                {content.description}
+              </p>
+            )}
+          </div>
         </div>
       </Card>
     </Link>

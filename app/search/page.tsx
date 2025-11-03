@@ -214,7 +214,7 @@ function SearchResults() {
       )}
 
       {paginatedResults.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6">
           {paginatedResults.map((item) => (
             <ContentCard key={item.id} content={item} />
           ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { logger } from '@/lib/logger';
 
 export function SWRegister() {
   const [error, setError] = useState<string | null>(null);
@@ -24,11 +25,7 @@ export function SWRegister() {
         const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
                       (window.navigator as any).standalone === true;
         
-        if (isPWA) {
-          console.log('📱 Mode PWA détecté');
-        } else {
-          console.log('🌐 Mode navigateur détecté');
-        }
+        logger.debug('Mode', isPWA ? 'PWA' : 'navigateur');
       }
 
       if (!('serviceWorker' in navigator)) {
@@ -38,42 +35,27 @@ export function SWRegister() {
       }
 
       try {
-        console.log('🔄 Enregistrement du Service Worker...');
-        
         // Enregistrer le service worker
         const registration = await navigator.serviceWorker.register('/sw.js', { 
           scope: '/',
           updateViaCache: 'none'
         });
-
-        console.log('✅ Service Worker enregistré:', registration.scope);
         
         // Forcer la mise à jour
         await registration.update();
         
         // Écouter les mises à jour
         registration.addEventListener('updatefound', () => {
-          console.log('🔄 Mise à jour du Service Worker détectée');
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'activated') {
-                console.log('✅ Nouvelle version activée');
                 // Recharger pour utiliser la nouvelle version
                 window.location.reload();
               }
             });
           }
         });
-
-        // Vérifier l'état actuel
-        if (registration.active) {
-          console.log('✅ Service Worker actif et opérationnel');
-        } else if (registration.installing) {
-          console.log('⏳ Service Worker en cours d\'installation...');
-        } else if (registration.waiting) {
-          console.log('⏸️ Service Worker en attente d\'activation');
-        }
 
       } catch (error: any) {
         console.error('❌ Erreur SW:', error);
@@ -89,7 +71,7 @@ export function SWRegister() {
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistration('/').then((reg) => {
           if (!reg) {
-            console.warn('⚠️ Service Worker perdu, réenregistrement...');
+            logger.warn('⚠️ Service Worker perdu, réenregistrement...');
             registerSW();
           }
         });

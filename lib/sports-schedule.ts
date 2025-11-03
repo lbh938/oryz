@@ -1176,30 +1176,89 @@ export function getUpcomingMatches(): SportMatch[] {
 }
 
 /**
+ * Détermine la durée maximale d'un match en minutes selon son type
+ * Foot normal : 90 min + arrêts de jeu = 100 minutes
+ * Ligue des Champions : 90 min + prolongations + tirs au but = 150 minutes
+ */
+export function getMatchMaxDuration(matchName: string): number {
+  const nameLower = matchName.toLowerCase();
+  
+  // Détecter les matchs de Ligue des Champions
+  if (
+    nameLower.includes('champions league') ||
+    nameLower.includes('ligue des champions') ||
+    nameLower.includes('uefa champions') ||
+    nameLower.includes('champions league')
+  ) {
+    return 150; // 90 min + prolongations possibles (30 min) + tirs au but (5 min) = 150 min
+  }
+  
+  // Pour les autres matchs de foot, 100 minutes suffit
+  // (90 minutes + arrêts de jeu max 10 minutes)
+  return 100;
+}
+
+/**
  * Obtenir les matches en cours maintenant
  */
 export function getLiveMatches(): SportMatch[] {
   const now = new Date();
-  const currentDay = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][now.getDay()];
+  const dayOrder = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+  const currentDayIndex = now.getDay();
+  const currentDay = dayOrder[currentDayIndex];
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   
-  const todayMatches = getMatchesByDay(currentDay);
+  const [currentHour, currentMin] = currentTime.split(':').map(Number);
+  const currentMinutes = currentHour * 60 + currentMin;
   
-  // Filtrer les matches qui ont commencé et qui sont probablement encore en cours
-  // Un match est considéré comme "en direct" s'il a commencé dans les 2 dernières heures
-  return todayMatches.filter(match => {
+  const liveMatches: SportMatch[] = [];
+  
+  // Vérifier les matches d'aujourd'hui
+  const todayMatches = getMatchesByDay(currentDay);
+  todayMatches.forEach(match => {
     const matchTime = match.time;
     const [matchHour, matchMin] = matchTime.split(':').map(Number);
-    const [currentHour, currentMin] = currentTime.split(':').map(Number);
-    
     const matchMinutes = matchHour * 60 + matchMin;
-    const currentMinutes = currentHour * 60 + currentMin;
+    
+    // Calculer la durée maximale pour ce match
+    const maxDuration = getMatchMaxDuration(match.name);
     
     // Match en cours si l'heure actuelle est >= heure du match
-    // et si le match n'a pas commencé il y a plus de 3 heures (durée max d'un match)
+    // et si le match n'est pas terminé (n'a pas dépassé sa durée maximale)
     const diff = currentMinutes - matchMinutes;
-    return diff >= 0 && diff <= 180; // 3 heures max
+    if (diff >= 0 && diff <= maxDuration) {
+      liveMatches.push(match);
+    }
   });
+  
+  // Vérifier aussi les matches d'hier qui ont commencé tard et pourraient encore être en cours
+  // (par exemple un match qui a commencé hier à 23:00 et continue après minuit)
+  const previousDayIndex = (currentDayIndex - 1 + 7) % 7;
+  const previousDay = dayOrder[previousDayIndex];
+  const yesterdayMatches = getMatchesByDay(previousDay);
+  
+  yesterdayMatches.forEach(match => {
+    const matchTime = match.time;
+    const [matchHour, matchMin] = matchTime.split(':').map(Number);
+    const matchMinutes = matchHour * 60 + matchMin;
+    
+    // Calculer la durée maximale pour ce match
+    const maxDuration = getMatchMaxDuration(match.name);
+    
+    // Si le match d'hier a commencé après 21:00 (21h00 = 21*60 = 1260 minutes)
+    // et que l'heure actuelle est tôt le matin (avant 4h = 4*60 = 240 minutes)
+    // alors il pourrait encore être en cours
+    if (matchMinutes >= 1260 && currentMinutes <= 240) {
+      // Calculer le temps écoulé depuis le début du match
+      // Temps écoulé = (24h - heure début match) + heure actuelle
+      const elapsedMinutes = (24 * 60 - matchMinutes) + currentMinutes;
+      if (elapsedMinutes <= maxDuration) {
+        liveMatches.push(match);
+      }
+    }
+  });
+  
+  return liveMatches;
 }
 
 /**

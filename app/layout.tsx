@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { PWAInstall } from "@/components/pwa-install";
 import { SWRegister } from "@/components/sw-register";
 import { PopupBlocker } from "@/components/popup-blocker";
+import { SilenceConsole } from "@/components/silence-console";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -104,6 +105,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <SilenceConsole />
           <PopupBlocker />
           <SWRegister />
           {children}
