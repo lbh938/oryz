@@ -93,6 +93,9 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                 ? (hero.image_mobile_url || hero.image_url)
                 : (hero.image_desktop_url || hero.image_url);
               
+              // Ratio mobile depuis la base de données (défaut: 16/9 = 1.778)
+              const mobileRatio = hero.mobile_aspect_ratio || 16 / 9;
+              
               return imageUrl ? (
                 <img
                   src={imageUrl}
@@ -101,6 +104,8 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                   style={{
                     transform: 'none',
                     scale: '1',
+                    // Respecter le ratio mobile choisi dans l'admin panel
+                    aspectRatio: isMobile ? `${mobileRatio}` : undefined,
                   }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';

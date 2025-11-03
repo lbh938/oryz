@@ -14,6 +14,7 @@ export interface HeroConfig {
   image_url: string;
   image_mobile_url?: string; // Image spécifique pour mobile
   image_desktop_url?: string; // Image spécifique pour desktop
+  mobile_aspect_ratio?: number; // Ratio mobile pour le recadrage (défaut: 16/9 = 1.778)
   is_active?: boolean;
   display_order?: number;
   created_at?: string;
@@ -124,6 +125,9 @@ export async function createHero(
         cta_text: config.cta_text,
         cta_url: config.cta_url,
         image_url: config.image_url,
+        image_mobile_url: config.image_mobile_url || null,
+        image_desktop_url: config.image_desktop_url || null,
+        mobile_aspect_ratio: config.mobile_aspect_ratio || 16 / 9,
         is_active: config.is_active !== undefined ? config.is_active : true,
         display_order: config.display_order || nextOrder
       })
@@ -162,6 +166,9 @@ export async function updateHeroConfig(
           cta_text: config.cta_text,
           cta_url: config.cta_url,
           image_url: config.image_url,
+          image_mobile_url: config.image_mobile_url || null,
+          image_desktop_url: config.image_desktop_url || null,
+          mobile_aspect_ratio: config.mobile_aspect_ratio || 16 / 9,
           updated_at: new Date().toISOString()
         })
         .eq('id', heroId);
@@ -193,6 +200,9 @@ export async function updateHeroConfig(
           cta_text: config.cta_text,
           cta_url: config.cta_url,
           image_url: config.image_url,
+          image_mobile_url: config.image_mobile_url || null,
+          image_desktop_url: config.image_desktop_url || null,
+          mobile_aspect_ratio: config.mobile_aspect_ratio || 16 / 9,
           updated_at: new Date().toISOString()
         })
         .eq('id', firstHero.id);

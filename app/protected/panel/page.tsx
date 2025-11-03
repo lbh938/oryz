@@ -35,8 +35,14 @@ import { NotificationDebugPanel } from '@/components/admin/notification-debug-pa
 import {
   Save, Users, Eye, TrendingUp, Calendar,
   Loader2, Lock, AlertCircle, CheckCircle2, KeyRound, LogOut, Home, ArrowLeft,
-  Plus, Edit, Trash2, ArrowUp, ArrowDown, X
+  Plus, Edit, Trash2, ArrowUp, ArrowDown, X, ChevronDown
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -57,13 +63,13 @@ export default function AdminPage() {
   const [heroes, setHeroes] = useState<HeroConfig[]>([]);
   const [editingHero, setEditingHero] = useState<HeroConfig | null>(null);
   const [isCreatingHero, setIsCreatingHero] = useState(false);
-  const [mobileAspectRatio, setMobileAspectRatio] = useState(16 / 9); // Ratio mobile par défaut
   const [heroConfig, setHeroConfig] = useState<HeroConfig>({
     title: '',
     subtitle: '',
     cta_text: '',
     cta_url: '',
-    image_url: ''
+    image_url: '',
+    mobile_aspect_ratio: 16 / 9 // Ratio mobile par défaut
   });
 
   // Analytics State
@@ -204,7 +210,10 @@ export default function AdminPage() {
       subtitle: hero.subtitle,
       cta_text: hero.cta_text,
       cta_url: hero.cta_url,
-      image_url: hero.image_url
+      image_url: hero.image_url,
+      image_mobile_url: hero.image_mobile_url,
+      image_desktop_url: hero.image_desktop_url,
+      mobile_aspect_ratio: hero.mobile_aspect_ratio || 16 / 9 // Charger le ratio mobile depuis la base
     });
   };
 
@@ -217,7 +226,8 @@ export default function AdminPage() {
       subtitle: '',
       cta_text: '',
       cta_url: '',
-      image_url: ''
+      image_url: '',
+      mobile_aspect_ratio: 16 / 9 // Réinitialiser au ratio par défaut
     });
   };
 
@@ -229,11 +239,17 @@ export default function AdminPage() {
     try {
       let success = false;
       if (editingHero?.id) {
-        // Modifier un hero existant
-        success = await updateHeroConfig(heroConfig, editingHero.id);
+        // Modifier un hero existant - inclure le ratio mobile dans la sauvegarde
+        success = await updateHeroConfig({
+          ...heroConfig,
+          mobile_aspect_ratio: heroConfig.mobile_aspect_ratio || 16 / 9
+        }, editingHero.id);
       } else {
-        // Créer un nouveau hero
-        const result = await createHero(heroConfig);
+        // Créer un nouveau hero - inclure le ratio mobile dans la création
+        const result = await createHero({
+          ...heroConfig,
+          mobile_aspect_ratio: heroConfig.mobile_aspect_ratio || 16 / 9
+        });
         success = result.success;
       }
 
@@ -786,42 +802,97 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Ratio Mobile - Personnalisable */}
+                {/* Ratio Mobile - Sélectionnable */}
                 <div>
                   <Label htmlFor="mobile-aspect-ratio" className="text-white font-label mb-2 block">
-                    Ratio Mobile (Largeur/Hauteur)
+                    Ratio Mobile
                   </Label>
-                  <div className="flex items-center gap-3">
-                    <Input
-                      id="mobile-aspect-ratio"
-                      type="number"
-                      step="0.1"
-                      min="0.5"
-                      max="5"
-                      value={mobileAspectRatio}
-                      onChange={(e) => {
-                        const value = parseFloat(e.target.value);
-                        if (!isNaN(value) && value > 0) {
-                          setMobileAspectRatio(value);
-                        }
-                      }}
-                      className="bg-[#333333] border-[#3498DB]/30 text-white h-10 w-32"
-                      placeholder="16/9"
-                    />
-                    <span className="text-white/60 font-sans text-sm">
-                      (actuel: {mobileAspectRatio.toFixed(2)})
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setMobileAspectRatio(16 / 9)}
-                      className="border-[#3498DB]/30 text-[#3498DB] hover:bg-[#3498DB]/10 text-xs"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full sm:w-auto min-w-[200px] justify-between bg-[#333333] border-[#3498DB]/30 text-white hover:border-[#3498DB]/50 hover:bg-[#3498DB]/10"
+                      >
+                        <span className="font-label">
+                          {(() => {
+                            const ratio = heroConfig.mobile_aspect_ratio || 16 / 9;
+                            if (ratio === 16 / 9) return '16:9 (Cinéma)';
+                            if (ratio === 21 / 9) return '21:9 (Ultra large)';
+                            if (ratio === 4 / 3) return '4:3 (Classique)';
+                            if (ratio === 1) return '1:1 (Carré)';
+                            if (ratio === 9 / 16) return '9:16 (Portrait)';
+                            if (ratio === 3 / 4) return '3:4 (Portrait classique)';
+                            if (ratio === 2 / 3) return '2:3 (Portrait)';
+                            return `${ratio.toFixed(2)}:1`;
+                          })()}
+                        </span>
+                        <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent 
+                      className="w-[200px] bg-[#1a1a1a] border-[#333333]"
+                      align="start"
                     >
-                      Réinitialiser (16:9)
-                    </Button>
-                  </div>
-                  <p className="text-xs text-white/50 mt-1 font-sans">
-                    Exemples: 16:9 = 1.78, 21:9 = 2.33, 4:3 = 1.33, 1:1 = 1.00
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 16 / 9 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 16 / 9 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        16:9 (Cinéma)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 21 / 9 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 21 / 9 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        21:9 (Ultra large)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 3 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 4 / 3 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        4:3 (Classique)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 1 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 1 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        1:1 (Carré)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 9 / 16 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 9 / 16 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        9:16 (Portrait)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 3 / 4 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 3 / 4 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        3:4 (Portrait classique)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 2 / 3 })}
+                        className={`cursor-pointer ${
+                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 2 / 3 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        2:3 (Portrait)
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <p className="text-xs text-white/50 mt-2 font-sans">
+                    Sélectionnez le ratio souhaité pour le recadrage mobile
                   </p>
                 </div>
 
@@ -837,7 +908,7 @@ export default function AdminPage() {
                   onUploadCompleteDesktop={(url) => setHeroConfig({ ...heroConfig, image_desktop_url: url })}
                   maxSizeMB={10}
                   aspectRatio={21 / 9}
-                  mobileAspectRatio={mobileAspectRatio} // Ratio mobile personnalisable
+                  mobileAspectRatio={heroConfig.mobile_aspect_ratio || 16 / 9} // Ratio mobile depuis la base de données
                   allowSeparateMobileDesktop={true}
                 />
 

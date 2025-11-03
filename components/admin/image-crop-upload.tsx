@@ -64,6 +64,37 @@ export function ImageCropUpload({
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
+  // Charger une image depuis une URL pour le recadrage
+  const loadImageFromUrl = async (imageUrl: string, mode: 'mobile' | 'desktop' | 'single' = 'single') => {
+    try {
+      setError(null);
+      setSuccess(false);
+      
+      // Télécharger l'image depuis l'URL
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error('Impossible de charger l\'image');
+      }
+      
+      const blob = await response.blob();
+      
+      // Convertir le blob en dataURL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setOriginalImage(reader.result as string);
+        setCroppingMode(mode);
+        setShowCropper(true);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+      };
+      reader.readAsDataURL(blob);
+    } catch (err: any) {
+      console.error('Error loading image from URL:', err);
+      setError(err.message || 'Erreur lors du chargement de l\'image');
+    }
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -492,14 +523,24 @@ export function ImageCropUpload({
                   alt="Preview Mobile"
                   className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
                 />
-                <button
-                  type="button"
-                  onClick={handleRemoveMobile}
-                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  title="Supprimer l'image mobile"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => loadImageFromUrl(previewMobile, 'mobile')}
+                    className="p-2 bg-[#3498DB] hover:bg-[#3498DB]/90 text-white rounded-full shadow-lg"
+                    title="Recadrer l'image mobile"
+                  >
+                    <Crop className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveMobile}
+                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg"
+                    title="Supprimer l'image mobile"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ) : (
               <button
@@ -532,14 +573,24 @@ export function ImageCropUpload({
                   alt="Preview Desktop"
                   className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
                 />
-                <button
-                  type="button"
-                  onClick={handleRemoveDesktop}
-                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                  title="Supprimer l'image desktop"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={() => loadImageFromUrl(previewDesktop, 'desktop')}
+                    className="p-2 bg-[#3498DB] hover:bg-[#3498DB]/90 text-white rounded-full shadow-lg"
+                    title="Recadrer l'image desktop"
+                  >
+                    <Crop className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveDesktop}
+                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg"
+                    title="Supprimer l'image desktop"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             ) : (
               <button
@@ -566,14 +617,24 @@ export function ImageCropUpload({
             alt="Preview"
             className="w-full h-48 object-cover rounded-lg border-2 border-[#333333]"
           />
-          <button
-            type="button"
-            onClick={handleRemove}
-            className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-            title="Supprimer l'image"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => loadImageFromUrl(preview, 'single')}
+              className="p-2 bg-[#3498DB] hover:bg-[#3498DB]/90 text-white rounded-full shadow-lg"
+              title="Recadrer l'image"
+            >
+              <Crop className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg"
+              title="Supprimer l'image"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
           {success && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
               <div className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg">
