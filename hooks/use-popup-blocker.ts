@@ -167,20 +167,39 @@ function isAllowedDomain(hostname: string): boolean {
  * Affiche une notification discrète que quelque chose a été bloqué
  */
 function showBlockedNotification() {
-  // Créer une notification toast discrète
+  // Éviter les doublons - vérifier si une notification existe déjà
+  const existingNotification = document.querySelector('[data-popup-blocker-notification]');
+  if (existingNotification) {
+    return;
+  }
+
+  // Créer une notification toast discrète avec glass morphism
   const notification = document.createElement('div');
-  notification.className = 'fixed bottom-4 right-4 bg-[#3498DB]/90 backdrop-blur-xl text-white px-4 py-2 rounded-lg shadow-lg z-[100] text-sm font-label animate-in fade-in slide-in-from-bottom-2';
-  notification.textContent = '🔒 Pop-up bloquée - Vous êtes protégé';
+  notification.setAttribute('data-popup-blocker-notification', 'true');
+  notification.className = 'fixed bottom-4 right-4 bg-white/10 backdrop-blur-2xl border border-white/20 text-white px-4 py-3 rounded-xl shadow-2xl shadow-[#3498DB]/30 z-[9999] text-sm font-label flex items-center gap-2';
+  notification.innerHTML = '<span class="text-lg">🔒</span><span>Pop-up bloquée - Protection active</span>';
+  
+  // Styles pour l'animation
+  notification.style.opacity = '0';
+  notification.style.transform = 'translateY(20px)';
+  notification.style.transition = 'all 0.3s ease-out';
   
   document.body.appendChild(notification);
   
-  // Supprimer après 3 secondes
+  // Animer l'apparition
   setTimeout(() => {
-    notification.classList.add('animate-out', 'fade-out', 'slide-out-to-bottom-2');
+    notification.style.opacity = '1';
+    notification.style.transform = 'translateY(0)';
+  }, 10);
+  
+  // Supprimer après 3 secondes avec animation
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(20px)';
     setTimeout(() => {
       if (notification.parentNode) {
         notification.parentNode.removeChild(notification);
       }
-    }, 200);
+    }, 300);
   }, 3000);
 }
