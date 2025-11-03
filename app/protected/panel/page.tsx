@@ -854,7 +854,7 @@ export default function AdminPage() {
                 </Button>
               </div>
             </div>
-          </div>
+            )}
 
           {/* Top Pages */}
           <div className="space-y-6">
