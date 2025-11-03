@@ -262,12 +262,69 @@ export function ImageCropUpload({
     }
   };
 
-  const handleRemove = () => {
+  // Fonction pour supprimer une image du storage Supabase
+  const deleteImageFromStorage = async (imageUrl: string | null | undefined) => {
+    if (!imageUrl) return;
+    
+    try {
+      const urlWithoutParams = imageUrl.split('?')[0];
+      // Extraire le chemin du fichier depuis l'URL Supabase
+      // Format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[filename]
+      const storageMatch = urlWithoutParams.match(/\/(hero-images|channel-images|movie-images)\/(.+)$/);
+      
+      if (storageMatch && storageMatch[2]) {
+        const filePath = storageMatch[2];
+        const { error: storageError } = await supabase.storage
+          .from(bucket)
+          .remove([filePath]);
+        
+        if (storageError) {
+          console.warn('Error deleting image from storage:', storageError);
+        }
+      }
+    } catch (storageErr) {
+      console.warn('Exception deleting image from storage:', storageErr);
+    }
+  };
+
+  const handleRemove = async () => {
+    // Supprimer l'image du storage si elle existe
+    if (preview) {
+      await deleteImageFromStorage(preview);
+    }
+    
     setPreview(null);
     setError(null);
     setSuccess(false);
+    if (onUploadComplete) {
+      onUploadComplete('');
+    }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveMobile = async () => {
+    // Supprimer l'image mobile du storage si elle existe
+    if (previewMobile) {
+      await deleteImageFromStorage(previewMobile);
+    }
+    
+    setPreviewMobile(null);
+    if (onUploadCompleteMobile) {
+      onUploadCompleteMobile('');
+    }
+  };
+
+  const handleRemoveDesktop = async () => {
+    // Supprimer l'image desktop du storage si elle existe
+    if (previewDesktop) {
+      await deleteImageFromStorage(previewDesktop);
+    }
+    
+    setPreviewDesktop(null);
+    if (onUploadCompleteDesktop) {
+      onUploadCompleteDesktop('');
     }
   };
 
@@ -437,13 +494,9 @@ export function ImageCropUpload({
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setPreviewMobile(null);
-                    if (onUploadCompleteMobile) {
-                      onUploadCompleteMobile('');
-                    }
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={handleRemoveMobile}
+                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  title="Supprimer l'image mobile"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -481,13 +534,9 @@ export function ImageCropUpload({
                 />
                 <button
                   type="button"
-                  onClick={() => {
-                    setPreviewDesktop(null);
-                    if (onUploadCompleteDesktop) {
-                      onUploadCompleteDesktop('');
-                    }
-                  }}
-                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={handleRemoveDesktop}
+                  className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  title="Supprimer l'image desktop"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -520,7 +569,8 @@ export function ImageCropUpload({
           <button
             type="button"
             onClick={handleRemove}
-            className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-2 right-2 p-2 bg-red-600 hover:bg-red-700 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+            title="Supprimer l'image"
           >
             <X className="h-4 w-4" />
           </button>

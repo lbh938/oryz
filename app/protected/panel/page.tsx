@@ -57,6 +57,7 @@ export default function AdminPage() {
   const [heroes, setHeroes] = useState<HeroConfig[]>([]);
   const [editingHero, setEditingHero] = useState<HeroConfig | null>(null);
   const [isCreatingHero, setIsCreatingHero] = useState(false);
+  const [mobileAspectRatio, setMobileAspectRatio] = useState(16 / 9); // Ratio mobile par défaut
   const [heroConfig, setHeroConfig] = useState<HeroConfig>({
     title: '',
     subtitle: '',
@@ -413,7 +414,7 @@ export default function AdminPage() {
                 variant="outline"
                 size="icon"
                 onClick={() => setShowPasswordModal(true)}
-                className="border-[#3498DB] text-[#3498DB] hover:bg-[#3498DB] hover:text-white"
+                className="border-[#3498DB]/50 text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white bg-[#3498DB]/10 transition-all shadow-sm hover:shadow-[#3498DB]/30"
                 title="Changer le mot de passe"
               >
                 <KeyRound className="h-5 w-5" />
@@ -785,6 +786,45 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* Ratio Mobile - Personnalisable */}
+                <div>
+                  <Label htmlFor="mobile-aspect-ratio" className="text-white font-label mb-2 block">
+                    Ratio Mobile (Largeur/Hauteur)
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      id="mobile-aspect-ratio"
+                      type="number"
+                      step="0.1"
+                      min="0.5"
+                      max="5"
+                      value={mobileAspectRatio}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (!isNaN(value) && value > 0) {
+                          setMobileAspectRatio(value);
+                        }
+                      }}
+                      className="bg-[#333333] border-[#3498DB]/30 text-white h-10 w-32"
+                      placeholder="16/9"
+                    />
+                    <span className="text-white/60 font-sans text-sm">
+                      (actuel: {mobileAspectRatio.toFixed(2)})
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMobileAspectRatio(16 / 9)}
+                      className="border-[#3498DB]/30 text-[#3498DB] hover:bg-[#3498DB]/10 text-xs"
+                    >
+                      Réinitialiser (16:9)
+                    </Button>
+                  </div>
+                  <p className="text-xs text-white/50 mt-1 font-sans">
+                    Exemples: 16:9 = 1.78, 21:9 = 2.33, 4:3 = 1.33, 1:1 = 1.00
+                  </p>
+                </div>
+
                 {/* Image Upload with Crop */}
                 <ImageCropUpload
                   bucket="hero-images"
@@ -797,7 +837,7 @@ export default function AdminPage() {
                   onUploadCompleteDesktop={(url) => setHeroConfig({ ...heroConfig, image_desktop_url: url })}
                   maxSizeMB={10}
                   aspectRatio={21 / 9}
-                  mobileAspectRatio={16 / 9} // Format plus vertical pour mobile
+                  mobileAspectRatio={mobileAspectRatio} // Ratio mobile personnalisable
                   allowSeparateMobileDesktop={true}
                 />
 
@@ -975,10 +1015,12 @@ export default function AdminPage() {
       {/* Modal Changement de Mot de Passe */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border-2 border-[#3498DB]/30 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+          <div className="bg-[#1a1a1a] border-2 border-[#3498DB]/30 rounded-2xl p-6 sm:p-8 w-full max-w-md shadow-2xl shadow-[#3498DB]/20">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <KeyRound className="h-6 w-6 text-[#3498DB]" />
+                <div className="p-2 bg-[#3498DB]/20 rounded-lg">
+                  <KeyRound className="h-6 w-6 text-[#3498DB]" />
+                </div>
                 <h3 className="text-xl font-display font-bold text-white uppercase">
                   Changer le mot de passe
                 </h3>
