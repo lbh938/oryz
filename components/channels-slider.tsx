@@ -11,9 +11,10 @@ import { ChannelBadges } from './channel-badges';
 interface ChannelsSliderProps {
   channels: Channel[];
   title?: string;
+  showTitle?: boolean;
 }
 
-export function ChannelsSlider({ channels, title = "Chaînes disponibles" }: ChannelsSliderProps) {
+export function ChannelsSlider({ channels, title = "Chaînes disponibles", showTitle = true }: ChannelsSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
@@ -94,15 +95,18 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles" }: Cha
   return (
     <div className="space-y-6">
       {/* Header avec titre et boutons de navigation */}
+      {(showTitle || channels.length > cardsVisible) && (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-2">
-          {/* Titre à gauche */}
-          <h3 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white uppercase">
-            {title}
-          </h3>
+          {/* Titre à gauche - affiché seulement si showTitle est true */}
+          {showTitle && (
+            <h3 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white uppercase">
+              {title}
+            </h3>
+          )}
 
-        {/* Boutons de navigation à droite */}
-        {channels.length > cardsVisible && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Boutons de navigation à droite */}
+          {channels.length > cardsVisible && (
+            <div className="flex items-center gap-2 flex-shrink-0">
             <Button
               variant="outline"
               size="icon"
@@ -122,8 +126,9 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles" }: Cha
               <ChevronRight className="h-5 w-5" />
             </Button>
           </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Slider avec support tactile */}
       <div 

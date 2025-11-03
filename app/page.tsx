@@ -59,7 +59,7 @@ export default async function Home() {
       {/* Channels Section */}
       <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <ChannelsSlider channels={channels} title="CHAÎNES DE SPORT" />
-        <p className="text-center text-muted-foreground text-sm sm:text-base md:text-lg font-sans mt-3 sm:mt-4 px-4">
+        <p className="text-center text-white/60 text-sm sm:text-base md:text-lg font-sans mt-3 sm:mt-4 px-4">
           Regardez vos sports préférés en direct 24/7
         </p>
       </section>

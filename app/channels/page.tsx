@@ -93,11 +93,11 @@ export default function ChannelsPage() {
         {channelItems.length === 0 ? (
           /* Empty State si pas de chaînes */
           <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50 mb-4">
-              <Tv className="w-8 h-8 text-muted-foreground" />
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/10 backdrop-blur-xl mb-4">
+              <Tv className="w-8 h-8 text-white/60" />
             </div>
-            <h3 className="text-xl font-display mb-2">AUCUNE CHAÎNE DISPONIBLE</h3>
-            <p className="text-muted-foreground font-sans">
+            <h3 className="text-xl font-display font-bold text-white mb-2 uppercase">AUCUNE CHAÎNE DISPONIBLE</h3>
+            <p className="text-white/60 font-sans">
               Les chaînes seront bientôt disponibles
             </p>
           </div>
