@@ -48,6 +48,8 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
     if (currentIndex >= maxIndex) return;
     setIsAnimating(true);
     setCurrentIndex(prev => Math.min(prev + 1, maxIndex));
+    // Réinitialiser après la transition
+    setTimeout(() => setIsAnimating(false), 850);
   };
   
   const prevSlide = () => {
@@ -55,14 +57,9 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
     if (currentIndex === 0) return;
     setIsAnimating(true);
     setCurrentIndex(prev => Math.max(prev - 1, 0));
+    // Réinitialiser après la transition
+    setTimeout(() => setIsAnimating(false), 850);
   };
-
-  useEffect(() => {
-    if (isAnimating) {
-      const timer = setTimeout(() => setIsAnimating(false), 700);
-      return () => clearTimeout(timer);
-    }
-  }, [isAnimating]);
 
   // Gestion du swipe tactile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -138,10 +135,11 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
         onTouchEnd={handleTouchEnd}
       >
         <div 
-          className="flex gap-4 sm:gap-5 md:gap-6 transition-transform duration-700 ease-in-out"
+          className="flex gap-4 sm:gap-5 md:gap-6"
           style={{
             transform: `translateX(-${currentIndex * (100 / cardsVisible + 1.5)}%)`,
-            transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+            transition: 'transform 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            willChange: 'transform'
           }}
         >
           {channels.map((channel) => (
@@ -153,13 +151,14 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
                 href={`/watch/${channel.id}`}
                 className="block h-full"
               >
-                <div className="group/card relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
+                <div className="group/card relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 ease-out h-full flex flex-col">
                   {/* Thumbnail */}
                   <div className="relative aspect-[3/4] overflow-hidden bg-gradient-to-br from-black/20 to-black/40 rounded-t-2xl flex-shrink-0">
                     <img
                       src={channel.thumbnail}
                       alt={channel.name}
-                      className={`w-full h-full ${channel.name.includes('RMC') ? 'object-contain' : 'object-cover'} group-hover/card:scale-110 transition-transform duration-500`}
+                      className={`w-full h-full ${channel.name.includes('RMC') ? 'object-contain' : 'object-cover'} group-hover/card:scale-110 transition-transform duration-500 ease-out`}
+                      loading="lazy"
                     />
                     
                     {/* Bouton Favori */}

@@ -13,6 +13,7 @@ import { ShareButton } from '@/components/share-button';
 import { LikeButton } from '@/components/like-button';
 import { useSourceDetection } from '@/hooks/use-source-detection';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
+import { useAdBlocker } from '@/hooks/use-ad-blocker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,8 +53,9 @@ export default function WatchPage({ params }: WatchPageProps) {
     }
   }, [id]);
 
-  // Activer le bloqueur de pop-ups sur toute la page de visionnage
+  // Activer le bloqueur de pop-ups et de publicités sur toute la page de visionnage
   usePopupBlocker(true);
+  useAdBlocker(true);
 
   // Préparer les URLs pour la détection (doit être appelé AVANT tous les returns conditionnels)
   const content = id ? getContentById(id) : null;

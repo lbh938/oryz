@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
+import { useAdBlocker } from '@/hooks/use-ad-blocker';
 
 interface IframePlayerProps {
   src: string;
@@ -13,8 +14,9 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  // Activer le bloqueur de pop-ups pendant la lecture
+  // Activer le bloqueur de pop-ups et de publicités pendant la lecture
   usePopupBlocker(true);
+  useAdBlocker(true);
 
   // Détecter et traiter différents types d'URLs
   let proxyUrl = src;
