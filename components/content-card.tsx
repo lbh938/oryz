@@ -88,13 +88,13 @@ export function ContentCard({ content }: ContentCardProps) {
           <div className="flex-1 min-h-0">
             {content.genre && content.genre.length > 0 ? (
               <p className="text-xs text-white/50 font-sans line-clamp-1">
-                {content.genre.slice(0, 2).join(', ')}
-              </p>
+              {content.genre.slice(0, 2).join(', ')}
+            </p>
             ) : (
               <p className="text-xs text-white/50 font-sans line-clamp-2">
-                {content.description}
-              </p>
-            )}
+              {content.description}
+            </p>
+          )}
           </div>
         </div>
       </Card>

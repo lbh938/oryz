@@ -16,8 +16,6 @@ export function PopupBlocker() {
       'facebook.com',
       'whatsapp.com',
       'telegram.org',
-      'movix.club', // Omega player
-      'api.movix.club', // API Omega
     ];
 
     // Vérifier si on est dans une iframe (ne pas bloquer si on est dans une iframe)

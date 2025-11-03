@@ -15,12 +15,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Construire l'URL Omega player via l'API movix
-  const omegaUrl = `https://api.movix.club/api/omega?url=${encodeURIComponent(url)}`;
-
+  // Utiliser directement l'URL fournie (sans API externe movix)
   try {
-    // Récupérer la page Omega player
-    const response = await fetch(omegaUrl, {
+    // Récupérer la page depuis l'URL fournie
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -50,7 +48,7 @@ export async function GET(request: NextRequest) {
 <body>
   <div id="player-container">
     <iframe 
-      src="${omegaUrl}" 
+      src="${url}" 
       allowfullscreen 
       frameborder="0" 
       scrolling="no"
@@ -70,7 +68,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Injecter une protection intelligente minimale pour Omega player
+    // Injecter une protection intelligente minimale
     const html = await response.text();
     
     // Injection minimale et ciblée uniquement pour bloquer les pop-ups de pub
@@ -84,7 +82,7 @@ export async function GET(request: NextRequest) {
             'use strict';
             // Protection INTELLIGENTE : bloquer uniquement les pop-ups suspectes
             const originalOpen = window.open;
-            const allowedDomains = ['movix.club', 'api.movix.club', window.location.hostname];
+            const allowedDomains = [window.location.hostname];
             
             window.open = function(url, target, features) {
               const urlString = url?.toString() || '';
@@ -139,7 +137,7 @@ export async function GET(request: NextRequest) {
   <style>body { margin: 0; padding: 0; } iframe { width: 100%; height: 100vh; border: none; }</style>
 </head>
 <body>
-  <iframe src="${omegaUrl}" allowfullscreen frameborder="0"></iframe>
+  <iframe src="${url}" allowfullscreen frameborder="0"></iframe>
 </body>
 </html>`,
       {

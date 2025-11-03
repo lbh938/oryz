@@ -14,6 +14,7 @@ import { LikeButton } from '@/components/like-button';
 import { useSourceDetection } from '@/hooks/use-source-detection';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import { useAdBlocker } from '@/hooks/use-ad-blocker';
+import { MainLayout } from '@/components/main-layout';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,30 +74,23 @@ export default function WatchPage({ params }: WatchPageProps) {
   // Si c'est un match sportif, utiliser l'URL fournie directement
   if (sportUrl) {
     return (
-      <div className="min-h-screen bg-background">
-        <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
-          <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex justify-between items-center h-14 sm:h-16">
-              <div className="flex items-center gap-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="rounded-full hover:bg-[#3498DB]/10 hover:text-[#3498DB]"
-                  onClick={() => window.history.back()}
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                  <img src="/logo.png" alt="ORYZ STREAM" className="h-7 sm:h-8 md:h-9 w-auto" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-        <div className="pt-16 sm:pt-20 pb-8 sm:pb-12">
+      <MainLayout>
+        <div className="pb-8 sm:pb-12">
           <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-                  {sportMatchName && (
+            {/* Bouton retour */}
+            <div className="mb-4 sm:mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+                onClick={() => window.history.back()}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour
+              </Button>
+            </div>
+
+            {sportMatchName && (
               <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent mb-2">
                   {sportMatchName}
@@ -113,7 +107,7 @@ export default function WatchPage({ params }: WatchPageProps) {
             </div>
           </div>
         </div>
-      </div>
+      </MainLayout>
     );
   }
 
@@ -124,49 +118,21 @@ export default function WatchPage({ params }: WatchPageProps) {
   const hasMultipleSources = content.sources && content.sources.length > 1;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation - ORYZ Style */}
-      <nav className="fixed top-0 w-full z-50 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-lg shadow-black/10">
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-between items-center h-14 sm:h-16">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="rounded-full hover:bg-[#3498DB]/10 hover:text-[#3498DB]"
-                onClick={() => window.history.back()}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-                <img src="/logo.png" alt="ORYZ STREAM" className="h-7 sm:h-8 md:h-9 w-auto" />
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              {content.isLive && (
-                <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                  LIVE
-                </div>
-              )}
-              <LikeButton 
-                contentId={content.id}
-                contentType={content.type === 'movie' ? 'movie' : 'channel'}
-                variant="compact"
-                size="sm"
-              />
-              <ShareButton 
-                channelId={content.id} 
-                channelName={content.name}
-                variant="icon"
-              />
-            </div>
-          </div>
+    <MainLayout>
+      <div className="pb-8 sm:pb-12">
+        {/* Bouton retour */}
+        <div className="mb-4 sm:mb-6 container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+            onClick={() => window.history.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
         </div>
-      </nav>
 
-      {/* Main Content */}
-      <div className="pt-16 sm:pt-20 pb-8 sm:pb-12">
         <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
           {/* Source Selector - Dropdown pour les séries avec beaucoup d'épisodes */}
           {hasMultipleSources && (
@@ -352,6 +318,6 @@ export default function WatchPage({ params }: WatchPageProps) {
           </div>
         </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

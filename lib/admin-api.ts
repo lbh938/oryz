@@ -322,6 +322,95 @@ export async function getGlobalStats(): Promise<{
 }
 
 // =====================================================
+// APP SETTINGS
+// =====================================================
+
+/**
+ * Récupérer un paramètre de l'application
+ */
+export async function getAppSetting(key: string): Promise<string | null> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', key)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data.value;
+}
+
+/**
+ * Mettre à jour un paramètre de l'application
+ */
+export async function updateAppSetting(key: string, value: string, description?: string): Promise<boolean> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return false;
+  }
+
+  // Vérifier si le paramètre existe
+  const { data: existing } = await supabase
+    .from('app_settings')
+    .select('id')
+    .eq('key', key)
+    .single();
+
+  if (existing) {
+    // Mettre à jour
+    const { error } = await supabase
+      .from('app_settings')
+      .update({
+        value,
+        description: description || undefined,
+        updated_by: user.id,
+        updated_at: new Date().toISOString()
+      })
+      .eq('key', key);
+
+    return !error;
+  } else {
+    // Créer
+    const { error } = await supabase
+      .from('app_settings')
+      .insert({
+        key,
+        value,
+        description: description || undefined,
+        updated_by: user.id
+      });
+
+    return !error;
+  }
+}
+
+/**
+ * Récupérer tous les paramètres de l'application
+ */
+export async function getAllAppSettings(): Promise<Record<string, string>> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase
+    .from('app_settings')
+    .select('key, value');
+
+  if (error || !data) {
+    return {};
+  }
+
+  return data.reduce((acc, item) => {
+    acc[item.key] = item.value;
+    return acc;
+  }, {} as Record<string, string>);
+}
+
+// =====================================================
 // ADMIN AUTH
 // =====================================================
 

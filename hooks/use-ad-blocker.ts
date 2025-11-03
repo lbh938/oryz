@@ -297,19 +297,22 @@ export function useAdBlocker(isActive: boolean = true) {
                 element.remove();
               }
               
-              // Empêcher les événements
+              // Empêcher TOUS les événements sur les éléments de pub (même les clics)
               if (element.addEventListener) {
                 const originalAddEventListener = element.addEventListener.bind(element);
                 element.addEventListener = function(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions) {
-                  // Bloquer les événements de pub mais permettre les événements de vidéo
-                  if (!type.includes('video') && !type.includes('player')) {
-                    return;
-                  }
-                  if (listener === null) {
-                    return;
-                  }
-                  return originalAddEventListener(type, listener, options);
+                  // Bloquer TOUS les événements sur les pubs (même les clics)
+                  // Ne pas permettre d'événements qui pourraient réactiver les pubs
+                  return; // Bloquer tous les événements
                 };
+              }
+              
+              // Empêcher aussi les événements via onclick et autres attributs
+              if (element.hasAttribute('onclick')) {
+                element.removeAttribute('onclick');
+              }
+              if (element.hasAttribute('onload')) {
+                element.removeAttribute('onload');
               }
               
               blockedElements.current.add(element);
@@ -319,15 +322,14 @@ export function useAdBlocker(isActive: boolean = true) {
       });
     });
 
-    // Observer les changements dans le DOM - mais avec délai pour laisser l'app se charger
-    setTimeout(() => {
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['id', 'class', 'src']
-      });
-    }, 1000); // Attendre 1 seconde pour laisser l'app charger
+    // Observer les changements dans le DOM - ACTIVATION IMMÉDIATE pour bloquer les pubs dès leur apparition
+    // Observer immédiatement, mais ignorer le contenu de l'app dans la logique
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['id', 'class', 'src']
+    });
 
     // Bloquer les scripts de pub déjà présents
     const blockExistingAds = () => {
@@ -397,12 +399,10 @@ export function useAdBlocker(isActive: boolean = true) {
     let intervalId: NodeJS.Timeout | null = null;
     let timeoutId: NodeJS.Timeout | null = null;
 
-    // Bloquer les pubs existantes au chargement - mais avec délai pour laisser l'app se charger
-    timeoutId = setTimeout(() => {
-      blockExistingAds();
-      // Bloquer périodiquement les nouvelles pubs
-      intervalId = setInterval(blockExistingAds, 2000);
-    }, 2000); // Attendre 2 secondes pour laisser l'app charger complètement
+    // Bloquer les pubs existantes immédiatement - et périodiquement après
+    blockExistingAds();
+    // Bloquer périodiquement les nouvelles pubs (plus fréquent pour être plus agressif)
+    intervalId = setInterval(blockExistingAds, 1000); // Vérifier toutes les secondes
 
     // Cleanup
     return () => {

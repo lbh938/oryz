@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import { useAdBlocker } from '@/hooks/use-ad-blocker';
+import { getAppSetting } from '@/lib/admin-api';
 
 interface IframePlayerProps {
   src: string;
@@ -12,34 +13,18 @@ interface IframePlayerProps {
 export function IframePlayer({ src, className }: IframePlayerProps) {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sandboxEnabled, setSandboxEnabled] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Activer le bloqueur de pop-ups et de publicités pendant la lecture
   usePopupBlocker(true);
   useAdBlocker(true);
 
-  // Détecter et traiter différents types d'URLs
+  // Détecter et traiter différents types d'URLs - DOIT ÊTRE AVANT LES useEffect
   let proxyUrl = src;
   
-  // Omega player (via API movix) : utiliser notre proxy avec protection intelligente
-  if (src.includes('api.movix.club/api/omega')) {
-    // Extraire l'URL originale depuis l'URL Omega
-    try {
-      const urlParams = new URL(src);
-      const originalUrl = urlParams.searchParams.get('url');
-      if (originalUrl) {
-        // Utiliser notre proxy Omega avec protection intelligente
-        proxyUrl = `/api/proxy/omega?url=${encodeURIComponent(originalUrl)}`;
-      } else {
-        proxyUrl = src;
-      }
-    } catch (e) {
-      // Si erreur parsing, utiliser directement
-      proxyUrl = src;
-    }
-  }
   // ShareCloudy: utiliser le proxy
-  else if (src.includes('sharecloudy.com')) {
+  if (src.includes('sharecloudy.com')) {
     proxyUrl = `/api/proxy/sharecloudy?url=${encodeURIComponent(src)}`;
   }
   // Wrappers score808 ou href.li: utiliser directement (l'iframe peut les gérer)
@@ -48,6 +33,86 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
     // Utiliser directement le wrapper (il est fait pour être embeddé)
     proxyUrl = src;
   }
+
+  // Charger le paramètre sandbox depuis la base de données
+  // Par défaut, activer le sandbox pour la sécurité (même si le paramètre admin est désactivé)
+  useEffect(() => {
+    const loadSandboxSetting = async () => {
+      try {
+        const setting = await getAppSetting('iframe_sandbox_enabled');
+        // Si le paramètre existe et est explicitement désactivé, respecter le choix
+        // Sinon, activer par défaut pour la sécurité
+        setSandboxEnabled(setting !== 'false'); // Actif par défaut, désactivé seulement si 'false'
+      } catch (error) {
+        // En cas d'erreur, activer par défaut pour la sécurité
+        setSandboxEnabled(true);
+      }
+    };
+    loadSandboxSetting();
+  }, []);
+
+  // Bloqueur renforcé pour les iframes sans sandbox - intercepte tous les messages
+  useEffect(() => {
+    if (!iframeRef.current) return;
+
+    // Intercepter tous les messages de l'iframe
+    const handleMessage = (event: MessageEvent) => {
+      // Vérifier si le message vient de notre iframe
+      try {
+        // Bloquer les tentatives d'ouverture de fenêtres
+        if (event.data && (
+          typeof event.data === 'object' && (
+            event.data.type === 'openWindow' ||
+            event.data.action === 'open' ||
+            event.data.method === 'open'
+          ) ||
+          typeof event.data === 'string' && (
+            event.data.includes('window.open') ||
+            event.data.includes('openWindow') ||
+            event.data.includes('popup')
+          )
+        )) {
+          console.warn('[Iframe Blocker] Tentative d\'ouverture bloquée:', event.data);
+          event.stopPropagation();
+          event.preventDefault();
+          return false;
+        }
+
+        // Bloquer les redirections suspectes
+        if (event.data && typeof event.data === 'object' && (
+          event.data.type === 'redirect' ||
+          event.data.action === 'redirect' ||
+          event.data.url && !event.data.url.includes(window.location.origin)
+        )) {
+          console.warn('[Iframe Blocker] Redirection suspecte bloquée:', event.data);
+          event.stopPropagation();
+          return false;
+        }
+      } catch (e) {
+        // Ignorer les erreurs
+      }
+    };
+
+    window.addEventListener('message', handleMessage, true);
+
+    // Intercepter les tentatives de navigation depuis l'iframe
+    const originalOpen = window.open;
+    window.open = function(...args: Parameters<typeof window.open>) {
+      // Si appelé depuis un contexte suspect, bloquer
+      const stack = new Error().stack || '';
+      const urlString = args[0] ? String(args[0]) : '';
+      if (stack.includes('iframe') || urlString.includes('ad') || urlString.includes('popup')) {
+        console.warn('[Iframe Blocker] window.open bloqué:', args[0]);
+        return null;
+      }
+      return originalOpen.apply(window, args);
+    };
+
+    return () => {
+      window.removeEventListener('message', handleMessage, true);
+      window.open = originalOpen;
+    };
+  }, [src]); // Utiliser src au lieu de proxyUrl pour éviter l'erreur d'initialisation
 
   useEffect(() => {
     setError(false);
@@ -59,7 +124,7 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [src, proxyUrl]);
+  }, [src]);
 
   if (!src) {
     return (
@@ -100,6 +165,11 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             allowFullScreen
             style={{ border: 'none' }}
             referrerPolicy="no-referrer-when-downgrade"
+            {...(sandboxEnabled ? {
+              sandbox: "allow-scripts allow-same-origin allow-presentation allow-forms"
+            } : {})}
+            // Ajouter des attributs de sécurité supplémentaires même sans sandbox
+            loading="lazy"
             onLoad={() => {
               setLoading(false);
             }}

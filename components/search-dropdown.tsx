@@ -78,7 +78,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
 
       {/* Dropdown des résultats */}
       {isOpen && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-[#333333] rounded-lg shadow-2xl z-50 max-h-[70vh] sm:max-h-[400px] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl shadow-black/50 z-50 max-h-[70vh] sm:max-h-[400px] overflow-y-auto">
           {/* Résultats */}
           <div className="p-1 sm:p-2">
             {results.map((item) => (
@@ -151,7 +151,7 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
 
       {/* Message "Aucun résultat" */}
       {isOpen && searchQuery.trim().length >= 2 && results.length === 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1a1a1a] border border-[#333333] rounded-lg shadow-2xl z-50 p-6 text-center">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-black/95 backdrop-blur-2xl border border-white/20 rounded-lg shadow-2xl shadow-black/50 z-50 p-6 text-center">
           <Search className="h-12 w-12 text-white/20 mx-auto mb-3" />
           <p className="text-white/60 font-sans mb-2">
             Aucun résultat pour "{searchQuery}"

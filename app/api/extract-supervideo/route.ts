@@ -25,45 +25,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Méthode 1: Essayer via l'API externe movix.club (si disponible)
-    try {
-      const movixResponse = await fetch(
-        `https://api.movix.club/api/extract-supervideo?url=${encodeURIComponent(url)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          },
-          // Timeout après 10 secondes
-          signal: AbortSignal.timeout(10000),
-        }
-      );
-
-      if (movixResponse.ok) {
-        const data = await movixResponse.json();
-        
-        // Si l'API retourne une URL M3U8 valide
-        if (data?.hls_url || data?.stream_url) {
-          const hlsUrl = data.hls_url || data.stream_url;
-          
-          // Vérifier que c'est bien une URL M3U8
-          if (hlsUrl.includes('.m3u8') || hlsUrl.startsWith('http')) {
-            return NextResponse.json({
-              success: true,
-              hls_url: hlsUrl,
-              source: 'movix-api',
-              original_url: url,
-            });
-          }
-        }
-      }
-    } catch (error) {
-      // L'API externe a échoué, continuer avec méthode alternative
-      console.log('⚠️ API movix.club indisponible, utilisation méthode alternative');
-    }
-
-    // Méthode 2: Scraper directement depuis Supervideo (si possible)
+    // Scraper directement depuis Supervideo
     try {
       const response = await fetch(url, {
         method: 'GET',

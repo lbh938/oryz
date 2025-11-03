@@ -54,23 +54,55 @@ export function usePopupBlocker(isActive: boolean = true) {
         // Si l'URL est invalide, bloquer
       }
 
-      // Bloquer toutes les autres pop-ups externes pendant la lecture vidéo
+      // Bloquer TOUTES les pop-ups externes pendant la lecture vidéo
+      // Même si l'utilisateur clique, on bloque toujours les pop-ups externes
       console.warn('[Popup Blocker] Pop-up externe bloquée:', url);
       blockedPopups.current.add(url || 'unknown');
       
       // Afficher une notification discrète à l'utilisateur
       showBlockedNotification();
       
+      // TOUJOURS bloquer, même après un clic utilisateur
       return null;
     };
 
-    // Bloquer window.open dans les iframes
+    // Bloquer window.open dans les iframes - RENFORCÉ pour fonctionner même sans sandbox
     const handleIframeMessage = (event: MessageEvent) => {
       // Vérifier l'origine du message
       try {
         // Bloquer les messages qui tentent d'ouvrir des fenêtres
-        if (event.data?.type === 'openWindow' || event.data?.action === 'open') {
-          console.warn('[Popup Blocker] Tentative d\'ouverture bloquée depuis iframe:', event.origin);
+        if (event.data && (
+          (typeof event.data === 'object' && (
+            event.data.type === 'openWindow' ||
+            event.data.action === 'open' ||
+            event.data.method === 'open' ||
+            event.data.command === 'open'
+          )) ||
+          (typeof event.data === 'string' && (
+            event.data.includes('window.open') ||
+            event.data.includes('openWindow') ||
+            event.data.includes('popup') ||
+            event.data.includes('target=_blank')
+          ))
+        )) {
+          console.warn('[Popup Blocker] Tentative d\'ouverture bloquée depuis iframe:', event.origin, event.data);
+          event.stopPropagation();
+          event.preventDefault();
+          return false;
+        }
+
+        // Bloquer les redirections suspectes depuis les iframes
+        if (event.data && typeof event.data === 'object' && (
+          event.data.type === 'redirect' ||
+          event.data.action === 'redirect' ||
+          event.data.method === 'redirect' ||
+          (event.data.url && !event.data.url.includes(window.location.origin) && (
+            event.data.url.includes('ad') ||
+            event.data.url.includes('popup') ||
+            event.data.url.includes('click')
+          ))
+        )) {
+          console.warn('[Popup Blocker] Redirection suspecte bloquée depuis iframe:', event.data);
           event.stopPropagation();
           return false;
         }
@@ -79,7 +111,8 @@ export function usePopupBlocker(isActive: boolean = true) {
       }
     };
 
-    window.addEventListener('message', handleIframeMessage);
+    // Utiliser capture phase pour intercepter tôt
+    window.addEventListener('message', handleIframeMessage, true);
 
     // Bloquer les clics sur les liens qui ouvrent de nouvelles fenêtres
     const handleClick = (e: MouseEvent) => {

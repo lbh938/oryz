@@ -11,6 +11,9 @@ import {
   getTopPages7d,
   getGlobalStats,
   isAdmin,
+  getAppSetting,
+  updateAppSetting,
+  getAllAppSettings,
   type HeroConfig,
   type TopPage
 } from '@/lib/admin-api';
@@ -64,6 +67,10 @@ export default function AdminPage() {
     uniqueVisitors7d: 0
   });
 
+  // App Settings State
+  const [iframeSandboxEnabled, setIframeSandboxEnabled] = useState(false);
+  const [isSavingSandbox, setIsSavingSandbox] = useState(false);
+
   // Vérifier l'authentification
   useEffect(() => {
     checkAuth();
@@ -104,12 +111,13 @@ export default function AdminPage() {
     setIsLoading(true);
 
     try {
-      const [hero, visitors, pages24h, pages7d, stats] = await Promise.all([
+      const [hero, visitors, pages24h, pages7d, stats, sandboxSetting] = await Promise.all([
         getActiveHeroConfig(),
         getActiveVisitorsCount(),
         getTopPages24h(),
         getTopPages7d(),
-        getGlobalStats()
+        getGlobalStats(),
+        getAppSetting('iframe_sandbox_enabled')
       ]);
 
       if (hero) {
@@ -120,6 +128,7 @@ export default function AdminPage() {
       setTopPages24h(pages24h);
       setTopPages7d(pages7d);
       setGlobalStats(stats);
+      setIframeSandboxEnabled(sandboxSetting === 'true');
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
@@ -138,6 +147,32 @@ export default function AdminPage() {
 
     return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  // Sauvegarder le paramètre sandbox
+  const handleSaveSandbox = async () => {
+    setIsSavingSandbox(true);
+    setSaveStatus('idle');
+
+    try {
+      const success = await updateAppSetting(
+        'iframe_sandbox_enabled',
+        iframeSandboxEnabled ? 'true' : 'false',
+        'Active ou désactive l\'attribut sandbox sur les iframes de lecture vidéo'
+      );
+
+      if (success) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      console.error('Error saving sandbox setting:', error);
+      setSaveStatus('error');
+    } finally {
+      setIsSavingSandbox(false);
+    }
+  };
 
   // Sauvegarder le hero
   const handleSaveHero = async () => {
@@ -348,6 +383,81 @@ export default function AdminPage() {
             <p className="text-xs text-white/60 font-sans mt-1">
               Vues (7 jours)
             </p>
+          </div>
+        </div>
+
+        {/* Paramètres Iframe - Sandbox */}
+        <div className="bg-gradient-to-br from-[#0F4C81]/20 to-[#3498DB]/20 border border-[#3498DB]/30 rounded-xl p-6 sm:p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#0F4C81] to-[#3498DB]">
+              <Lock className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-bold text-white">
+                Paramètres Iframe
+              </h2>
+              <p className="text-sm text-white/60 font-sans">
+                Gérer l'attribut sandbox des iframes de lecture vidéo
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+              <div className="flex-1">
+                <Label htmlFor="sandbox-toggle" className="text-white font-label font-semibold text-base mb-1 block">
+                  Activer le sandbox
+                </Label>
+                <p className="text-sm text-white/60 font-sans">
+                  Active l'attribut sandbox sur les iframes pour plus de sécurité. 
+                  Désactivez si certains lecteurs vidéo ne fonctionnent pas correctement.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 ml-4">
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={iframeSandboxEnabled}
+                    onChange={(e) => setIframeSandboxEnabled(e.target.checked)}
+                    className="sr-only peer"
+                    id="sandbox-toggle"
+                  />
+                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#3498DB]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3498DB]"></div>
+                </label>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                onClick={handleSaveSandbox}
+                disabled={isSavingSandbox}
+                className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
+              >
+                {isSavingSandbox ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Enregistrer
+                  </>
+                )}
+              </Button>
+              {saveStatus === 'success' && (
+                <div className="flex items-center gap-2 text-green-400">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span className="text-sm font-label">Enregistré !</span>
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="flex items-center gap-2 text-red-400">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-sm font-label">Erreur</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

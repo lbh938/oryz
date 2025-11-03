@@ -47,20 +47,16 @@ export function useSourceDetection(originalUrl: string): SourceDetection {
         return;
       }
 
-      // 2. Vérifier si c'est Supervideo (utiliser Omega player pour bloquer les pop-ups)
+      // 2. Vérifier si c'est Supervideo - utiliser directement l'URL
       if (
         originalUrl.includes('supervideo.') ||
         originalUrl.includes('supervideo.cc') ||
         originalUrl.includes('supervideo.my')
       ) {
-        // Utiliser Omega player via API movix pour Supervideo
-        // Omega est un lecteur qui bloque naturellement les pop-ups automatiquement
-        // Format : https://api.movix.club/api/omega?url=ENCODED_URL
-        const omegaUrl = `https://api.movix.club/api/omega?url=${encodeURIComponent(originalUrl)}`;
-        
+        // Utiliser directement l'URL Supervideo (si nécessaire, utilisez un proxy)
         setDetection({
           type: 'iframe',
-          url: omegaUrl,
+          url: originalUrl,
           isLoading: false,
           error: null,
         });
