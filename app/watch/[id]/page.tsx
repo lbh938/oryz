@@ -15,6 +15,8 @@ import { useSourceDetection } from '@/hooks/use-source-detection';
 import { usePopupBlocker } from '@/hooks/use-popup-blocker';
 import { useAdBlocker } from '@/hooks/use-ad-blocker';
 import { MainLayout } from '@/components/main-layout';
+import { PremiumGate } from '@/components/premium-gate';
+import { isPremiumChannel } from '@/lib/subscriptions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -116,24 +118,26 @@ export default function WatchPage({ params }: WatchPageProps) {
   }
 
   const hasMultipleSources = content.sources && content.sources.length > 1;
+  const isPremium = isPremiumChannel(content.name);
 
   return (
-    <MainLayout>
-      <div className="pb-8 sm:pb-12">
-        {/* Bouton retour */}
-        <div className="mb-4 sm:mb-6 container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
-        </div>
+    <PremiumGate channelName={content.name} channelId={content.id}>
+      <MainLayout>
+        <div className="pb-8 sm:pb-12">
+          {/* Bouton retour */}
+          <div className="mb-4 sm:mb-6 container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+              onClick={() => window.history.back()}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+          </div>
 
-        <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
+          <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
           {/* Source Selector - Dropdown pour les séries avec beaucoup d'épisodes */}
           {hasMultipleSources && (
             <div className="mb-3 sm:mb-4 flex items-center gap-2 justify-center flex-wrap">
@@ -317,7 +321,8 @@ export default function WatchPage({ params }: WatchPageProps) {
             )}
           </div>
         </div>
-      </div>
-    </MainLayout>
+        </div>
+      </MainLayout>
+    </PremiumGate>
   );
 }

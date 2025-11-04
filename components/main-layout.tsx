@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { LogIn, Heart, User } from "lucide-react";
+import { LogIn, Heart, User, Crown } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Footer } from "@/components/footer";
@@ -120,6 +120,15 @@ export function MainLayout({ children }: MainLayoutProps) {
                   {favoritesCount > 9 ? '9+' : favoritesCount}
                 </span>
               )}
+            </Link>
+
+            {/* Bouton Premium - Desktop only */}
+            <Link
+              href="/subscription"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold transition-all shadow-lg shadow-[#3498DB]/30"
+            >
+              <Crown className="h-4 w-4" />
+              <span>Premium</span>
             </Link>
 
             {/* Boutons à droite */}

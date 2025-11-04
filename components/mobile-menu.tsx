@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Menu, X, LogIn, UserPlus, User, Settings, LogOut } from 'lucide-react';
+import { Menu, X, LogIn, UserPlus, User, Settings, LogOut, Crown } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 interface MobileMenuProps {
@@ -129,28 +129,36 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
                 </div>
               </div>
 
-              {/* Liens supplémentaires */}
-              <div>
-                <h3 className="text-xs sm:text-sm font-label font-semibold text-white/80 uppercase tracking-wider mb-3">
-                  Autres
-                </h3>
-                <div className="space-y-1.5 sm:space-y-2">
-                  <Link
-                    href="/channels"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-white hover:bg-[#3498DB]/30 hover:text-[#3498DB] transition-colors font-label font-medium text-sm sm:text-base"
-                  >
-                    Toutes les chaînes
-                  </Link>
-                  <Link
-                    href="/favorites"
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-white hover:bg-[#3498DB]/30 hover:text-[#3498DB] transition-colors font-label font-medium text-sm sm:text-base"
-                  >
-                    ❤️ Favoris
-                  </Link>
-                </div>
-              </div>
+                  {/* Liens supplémentaires */}
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-label font-semibold text-white/80 uppercase tracking-wider mb-3">
+                      Autres
+                    </h3>
+                    <div className="space-y-1.5 sm:space-y-2">
+                      <Link
+                        href="/subscription"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white transition-colors font-label font-semibold text-sm sm:text-base"
+                      >
+                        <Crown className="h-4 w-4" />
+                        Premium
+                      </Link>
+                      <Link
+                        href="/channels"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-white hover:bg-[#3498DB]/30 hover:text-[#3498DB] transition-colors font-label font-medium text-sm sm:text-base"
+                      >
+                        Toutes les chaînes
+                      </Link>
+                      <Link
+                        href="/favorites"
+                        onClick={() => setIsOpen(false)}
+                        className="block px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-white hover:bg-[#3498DB]/30 hover:text-[#3498DB] transition-colors font-label font-medium text-sm sm:text-base"
+                      >
+                        ❤️ Favoris
+                      </Link>
+                    </div>
+                  </div>
             </div>
           </nav>
 

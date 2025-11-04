@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { User, Shield, Home, ArrowRight } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 import { UserProfileEditor } from "@/components/user-profile-editor";
+import { SubscriptionStatus } from "@/components/subscription-status";
 
 export default async function ProtectedPage() {
   const supabase = await createClient();
@@ -59,6 +60,9 @@ export default async function ProtectedPage() {
           </h2>
           <UserProfileEditor userEmail={user.email || ''} />
         </div>
+
+        {/* Statut d'abonnement - Affiché seulement si l'utilisateur n'est pas admin */}
+        {!isAdmin && <SubscriptionStatus />}
 
         {/* Statut Admin */}
         {isAdmin && (
