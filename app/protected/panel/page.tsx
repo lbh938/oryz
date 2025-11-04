@@ -233,6 +233,20 @@ export default function AdminPage() {
 
   // Sauvegarder le hero (création ou modification)
   const handleSaveHero = async () => {
+    // Validation des champs requis
+    if (!heroConfig.title || !heroConfig.subtitle || !heroConfig.cta_text || !heroConfig.cta_url) {
+      setSaveStatus('error');
+      alert('Veuillez remplir tous les champs requis (Titre, Sous-titre, Texte CTA, URL CTA)');
+      return;
+    }
+
+    // Vérifier qu'au moins une image est présente
+    if (!heroConfig.image_url && !heroConfig.image_mobile_url && !heroConfig.image_desktop_url) {
+      setSaveStatus('error');
+      alert('Veuillez uploader au moins une image (image principale, mobile ou desktop)');
+      return;
+    }
+
     setIsSaving(true);
     setSaveStatus('idle');
 
@@ -262,10 +276,12 @@ export default function AdminPage() {
         }, 2000);
       } else {
         setSaveStatus('error');
+        alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
       }
     } catch (error) {
       console.error('Error saving hero:', error);
       setSaveStatus('error');
+      alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
     } finally {
       setIsSaving(false);
     }
@@ -273,15 +289,27 @@ export default function AdminPage() {
 
   // Supprimer un hero
   const handleDeleteHero = async (heroId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce hero ?')) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce hero ? Cette action est irréversible et supprimera aussi les images du storage.')) {
       return;
     }
 
-    const success = await deleteHero(heroId);
-    if (success) {
-      await loadData(); // Recharger la liste
-    } else {
-      alert('Erreur lors de la suppression');
+    try {
+      const success = await deleteHero(heroId);
+      if (success) {
+        await loadData(); // Recharger la liste
+        // Afficher un message de succès
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+        alert('Erreur lors de la suppression. Veuillez réessayer.');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      }
+    } catch (error) {
+      console.error('Error deleting hero:', error);
+      setSaveStatus('error');
+      alert('Erreur lors de la suppression. Veuillez réessayer.');
+      setTimeout(() => setSaveStatus('idle'), 2000);
     }
   };
 
@@ -903,9 +931,24 @@ export default function AdminPage() {
                   currentMobileImage={heroConfig.image_mobile_url}
                   currentDesktopImage={heroConfig.image_desktop_url}
                   label="Image Hero"
-                  onUploadComplete={(url) => setHeroConfig({ ...heroConfig, image_url: url })}
-                  onUploadCompleteMobile={(url) => setHeroConfig({ ...heroConfig, image_mobile_url: url })}
-                  onUploadCompleteDesktop={(url) => setHeroConfig({ ...heroConfig, image_desktop_url: url })}
+                  onUploadComplete={(url) => {
+                    setHeroConfig(prev => ({ 
+                      ...prev, 
+                      image_url: url || '' 
+                    }));
+                  }}
+                  onUploadCompleteMobile={(url) => {
+                    setHeroConfig(prev => ({ 
+                      ...prev, 
+                      image_mobile_url: url || undefined 
+                    }));
+                  }}
+                  onUploadCompleteDesktop={(url) => {
+                    setHeroConfig(prev => ({ 
+                      ...prev, 
+                      image_desktop_url: url || undefined 
+                    }));
+                  }}
                   maxSizeMB={10}
                   aspectRatio={21 / 9}
                   mobileAspectRatio={heroConfig.mobile_aspect_ratio || 16 / 9} // Ratio mobile depuis la base de données

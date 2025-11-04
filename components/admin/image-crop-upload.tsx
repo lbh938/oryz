@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Upload, X, Loader2, Check, Image as ImageIcon, Crop, RotateCw, ZoomIn, ZoomOut, Smartphone, Monitor } from 'lucide-react';
 import Cropper from 'react-easy-crop';
@@ -44,6 +44,13 @@ export function ImageCropUpload({
   const [success, setSuccess] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
   const [croppingMode, setCroppingMode] = useState<'mobile' | 'desktop' | 'single'>('single'); // Mode de recadrage
+  
+  // Mettre à jour les previews quand les currentImage changent
+  useEffect(() => {
+    if (currentImage) setPreview(currentImage);
+    if (currentMobileImage) setPreviewMobile(currentMobileImage);
+    if (currentDesktopImage) setPreviewDesktop(currentDesktopImage);
+  }, [currentImage, currentMobileImage, currentDesktopImage]);
   
   // Cropper states
   const [crop, setCrop] = useState({ x: 0, y: 0 });
@@ -229,45 +236,76 @@ export function ImageCropUpload({
 
       if (allowSeparateMobileDesktop) {
         if (croppingMode === 'mobile') {
+          // Sauvegarder l'image mobile
           setPreviewMobile(previewUrl);
           if (onUploadCompleteMobile) {
             onUploadCompleteMobile(publicUrl);
           }
-          // Demander si on veut aussi recadrer pour desktop
-          const continueDesktop = window.confirm('Image mobile sauvegardée ! Voulez-vous recadrer aussi pour desktop ?');
-          if (continueDesktop) {
-            setCroppingMode('desktop');
-            setCrop({ x: 0, y: 0 });
-            setZoom(1);
-            setRotation(0);
-            setCroppedAreaPixels(null);
-            setUploading(false);
-            return; // Ne pas fermer le cropper
+          
+          // Si l'image desktop n'existe pas encore, proposer de la recadrer
+          // Sinon, fermer automatiquement le cropper
+          if (!previewDesktop && !currentDesktopImage) {
+            // Petit délai pour que l'utilisateur voie le succès
+            setSuccess(true);
+            setTimeout(() => {
+              setSuccess(false);
+              const continueDesktop = window.confirm('Image mobile sauvegardée ! Voulez-vous recadrer aussi pour desktop ?');
+              if (continueDesktop) {
+                setCroppingMode('desktop');
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setRotation(0);
+                setCroppedAreaPixels(null);
+                setUploading(false);
+                // Ne pas fermer le cropper, continuer avec desktop
+              } else {
+                // Si l'utilisateur dit "Non", fermer le cropper
+                setShowCropper(false);
+                setOriginalImage(null);
+                setUploading(false);
+              }
+            }, 500);
+            return;
           }
+          
+          // Si desktop existe déjà, fermer automatiquement le cropper
+          setShowCropper(false);
+          setOriginalImage(null);
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+          setUploading(false);
+          return;
         } else {
+          // Desktop : sauvegarder et fermer automatiquement
           setPreviewDesktop(previewUrl);
           if (onUploadCompleteDesktop) {
             onUploadCompleteDesktop(publicUrl);
           }
+          setShowCropper(false);
+          setOriginalImage(null);
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+          setUploading(false);
+          return;
         }
       } else {
+        // Mode simple : sauvegarder et fermer automatiquement
         setPreview(previewUrl);
         if (onUploadComplete) {
           onUploadComplete(publicUrl);
         }
-      }
-
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-
-      // Fermer le cropper seulement si on a fini
-      if (!allowSeparateMobileDesktop || (allowSeparateMobileDesktop && croppingMode === 'desktop')) {
         setShowCropper(false);
         setOriginalImage(null);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        setUploading(false);
       }
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || 'Erreur lors de l\'upload');
+      setUploading(false);
+      // Ne pas fermer le cropper en cas d'erreur pour permettre de réessayer
+      // Garder les previews existantes
       if (allowSeparateMobileDesktop) {
         if (croppingMode === 'mobile') {
           setPreviewMobile(currentMobileImage || null);
@@ -276,11 +314,6 @@ export function ImageCropUpload({
         }
       } else {
         setPreview(currentImage || null);
-      }
-    } finally {
-      setUploading(false);
-      if (!showCropper) {
-        setOriginalImage(null);
       }
     }
   };
@@ -319,16 +352,24 @@ export function ImageCropUpload({
   };
 
   const handleRemove = async () => {
+    // Confirmation avant suppression
+    if (!confirm('Voulez-vous vraiment supprimer cette image ? Cette action est irréversible.')) {
+      return;
+    }
+
+    // Utiliser currentImage ou preview pour obtenir l'URL réelle
+    const imageToDelete = preview || currentImage;
+    
     // Supprimer l'image du storage si elle existe
-    if (preview) {
-      await deleteImageFromStorage(preview);
+    if (imageToDelete) {
+      await deleteImageFromStorage(imageToDelete);
     }
     
     setPreview(null);
     setError(null);
     setSuccess(false);
     if (onUploadComplete) {
-      onUploadComplete('');
+      onUploadComplete(''); // Passer une chaîne vide pour supprimer
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -336,26 +377,42 @@ export function ImageCropUpload({
   };
 
   const handleRemoveMobile = async () => {
+    // Confirmation avant suppression
+    if (!confirm('Voulez-vous vraiment supprimer l\'image mobile ? Cette action est irréversible.')) {
+      return;
+    }
+
+    // Utiliser currentMobileImage ou previewMobile pour obtenir l'URL réelle
+    const imageToDelete = previewMobile || currentMobileImage;
+    
     // Supprimer l'image mobile du storage si elle existe
-    if (previewMobile) {
-      await deleteImageFromStorage(previewMobile);
+    if (imageToDelete) {
+      await deleteImageFromStorage(imageToDelete);
     }
     
     setPreviewMobile(null);
     if (onUploadCompleteMobile) {
-      onUploadCompleteMobile('');
+      onUploadCompleteMobile(''); // Passer une chaîne vide pour supprimer
     }
   };
 
   const handleRemoveDesktop = async () => {
+    // Confirmation avant suppression
+    if (!confirm('Voulez-vous vraiment supprimer l\'image desktop ? Cette action est irréversible.')) {
+      return;
+    }
+
+    // Utiliser currentDesktopImage ou previewDesktop pour obtenir l'URL réelle
+    const imageToDelete = previewDesktop || currentDesktopImage;
+    
     // Supprimer l'image desktop du storage si elle existe
-    if (previewDesktop) {
-      await deleteImageFromStorage(previewDesktop);
+    if (imageToDelete) {
+      await deleteImageFromStorage(imageToDelete);
     }
     
     setPreviewDesktop(null);
     if (onUploadCompleteDesktop) {
-      onUploadCompleteDesktop('');
+      onUploadCompleteDesktop(''); // Passer une chaîne vide pour supprimer
     }
   };
 
