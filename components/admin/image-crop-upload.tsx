@@ -127,10 +127,13 @@ export function ImageCropUpload({
     const reader = new FileReader();
     reader.onloadend = () => {
       setOriginalImage(reader.result as string);
-      // Si on permet mobile/desktop séparé, demander quel mode choisir
+      // Si on permet mobile/desktop séparé, garder le mode déjà défini ou demander
       if (allowSeparateMobileDesktop) {
-        // Demander le mode
-        setCroppingMode('desktop'); // Par défaut, commencer par desktop
+        // Si le mode n'est pas déjà défini (mobile ou desktop), le définir par défaut à desktop
+        if (croppingMode === 'single') {
+          setCroppingMode('desktop'); // Par défaut, commencer par desktop
+        }
+        // Sinon, garder le mode déjà défini (mobile ou desktop)
       } else {
         setCroppingMode('single');
       }
@@ -669,9 +672,9 @@ export function ImageCropUpload({
               <button
                 type="button"
                 onClick={() => {
+                  setCroppingMode('mobile'); // Définir le mode AVANT de cliquer sur l'input
                   if (fileInputRef.current) {
                     fileInputRef.current.click();
-                    setCroppingMode('mobile');
                   }
                 }}
                 disabled={uploading}
@@ -719,9 +722,9 @@ export function ImageCropUpload({
               <button
                 type="button"
                 onClick={() => {
+                  setCroppingMode('desktop'); // Définir le mode AVANT de cliquer sur l'input
                   if (fileInputRef.current) {
                     fileInputRef.current.click();
-                    setCroppingMode('desktop');
                   }
                 }}
                 disabled={uploading}

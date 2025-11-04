@@ -73,12 +73,17 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
 
   return (
     <div className="relative w-full group" data-hero>
-      {/* Hero Content - Full width sur mobile, hauteur calculée selon le ratio mobile ou fixe moderne */}
+      {/* Hero Content - Full width sur mobile, hauteur calculée selon le ratio mobile choisi */}
       <div 
         className="relative sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10"
         style={{
           // Sur mobile, utiliser le ratio mobile pour calculer la hauteur dynamiquement
-          aspectRatio: isMobile ? `${currentHero?.mobile_aspect_ratio || 16 / 9}` : undefined,
+          // Le ratio doit correspondre exactement au ratio choisi dans l'admin panel
+          aspectRatio: isMobile && currentHero?.mobile_aspect_ratio 
+            ? `${currentHero.mobile_aspect_ratio}` 
+            : isMobile 
+              ? `${16 / 9}` 
+              : undefined,
           // Hauteur minimale sur mobile pour garantir un espace suffisant pour le contenu
           minHeight: isMobile ? '500px' : undefined,
         }}
@@ -105,10 +110,14 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                 <img
                   src={imageUrl}
                   alt={hero.title}
-                  className="absolute inset-0 w-full h-full object-contain sm:object-cover"
+                  className={`absolute inset-0 w-full h-full ${
+                    isMobile ? 'object-cover' : 'object-contain sm:object-cover'
+                  }`}
                   style={{
                     transform: 'none',
                     scale: '1',
+                    // Sur mobile, utiliser object-position center pour centrer l'image
+                    objectPosition: isMobile ? 'center' : 'center',
                   }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
@@ -127,8 +136,8 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
             {/* Content avec animation fluide style Netflix - Layout mobile moderne */}
             <div 
               className={`relative h-full flex flex-col ${
-                isMobile ? 'justify-end pb-8' : 'justify-center'
-              } px-4 sm:px-8 md:px-12 lg:px-16 ${
+                isMobile ? 'justify-end pb-6' : 'justify-center'
+              } ${isMobile ? 'px-4' : 'px-6 sm:px-8 md:px-12 lg:px-16'} ${
                 index === currentIndex 
                   ? 'opacity-100 translate-x-0' 
                   : index < currentIndex 
@@ -145,14 +154,14 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
               <div className={`${isMobile ? 'space-y-3' : 'space-y-2 sm:space-y-3 md:space-y-4'}`}>
                 <h1 className={`font-display font-bold text-white leading-tight ${
                   isMobile 
-                    ? 'text-3xl mb-2' 
+                    ? 'text-xl mb-1' 
                     : 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-2 sm:mb-3 md:mb-4'
                 }`}>
                   {hero.title}
                 </h1>
-                <p className={`text-white/90 max-w-2xl ${
+                <p className={`text-white/90 ${isMobile ? 'max-w-full' : 'max-w-2xl'} ${
                   isMobile 
-                    ? 'text-base mb-4 line-clamp-2' 
+                    ? 'text-xs mb-2 line-clamp-3' 
                     : 'text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 line-clamp-2'
                 }`}>
                   {hero.subtitle}
@@ -160,10 +169,10 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                 <div>
                   <Link
                     href={hero.cta_url}
-                    className={`inline-flex items-center gap-2 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold rounded-lg transition-all shadow-lg shadow-[#3498DB]/30 ${
+                    className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold rounded-lg transition-all shadow-lg shadow-[#3498DB]/30 ${
                       isMobile 
-                        ? 'px-6 py-3 text-base' 
-                        : 'px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg'
+                        ? 'px-4 py-2 text-xs' 
+                        : 'px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg gap-2'
                     }`}
                   >
                     {hero.cta_text}

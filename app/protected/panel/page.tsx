@@ -267,15 +267,15 @@ export default function AdminPage() {
         success = result.success;
       }
 
-      if (success) {
-        setSaveStatus('success');
+    if (success) {
+      setSaveStatus('success');
         await loadData(); // Recharger la liste
         setTimeout(() => {
           setSaveStatus('idle');
           handleCancelHero();
         }, 2000);
-      } else {
-        setSaveStatus('error');
+    } else {
+      setSaveStatus('error');
         alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
       }
     } catch (error) {
@@ -283,7 +283,7 @@ export default function AdminPage() {
       setSaveStatus('error');
       alert('Erreur lors de la sauvegarde. Veuillez réessayer.');
     } finally {
-      setIsSaving(false);
+    setIsSaving(false);
     }
   };
 
@@ -620,7 +620,7 @@ export default function AdminPage() {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
                   Gestion des Heroes
-                </h2>
+              </h2>
                 <Button
                   onClick={handleCreateHero}
                   className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
@@ -775,7 +775,7 @@ export default function AdminPage() {
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="title" className="text-white font-label">
                     Titre
@@ -843,15 +843,17 @@ export default function AdminPage() {
                       >
                         <span className="font-label">
                           {(() => {
-                            const ratio = heroConfig.mobile_aspect_ratio || 16 / 9;
-                            if (ratio === 16 / 9) return '16:9 (Cinéma)';
-                            if (ratio === 21 / 9) return '21:9 (Ultra large)';
-                            if (ratio === 4 / 3) return '4:3 (Classique)';
-                            if (ratio === 1) return '1:1 (Carré)';
-                            if (ratio === 9 / 16) return '9:16 (Portrait)';
-                            if (ratio === 3 / 4) return '3:4 (Portrait classique)';
-                            if (ratio === 2 / 3) return '2:3 (Portrait)';
-                            return `${ratio.toFixed(2)}:1`;
+                          const ratio = heroConfig.mobile_aspect_ratio || 16 / 9;
+                          // Utiliser une comparaison avec tolérance pour éviter les problèmes de précision des floats
+                          if (Math.abs(ratio - (16 / 9)) < 0.001) return '16:9 (Cinéma)';
+                          if (Math.abs(ratio - (21 / 9)) < 0.001) return '21:9 (Ultra large)';
+                          if (Math.abs(ratio - (4 / 3)) < 0.001) return '4:3 (Classique)';
+                          if (Math.abs(ratio - 1) < 0.001) return '1:1 (Carré)';
+                          if (Math.abs(ratio - (9 / 16)) < 0.001) return '9:16 (Portrait)';
+                          if (Math.abs(ratio - (3 / 4)) < 0.001) return '3:4 (Portrait classique)';
+                          if (Math.abs(ratio - (2 / 3)) < 0.001) return '2:3 (Portrait)';
+                          if (Math.abs(ratio - (4 / 5)) < 0.001) return '4:5 (Portrait Instagram)';
+                          return `${ratio.toFixed(2)}:1`;
                           })()}
                         </span>
                         <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
@@ -864,7 +866,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 16 / 9 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 16 / 9 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (16 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         16:9 (Cinéma)
@@ -872,7 +874,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 21 / 9 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 21 / 9 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (21 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         21:9 (Ultra large)
@@ -880,7 +882,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 3 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 4 / 3 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         4:3 (Classique)
@@ -888,7 +890,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 1 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 1 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - 1) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         1:1 (Carré)
@@ -896,7 +898,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 9 / 16 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 9 / 16 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (9 / 16)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         9:16 (Portrait)
@@ -904,7 +906,7 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 3 / 4 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 3 / 4 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (3 / 4)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         3:4 (Portrait classique)
@@ -912,10 +914,18 @@ export default function AdminPage() {
                       <DropdownMenuItem
                         onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 2 / 3 })}
                         className={`cursor-pointer ${
-                          (heroConfig.mobile_aspect_ratio || 16 / 9) === 2 / 3 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (2 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
                         }`}
                       >
                         2:3 (Portrait)
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 5 })}
+                        className={`cursor-pointer ${
+                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 5)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                        }`}
+                      >
+                        4:5 (Portrait Instagram)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -1145,7 +1155,7 @@ export default function AdminPage() {
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#3498DB]/20 rounded-lg">
-                  <KeyRound className="h-6 w-6 text-[#3498DB]" />
+                <KeyRound className="h-6 w-6 text-[#3498DB]" />
                 </div>
                 <h3 className="text-xl font-display font-bold text-white uppercase">
                   Changer le mot de passe

@@ -620,3 +620,61 @@ export async function isAdmin(email: string): Promise<boolean> {
   return !!data;
 }
 
+/**
+ * Vérifier les doublons de heroes (même titre et même URL CTA)
+ */
+export async function checkDuplicateHeroes(): Promise<{
+  duplicates: Array<{
+    title: string;
+    cta_url: string;
+    count: number;
+    hero_ids: string[];
+  }>;
+}> {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('hero_config')
+    .select('id, title, cta_url, created_at');
+  
+  if (error) {
+    console.error('Error checking duplicates:', error);
+    return { duplicates: [] };
+  }
+  
+  // Grouper par titre et cta_url pour trouver les doublons
+  const grouped = new Map<string, Array<{ id: string; title: string; cta_url: string; created_at: string }>>();
+  
+  data?.forEach(hero => {
+    const key = `${hero.title}|${hero.cta_url}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, []);
+    }
+    grouped.get(key)!.push({
+      id: hero.id,
+      title: hero.title,
+      cta_url: hero.cta_url,
+      created_at: hero.created_at || ''
+    });
+  });
+  
+  // Trouver les doublons
+  const duplicates = Array.from(grouped.entries())
+    .filter(([_, heroes]) => heroes.length > 1)
+    .map(([_, heroes]) => ({
+      title: heroes[0].title,
+      cta_url: heroes[0].cta_url,
+      count: heroes.length,
+      hero_ids: heroes
+        .sort((a, b) => {
+          // Trier par date de création (plus récent en premier)
+          const dateA = new Date(a.created_at || '');
+          const dateB = new Date(b.created_at || '');
+          return dateB.getTime() - dateA.getTime();
+        })
+        .map(h => h.id)
+    }));
+  
+  return { duplicates };
+}
+
