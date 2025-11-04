@@ -936,18 +936,30 @@ export default function AdminPage() {
                       ...prev, 
                       image_url: url || '' 
                     }));
+                    // Si url est vide, c'est une suppression - recharger les données
+                    if (!url) {
+                      setTimeout(() => loadData(), 500);
+                    }
                   }}
                   onUploadCompleteMobile={(url) => {
                     setHeroConfig(prev => ({ 
                       ...prev, 
                       image_mobile_url: url || undefined 
                     }));
+                    // Si url est vide, c'est une suppression - recharger les données
+                    if (!url) {
+                      setTimeout(() => loadData(), 500);
+                    }
                   }}
                   onUploadCompleteDesktop={(url) => {
                     setHeroConfig(prev => ({ 
                       ...prev, 
                       image_desktop_url: url || undefined 
                     }));
+                    // Si url est vide, c'est une suppression - recharger les données
+                    if (!url) {
+                      setTimeout(() => loadData(), 500);
+                    }
                   }}
                   maxSizeMB={10}
                   aspectRatio={21 / 9}

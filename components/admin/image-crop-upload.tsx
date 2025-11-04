@@ -332,22 +332,53 @@ export function ImageCropUpload({
     
     try {
       const urlWithoutParams = imageUrl.split('?')[0];
+      
       // Extraire le chemin du fichier depuis l'URL Supabase
       // Format: https://[project].supabase.co/storage/v1/object/public/[bucket]/[filename]
-      const storageMatch = urlWithoutParams.match(/\/(hero-images|channel-images|movie-images)\/(.+)$/);
+      // Ou: https://[project].supabase.co/storage/v1/object/sign/[bucket]/[filename]
       
-      if (storageMatch && storageMatch[2]) {
-        const filePath = storageMatch[2];
-        const { error: storageError } = await supabase.storage
-          .from(bucket)
-          .remove([filePath]);
+      // Méthode 1: Utiliser split pour extraire le nom du fichier après le bucket
+      const bucketName = bucket; // hero-images, channel-images, ou movie-images
+      const bucketIndex = urlWithoutParams.indexOf(`/${bucketName}/`);
+      
+      if (bucketIndex !== -1) {
+        const filePath = urlWithoutParams.substring(bucketIndex + bucketName.length + 1);
         
-        if (storageError) {
-          console.warn('Error deleting image from storage:', storageError);
+        if (filePath) {
+          const { error: storageError } = await supabase.storage
+            .from(bucket)
+            .remove([filePath]);
+          
+          if (storageError) {
+            console.error('Error deleting image from storage:', storageError);
+            throw storageError;
+          } else {
+            console.log('Image successfully deleted from storage:', filePath);
+          }
+        }
+      } else {
+        // Méthode 2: Essayer avec regex comme fallback
+        const storageMatch = urlWithoutParams.match(/\/(hero-images|channel-images|movie-images)\/(.+)$/);
+        
+        if (storageMatch && storageMatch[2]) {
+          const filePath = storageMatch[2];
+          const { error: storageError } = await supabase.storage
+            .from(bucket)
+            .remove([filePath]);
+          
+          if (storageError) {
+            console.error('Error deleting image from storage:', storageError);
+            throw storageError;
+          } else {
+            console.log('Image successfully deleted from storage:', filePath);
+          }
+        } else {
+          console.warn('Could not extract file path from URL:', urlWithoutParams);
         }
       }
     } catch (storageErr) {
-      console.warn('Exception deleting image from storage:', storageErr);
+      console.error('Exception deleting image from storage:', storageErr);
+      throw storageErr;
     }
   };
 
@@ -357,22 +388,33 @@ export function ImageCropUpload({
       return;
     }
 
-    // Utiliser currentImage ou preview pour obtenir l'URL réelle
-    const imageToDelete = preview || currentImage;
-    
-    // Supprimer l'image du storage si elle existe
-    if (imageToDelete) {
-      await deleteImageFromStorage(imageToDelete);
-    }
-    
-    setPreview(null);
-    setError(null);
-    setSuccess(false);
-    if (onUploadComplete) {
-      onUploadComplete(''); // Passer une chaîne vide pour supprimer
-    }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    try {
+      // Utiliser currentImage en priorité (image déjà sauvegardée), puis preview
+      const imageToDelete = currentImage || preview;
+      
+      // Supprimer l'image du storage si elle existe et est une URL Supabase
+      if (imageToDelete && (imageToDelete.includes('supabase.co') || imageToDelete.includes('supabase'))) {
+        await deleteImageFromStorage(imageToDelete);
+      }
+      
+      // Toujours réinitialiser l'état local
+      setPreview(null);
+      setError(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+      
+      // Appeler le callback pour mettre à jour l'état parent
+      if (onUploadComplete) {
+        onUploadComplete(''); // Passer une chaîne vide pour supprimer
+      }
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Error removing image:', error);
+      setError('Erreur lors de la suppression de l\'image');
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -382,17 +424,29 @@ export function ImageCropUpload({
       return;
     }
 
-    // Utiliser currentMobileImage ou previewMobile pour obtenir l'URL réelle
-    const imageToDelete = previewMobile || currentMobileImage;
-    
-    // Supprimer l'image mobile du storage si elle existe
-    if (imageToDelete) {
-      await deleteImageFromStorage(imageToDelete);
-    }
-    
-    setPreviewMobile(null);
-    if (onUploadCompleteMobile) {
-      onUploadCompleteMobile(''); // Passer une chaîne vide pour supprimer
+    try {
+      // Utiliser currentMobileImage en priorité (image déjà sauvegardée), puis previewMobile
+      const imageToDelete = currentMobileImage || previewMobile;
+      
+      // Supprimer l'image mobile du storage si elle existe et est une URL Supabase
+      if (imageToDelete && (imageToDelete.includes('supabase.co') || imageToDelete.includes('supabase'))) {
+        await deleteImageFromStorage(imageToDelete);
+      }
+      
+      // Toujours réinitialiser l'état local
+      setPreviewMobile(null);
+      setError(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+      
+      // Appeler le callback pour mettre à jour l'état parent
+      if (onUploadCompleteMobile) {
+        onUploadCompleteMobile(''); // Passer une chaîne vide pour supprimer
+      }
+    } catch (error) {
+      console.error('Error removing mobile image:', error);
+      setError('Erreur lors de la suppression de l\'image mobile');
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -402,17 +456,29 @@ export function ImageCropUpload({
       return;
     }
 
-    // Utiliser currentDesktopImage ou previewDesktop pour obtenir l'URL réelle
-    const imageToDelete = previewDesktop || currentDesktopImage;
-    
-    // Supprimer l'image desktop du storage si elle existe
-    if (imageToDelete) {
-      await deleteImageFromStorage(imageToDelete);
-    }
-    
-    setPreviewDesktop(null);
-    if (onUploadCompleteDesktop) {
-      onUploadCompleteDesktop(''); // Passer une chaîne vide pour supprimer
+    try {
+      // Utiliser currentDesktopImage en priorité (image déjà sauvegardée), puis previewDesktop
+      const imageToDelete = currentDesktopImage || previewDesktop;
+      
+      // Supprimer l'image desktop du storage si elle existe et est une URL Supabase
+      if (imageToDelete && (imageToDelete.includes('supabase.co') || imageToDelete.includes('supabase'))) {
+        await deleteImageFromStorage(imageToDelete);
+      }
+      
+      // Toujours réinitialiser l'état local
+      setPreviewDesktop(null);
+      setError(null);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2000);
+      
+      // Appeler le callback pour mettre à jour l'état parent
+      if (onUploadCompleteDesktop) {
+        onUploadCompleteDesktop(''); // Passer une chaîne vide pour supprimer
+      }
+    } catch (error) {
+      console.error('Error removing desktop image:', error);
+      setError('Erreur lors de la suppression de l\'image desktop');
+      setTimeout(() => setError(null), 3000);
     }
   };
 
