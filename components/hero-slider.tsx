@@ -73,8 +73,16 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
 
   return (
     <div className="relative w-full group" data-hero>
-      {/* Hero Content - Full width sur mobile, sans zoom */}
-      <div className="relative h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+      {/* Hero Content - Full width sur mobile, hauteur calculée selon le ratio mobile ou fixe moderne */}
+      <div 
+        className="relative sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[550px] sm:rounded-2xl overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10"
+        style={{
+          // Sur mobile, utiliser le ratio mobile pour calculer la hauteur dynamiquement
+          aspectRatio: isMobile ? `${currentHero?.mobile_aspect_ratio || 16 / 9}` : undefined,
+          // Hauteur minimale sur mobile pour garantir un espace suffisant pour le contenu
+          minHeight: isMobile ? '500px' : undefined,
+        }}
+      >
         {/* Background Images avec transition fluide */}
         {heroes.map((hero, index) => (
           <div
@@ -93,9 +101,6 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                 ? (hero.image_mobile_url || hero.image_url)
                 : (hero.image_desktop_url || hero.image_url);
               
-              // Ratio mobile depuis la base de données (défaut: 16/9 = 1.778)
-              const mobileRatio = hero.mobile_aspect_ratio || 16 / 9;
-              
               return imageUrl ? (
                 <img
                   src={imageUrl}
@@ -104,8 +109,6 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                   style={{
                     transform: 'none',
                     scale: '1',
-                    // Respecter le ratio mobile choisi dans l'admin panel
-                    aspectRatio: isMobile ? `${mobileRatio}` : undefined,
                   }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
@@ -114,12 +117,18 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
                 />
               ) : null;
             })()}
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+            {/* Gradient Overlay - Plus prononcé en bas sur mobile pour meilleure lisibilité */}
+            <div className={`absolute inset-0 ${
+              isMobile 
+                ? 'bg-gradient-to-t from-black/90 via-black/60 to-black/30' 
+                : 'bg-gradient-to-r from-black/80 via-black/50 to-transparent'
+            }`} />
             
-            {/* Content avec animation fluide style Netflix */}
+            {/* Content avec animation fluide style Netflix - Layout mobile moderne */}
             <div 
-              className={`relative h-full flex flex-col justify-center px-6 sm:px-8 md:px-12 lg:px-16 ${
+              className={`relative h-full flex flex-col ${
+                isMobile ? 'justify-end pb-8' : 'justify-center'
+              } px-4 sm:px-8 md:px-12 lg:px-16 ${
                 index === currentIndex 
                   ? 'opacity-100 translate-x-0' 
                   : index < currentIndex 
@@ -128,22 +137,38 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
               }`}
               style={{
                 transition: 'opacity 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                willChange: index === currentIndex ? 'auto' : 'opacity, transform'
+                willChange: index === currentIndex ? 'auto' : 'opacity, transform',
+                // Sur mobile, ajouter un padding-top pour que le contenu soit visible sous la navigation fixe
+                paddingTop: isMobile ? '88px' : undefined,
               }}
             >
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-display font-bold text-white mb-2 sm:mb-3 md:mb-4 leading-tight">
-                {hero.title}
-              </h1>
-              <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/90 mb-4 sm:mb-6 md:mb-8 max-w-2xl line-clamp-2">
-                {hero.subtitle}
-              </p>
-              <div>
-                <Link
-                  href={hero.cta_url}
-                  className="inline-flex items-center gap-2 px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold rounded-lg transition-all shadow-lg shadow-[#3498DB]/30 text-sm sm:text-base md:text-lg"
-                >
-                  {hero.cta_text}
-                </Link>
+              <div className={`${isMobile ? 'space-y-3' : 'space-y-2 sm:space-y-3 md:space-y-4'}`}>
+                <h1 className={`font-display font-bold text-white leading-tight ${
+                  isMobile 
+                    ? 'text-3xl mb-2' 
+                    : 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-2 sm:mb-3 md:mb-4'
+                }`}>
+                  {hero.title}
+                </h1>
+                <p className={`text-white/90 max-w-2xl ${
+                  isMobile 
+                    ? 'text-base mb-4 line-clamp-2' 
+                    : 'text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 line-clamp-2'
+                }`}>
+                  {hero.subtitle}
+                </p>
+                <div>
+                  <Link
+                    href={hero.cta_url}
+                    className={`inline-flex items-center gap-2 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold rounded-lg transition-all shadow-lg shadow-[#3498DB]/30 ${
+                      isMobile 
+                        ? 'px-6 py-3 text-base' 
+                        : 'px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 text-sm sm:text-base md:text-lg'
+                    }`}
+                  >
+                    {hero.cta_text}
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
