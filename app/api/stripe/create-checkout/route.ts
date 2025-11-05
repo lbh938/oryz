@@ -13,7 +13,22 @@ export async function POST(request: NextRequest) {
   
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Rafraîchir la session avant de vérifier l'utilisateur
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session && session.expires_at) {
+      const expiresAt = new Date(session.expires_at * 1000);
+      const now = new Date();
+      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+      const fifteenMinutes = 15 * 60 * 1000;
+      
+      if (timeUntilExpiry < fifteenMinutes && timeUntilExpiry > 0) {
+        await supabase.auth.refreshSession();
+      }
+    }
+    
+    // Utiliser session.user au lieu de getUser()
+    const user = session?.user ?? null;
     
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
@@ -223,7 +238,8 @@ export async function POST(request: NextRequest) {
         
         // Recréer les clients nécessaires
         const supabaseRecovery = await createClient();
-        const { data: { user: userRecovery } } = await supabaseRecovery.auth.getUser();
+        const { data: { session: sessionRecovery } } = await supabaseRecovery.auth.getSession();
+        const userRecovery = sessionRecovery?.user ?? null;
         
         if (!userRecovery) {
           return NextResponse.json(

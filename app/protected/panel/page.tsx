@@ -1063,60 +1063,60 @@ export default function AdminPage() {
                   </Button>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
+              <div className="space-y-4">
+                <div>
                     <Label htmlFor="title" className="text-white font-label text-xs sm:text-sm">
-                      Titre
-                    </Label>
-                    <Input
-                      id="title"
-                      value={heroConfig.title}
-                      onChange={(e) => setHeroConfig({ ...heroConfig, title: e.target.value })}
+                    Titre
+                  </Label>
+                  <Input
+                    id="title"
+                    value={heroConfig.title}
+                    onChange={(e) => setHeroConfig({ ...heroConfig, title: e.target.value })}
                       className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
-                      placeholder="Titre du hero"
-                    />
-                  </div>
+                    placeholder="Titre du hero"
+                  />
+                </div>
 
-                  <div>
+                <div>
                     <Label htmlFor="subtitle" className="text-white font-label text-xs sm:text-sm">
-                      Sous-titre
-                    </Label>
-                    <Input
-                      id="subtitle"
-                      value={heroConfig.subtitle}
-                      onChange={(e) => setHeroConfig({ ...heroConfig, subtitle: e.target.value })}
+                    Sous-titre
+                  </Label>
+                  <Input
+                    id="subtitle"
+                    value={heroConfig.subtitle}
+                    onChange={(e) => setHeroConfig({ ...heroConfig, subtitle: e.target.value })}
                       className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
-                      placeholder="Description"
-                    />
-                  </div>
+                    placeholder="Description"
+                  />
+                </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    <div>
+                  <div>
                       <Label htmlFor="cta_text" className="text-white font-label text-xs sm:text-sm">
-                        Texte du bouton
-                      </Label>
-                      <Input
-                        id="cta_text"
-                        value={heroConfig.cta_text}
-                        onChange={(e) => setHeroConfig({ ...heroConfig, cta_text: e.target.value })}
+                      Texte du bouton
+                    </Label>
+                    <Input
+                      id="cta_text"
+                      value={heroConfig.cta_text}
+                      onChange={(e) => setHeroConfig({ ...heroConfig, cta_text: e.target.value })}
                         className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
-                        placeholder="Ex: Regarder"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="cta_url" className="text-white font-label text-xs sm:text-sm">
-                        Lien du bouton
-                      </Label>
-                      <Input
-                        id="cta_url"
-                        value={heroConfig.cta_url}
-                        onChange={(e) => setHeroConfig({ ...heroConfig, cta_url: e.target.value })}
-                        className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
-                        placeholder="/watch/1"
-                      />
-                    </div>
+                      placeholder="Ex: Regarder"
+                    />
                   </div>
+
+                  <div>
+                      <Label htmlFor="cta_url" className="text-white font-label text-xs sm:text-sm">
+                      Lien du bouton
+                    </Label>
+                    <Input
+                      id="cta_url"
+                      value={heroConfig.cta_url}
+                      onChange={(e) => setHeroConfig({ ...heroConfig, cta_url: e.target.value })}
+                        className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                      placeholder="/watch/1"
+                    />
+                  </div>
+                </div>
 
                   {/* Ratio Mobile */}
                   <div>
@@ -1221,10 +1221,10 @@ export default function AdminPage() {
                     </p>
                   </div>
 
-                  {/* Image Upload with Crop */}
-                  <ImageCropUpload
-                    bucket="hero-images"
-                    currentImage={heroConfig.image_url}
+                {/* Image Upload with Crop */}
+                <ImageCropUpload
+                  bucket="hero-images"
+                  currentImage={heroConfig.image_url}
                     currentMobileImage={heroConfig.image_mobile_url}
                     currentDesktopImage={heroConfig.image_desktop_url}
                     label="Image Hero"
@@ -1255,71 +1255,71 @@ export default function AdminPage() {
                         setTimeout(() => loadData(), 500);
                       }
                     }}
-                    maxSizeMB={10}
-                    aspectRatio={21 / 9}
+                  maxSizeMB={10}
+                  aspectRatio={21 / 9}
                     mobileAspectRatio={heroConfig.mobile_aspect_ratio || 16 / 9}
                     allowSeparateMobileDesktop={true}
-                  />
+                />
 
-                  <div>
+                <div>
                     <Label htmlFor="image_url" className="text-white font-label text-[10px] sm:text-xs text-white/60">
-                      Ou entrez une URL manuellement
-                    </Label>
-                    <Input
-                      id="image_url"
-                      value={heroConfig.image_url}
-                      onChange={(e) => setHeroConfig({ ...heroConfig, image_url: e.target.value })}
+                    Ou entrez une URL manuellement
+                  </Label>
+                  <Input
+                    id="image_url"
+                    value={heroConfig.image_url}
+                    onChange={(e) => setHeroConfig({ ...heroConfig, image_url: e.target.value })}
                       className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
-                      placeholder="https://... ou /images/hero/banner.jpg"
-                    />
-                  </div>
+                    placeholder="https://... ou /images/hero/banner.jpg"
+                  />
+                </div>
 
-                  {/* Preview */}
-                  {heroConfig.image_url && (
+                {/* Preview */}
+                {heroConfig.image_url && (
                     <div className="mt-3 sm:mt-4">
                       <Label className="text-white font-label text-xs sm:text-sm mb-2 block">
-                        Aperçu
-                      </Label>
+                      Aperçu
+                    </Label>
                       <div className="relative h-24 sm:h-32 rounded-lg overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
-                        <img
-                          src={heroConfig.image_url}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
-                        />
+                      <img
+                        src={heroConfig.image_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
                         <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center p-3 sm:p-4">
-                          <div>
+                        <div>
                             <p className="text-white font-display font-bold text-xs sm:text-sm line-clamp-1">
-                              {heroConfig.title || 'Titre'}
-                            </p>
+                            {heroConfig.title || 'Titre'}
+                          </p>
                             <p className="text-white/70 font-sans text-[10px] sm:text-xs line-clamp-1 mt-1">
-                              {heroConfig.subtitle || 'Sous-titre'}
-                            </p>
-                          </div>
+                            {heroConfig.subtitle || 'Sous-titre'}
+                          </p>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  <Button
-                    onClick={handleSaveHero}
-                    disabled={isSaving}
+                <Button
+                  onClick={handleSaveHero}
+                  disabled={isSaving}
                     className="w-full bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold text-xs sm:text-sm h-10 sm:h-12"
-                  >
-                    {isSaving ? (
+                >
+                  {isSaving ? (
                       <><Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" /> Enregistrement...</>
-                    ) : saveStatus === 'success' ? (
+                  ) : saveStatus === 'success' ? (
                       <><CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Enregistré !</>
-                    ) : saveStatus === 'error' ? (
+                  ) : saveStatus === 'error' ? (
                       <><AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Erreur</>
-                    ) : (
+                  ) : (
                       <><Save className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Enregistrer</>
-                    )}
-                  </Button>
-                </div>
+                  )}
+                </Button>
               </div>
+            </div>
             )}
           </div>
         )}
@@ -1336,11 +1336,11 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-lg sm:text-xl font-display font-bold text-white">
                     Paramètres Iframe
-                  </h2>
+              </h2>
                   <p className="text-xs sm:text-sm text-white/60 font-sans">
                     Gérer l'attribut sandbox des iframes de lecture vidéo
-                  </p>
-                </div>
+                      </p>
+                    </div>
               </div>
 
               <div className="space-y-4">
@@ -1352,8 +1352,8 @@ export default function AdminPage() {
                     <p className="text-xs sm:text-sm text-white/60 font-sans">
                       Active l'attribut sandbox sur les iframes pour plus de sécurité. 
                       Désactivez si certains lecteurs vidéo ne fonctionnent pas correctement.
-                    </p>
-                  </div>
+                      </p>
+                    </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1411,11 +1411,11 @@ export default function AdminPage() {
                 <div>
                   <h2 className="text-lg sm:text-xl font-display font-bold text-white">
                     Visionnage Gratuit
-                  </h2>
+              </h2>
                   <p className="text-xs sm:text-sm text-white/60 font-sans">
                     Gérer le visionnage gratuit de 15 minutes pour les chaînes premium
-                  </p>
-                </div>
+                      </p>
+                    </div>
               </div>
 
               <div className="space-y-4">
@@ -1426,8 +1426,8 @@ export default function AdminPage() {
                     </Label>
                     <p className="text-xs sm:text-sm text-white/60 font-sans">
                       Permet aux utilisateurs non abonnés de regarder 15 minutes gratuites des chaînes premium avant de devoir s'abonner.
-                    </p>
-                  </div>
+                      </p>
+                    </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -1464,16 +1464,16 @@ export default function AdminPage() {
                     <div className="flex items-center gap-2 text-green-400">
                       <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span className="text-xs sm:text-sm font-label">Enregistré !</span>
-                    </div>
+              </div>
                   )}
                   {saveStatus === 'error' && (
                     <div className="flex items-center gap-2 text-red-400">
                       <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                       <span className="text-xs sm:text-sm font-label">Erreur</span>
-                    </div>
+            </div>
                   )}
-                </div>
-              </div>
+          </div>
+        </div>
             </div>
           </div>
         )}
@@ -1487,7 +1487,7 @@ export default function AdminPage() {
                 Statistiques des Notifications
               </h2>
               <NotificationStatsCard />
-            </div>
+          </div>
 
             {/* Envoi de Notification */}
             <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
@@ -1518,8 +1518,8 @@ export default function AdminPage() {
               <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
                 Test de Notification
               </h2>
-              <TestNotificationAll />
-            </div>
+            <TestNotificationAll />
+          </div>
 
             {/* Diagnostic des Notifications */}
             <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
@@ -1527,15 +1527,15 @@ export default function AdminPage() {
                 Diagnostic des Notifications
               </h2>
               <NotificationDiagnostic />
-            </div>
+        </div>
 
             {/* Panel de Debug */}
             <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
                 Panel de Debug
               </h2>
-              <NotificationDebugPanel />
-            </div>
+          <NotificationDebugPanel />
+        </div>
           </div>
         )}
 
@@ -1570,7 +1570,7 @@ export default function AdminPage() {
                       <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                 </Button>
-              </div>
+        </div>
 
               {isSportsScheduleOpen && (
                 <div className="space-y-4 mt-4 sm:mt-6">
@@ -1594,7 +1594,7 @@ HD2 ENGLISH
 06:00   Match 2 | https://...
 ...`}
                     />
-                  </div>
+        </div>
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
                     <Button
@@ -1618,7 +1618,7 @@ HD2 ENGLISH
                       <div className="flex items-center gap-2 text-green-400 text-xs sm:text-sm">
                         <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="font-label">{scheduleSaveMessage}</span>
-                      </div>
+        </div>
                     )}
                     {scheduleSaveStatus === 'error' && (
                       <div className="flex items-center gap-2 text-red-400 text-xs sm:text-sm">
