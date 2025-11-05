@@ -213,24 +213,60 @@ function SubscriptionPageContent() {
                       Complétez le processus de paiement pour activer votre essai gratuit de 7 jours.
                     </p>
                     <Button
-                      onClick={() => {
+                      onClick={async () => {
                         // Trouver le plan correspondant
                         const plan = PLANS.find(p => 
                           (p.id === 'kickoff' && subscription.plan_type === 'kickoff') ||
                           (p.id === 'pro_league' && subscription.plan_type === 'pro_league') ||
                           (p.id === 'vip' && subscription.plan_type === 'vip')
                         );
-                        if (plan) {
-                          handleSubscribe(plan);
-                        } else {
-                          // Si le plan n'est pas trouvé, rediriger vers la page d'abonnement
-                          window.location.href = '/subscription';
+                        
+                        if (!plan || !plan.priceId) {
+                          alert('Erreur : Plan non trouvé. Veuillez contacter le support.');
+                          return;
+                        }
+
+                        setProcessing(plan.id);
+
+                        try {
+                          // Créer une session checkout Stripe directement
+                          const response = await fetch('/api/stripe/create-checkout', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                              priceId: plan.priceId,
+                              planId: plan.id,
+                            }),
+                          });
+
+                          const data = await response.json();
+
+                          if (data.error) {
+                            alert(data.error);
+                            setProcessing(null);
+                            return;
+                          }
+
+                          // Rediriger directement vers l'URL de checkout Stripe
+                          if (data.url) {
+                            window.location.href = data.url;
+                          } else {
+                            alert('Erreur : URL de checkout non disponible');
+                            setProcessing(null);
+                          }
+                        } catch (error: any) {
+                          console.error('Error completing subscription:', error);
+                          alert('Erreur lors de la finalisation de l\'abonnement. Veuillez réessayer.');
+                          setProcessing(null);
                         }
                       }}
+                      disabled={processing === subscription.plan_type}
                       className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold"
                     >
                       <Crown className="h-4 w-4 mr-2" />
-                      Compléter l'abonnement
+                      {processing === subscription.plan_type ? 'Redirection vers le paiement...' : 'Compléter l\'abonnement'}
                     </Button>
                   </div>
                 )}

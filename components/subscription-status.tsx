@@ -5,12 +5,13 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Crown, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { getCurrentSubscription, hasPremiumAccess, Subscription } from '@/lib/subscriptions';
+import { getCurrentSubscription, hasPremiumAccess, Subscription, PLANS } from '@/lib/subscriptions';
 
 export function SubscriptionStatus() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
 
   useEffect(() => {
     const loadSubscription = async () => {
@@ -199,12 +200,62 @@ export function SubscriptionStatus() {
               <p className="text-yellow-400 text-sm font-sans font-semibold mb-3">
                 ⚠️ Votre abonnement n'est pas encore activé. Complétez le processus de paiement pour commencer votre essai gratuit.
               </p>
-              <Link href="/subscription" className="inline-block">
-                <Button className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold">
-                  <Crown className="h-4 w-4 mr-2" />
-                  Compléter l'abonnement
-                </Button>
-              </Link>
+              <Button
+                onClick={async () => {
+                  setCompleting(true);
+                  try {
+                    // Trouver le plan correspondant au plan_type de l'abonnement
+                    const plan = PLANS.find(p => 
+                      (p.id === 'kickoff' && subscription.plan_type === 'kickoff') ||
+                      (p.id === 'pro_league' && subscription.plan_type === 'pro_league') ||
+                      (p.id === 'vip' && subscription.plan_type === 'vip')
+                    );
+
+                    if (!plan || !plan.priceId) {
+                      alert('Erreur : Plan non trouvé. Veuillez contacter le support.');
+                      setCompleting(false);
+                      return;
+                    }
+
+                    // Créer une session checkout Stripe
+                    const response = await fetch('/api/stripe/create-checkout', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        priceId: plan.priceId,
+                        planId: plan.id,
+                      }),
+                    });
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                      alert(data.error);
+                      setCompleting(false);
+                      return;
+                    }
+
+                    // Rediriger directement vers l'URL de checkout Stripe
+                    if (data.url) {
+                      window.location.href = data.url;
+                    } else {
+                      alert('Erreur : URL de checkout non disponible');
+                      setCompleting(false);
+                    }
+                  } catch (error: any) {
+                    console.error('Error completing subscription:', error);
+                    alert('Erreur lors de la finalisation de l\'abonnement. Veuillez réessayer.');
+                    setCompleting(false);
+                  }
+                }}
+                disabled={completing}
+                className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold"
+              >
+                <Crown className="h-4 w-4 mr-2" />
+                {completing ? 'Redirection vers le paiement...' : 'Compléter l\'abonnement'}
+              </Button>
             </div>
           )}
 
