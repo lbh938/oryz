@@ -41,17 +41,30 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
 
   // Déterminer l'accès premium basé sur le contexte de subscription (rapide)
   useEffect(() => {
-    // Si l'utilisateur est admin, accès complet sans restriction
+    // Si l'utilisateur est admin, accès complet sans restriction (priorité absolue)
     if (isAdmin || status === 'admin') {
       setHasAccess(true);
       setLoading(false);
       return;
     }
 
-    // Si le statut indique un abonnement actif, l'utilisateur a accès
+    // Si le statut indique un abonnement actif, l'utilisateur a accès (priorité haute)
     if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial') {
       setHasAccess(true);
       setLoading(false);
+      return;
+    }
+
+    // Si on est encore en train de synchroniser mais qu'on a déjà un statut 'free', autoriser pour les chaînes non-premium
+    if (isSyncing && status === 'free' && !isPremium) {
+      setHasAccess(true);
+      setLoading(false);
+      return;
+    }
+
+    // Si on est encore en train de synchroniser sans statut, attendre uniquement pour les chaînes premium
+    if (isSyncing && status === 'anonymous' && !subscription && isPremium) {
+      // Attendre que la synchronisation soit terminée pour les chaînes premium
       return;
     }
     
@@ -94,10 +107,17 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
       return;
     }
     
-    // Sinon, pas d'accès
+    // Si ce n'est pas une chaîne premium, autoriser l'accès
+    if (!isPremium) {
+      setHasAccess(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Sinon, pas d'accès (pour chaîne premium sans abonnement)
     setHasAccess(false);
     setLoading(false);
-  }, [subscription, status, isAdmin, isSyncing]);
+  }, [subscription, status, isAdmin, isSyncing, isPremium]);
 
   const handleSubscribe = async () => {
     // Rediriger vers la page d'abonnement
@@ -105,8 +125,27 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     router.push('/subscription');
   };
 
-  // Afficher le loader seulement si on est en train de synchroniser ou si le preview charge
-  if (isSyncing || previewLoading || hasAccess === null) {
+  // Afficher le loader seulement si :
+  // 1. On est en train de synchroniser ET qu'on n'a pas encore de statut ET que c'est une chaîne premium
+  // 2. Le preview charge pour les non-abonnés ET qu'on n'a pas d'accès ET que c'est premium
+  // Ne JAMAIS bloquer si :
+  // - On a déjà hasAccess = true (même si isSyncing est true)
+  // - On a un statut d'abonnement valide (kickoff, pro_league, vip, trial, admin)
+  // - Ce n'est pas une chaîne premium
+  const shouldShowLoader = hasAccess === null && 
+                           isPremium && 
+                           ((isSyncing && status === 'anonymous' && !subscription) || 
+                            (previewLoading && !isAdmin && status !== 'admin' && !hasAccess && shouldUsePreview));
+  
+  // Si on a un statut d'abonnement valide, toujours autoriser l'accès (même si isSyncing est true)
+  if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin' || isAdmin) {
+    if (hasAccess !== true) {
+      setHasAccess(true);
+      setLoading(false);
+    }
+  }
+  
+  if (shouldShowLoader) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>

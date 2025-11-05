@@ -114,7 +114,7 @@ export function useSubscriptionSync() {
         setIsSyncing(false);
       }
     } else {
-      // Déterminer le statut utilisateur
+      // Déterminer le statut utilisateur immédiatement
       let userStatus: UserStatus = 'free';
       
       if (sub.status === 'trial' || sub.status === 'active') {
@@ -142,13 +142,14 @@ export function useSubscriptionSync() {
       
       setSubscription(sub);
       setStatus(userStatus);
+      setIsSyncing(false); // S'assurer que isSyncing est false après avoir défini le statut
     }
   }, []);
 
-  // Charger l'abonnement au montage
+  // Charger l'abonnement au montage - S'assurer que c'est appelé immédiatement
   useEffect(() => {
-    syncSubscription();
-  }, [syncSubscription]);
+    syncSubscription(false); // false = ne pas forcer la synchronisation
+  }, []); // [] = seulement au montage, pas de dépendances pour éviter les re-renders
 
   // Rafraîchir automatiquement lors du focus de la fenêtre
   useEffect(() => {
