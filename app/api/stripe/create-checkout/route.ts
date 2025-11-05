@@ -7,6 +7,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 });
 
 export async function POST(request: NextRequest) {
+  // Récupérer les paramètres de la requête en premier pour les utiliser dans le catch si nécessaire
+  const body = await request.json();
+  const { priceId, planId } = body;
+  
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -14,8 +18,6 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
-
-    const { priceId, planId } = await request.json();
     
     if (!priceId) {
       return NextResponse.json({ error: 'Price ID requis' }, { status: 400 });
@@ -130,6 +132,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Vérifier une dernière fois que le customer existe avant de créer la session
+    try {
+      await stripe.customers.retrieve(customerId);
+    } catch (error: any) {
+      // Si le customer n'existe toujours pas, créer un nouveau customer
+      console.error(`Customer ${customerId} n'existe pas, création d'un nouveau customer`);
+      const newCustomer = await stripe.customers.create({
+        email: user.email || undefined,
+        metadata: {
+          user_id: user.id,
+        },
+      });
+      customerId = newCustomer.id;
+      
+      // Mettre à jour la base de données avec le nouveau customer_id
+      await supabase
+        .from('subscriptions')
+        .update({ stripe_customer_id: customerId })
+        .eq('user_id', user.id);
+    }
+
     // Créer la session Checkout de Stripe avec essai gratuit de 7 jours
     // Une carte de paiement est REQUISE pour facturer automatiquement à la fin de l'essai
     // Le paiement sera collecté seulement à la fin de l'essai (0€ pendant 7 jours)
@@ -164,6 +187,82 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sessionId: session.id, url: session.url });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
+    
+    // Si l'erreur est liée à un customer inexistant, corriger et réessayer
+    if (error.code === 'resource_missing' && error.param === 'customer') {
+      try {
+        console.warn('Customer invalide détecté, correction en cours...');
+        
+        // Recréer les clients nécessaires
+        const supabaseRecovery = await createClient();
+        const { data: { user: userRecovery } } = await supabaseRecovery.auth.getUser();
+        
+        if (!userRecovery) {
+          return NextResponse.json(
+            { error: 'Utilisateur non authentifié' },
+            { status: 401 }
+          );
+        }
+        
+        // Nettoyer le customer_id invalide de la base de données
+        await supabaseRecovery
+          .from('subscriptions')
+          .update({ stripe_customer_id: null })
+          .eq('user_id', userRecovery.id);
+        
+        // Créer un nouveau customer
+        const newCustomer = await stripe.customers.create({
+          email: userRecovery.email || undefined,
+          metadata: {
+            user_id: userRecovery.id,
+          },
+        });
+        
+        // Mettre à jour la base de données avec le nouveau customer_id
+        await supabaseRecovery
+          .from('subscriptions')
+          .update({ stripe_customer_id: newCustomer.id })
+          .eq('user_id', userRecovery.id);
+        
+        // Réessayer de créer la session avec le nouveau customer
+        // Utiliser les variables priceId et planId du scope principal
+        const retrySession = await stripe.checkout.sessions.create({
+          customer: newCustomer.id,
+          payment_method_types: ['card'],
+          mode: 'subscription',
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          subscription_data: {
+            trial_period_days: 7,
+            metadata: {
+              user_id: userRecovery.id,
+              plan_id: planId,
+            },
+          },
+          payment_method_collection: 'always',
+          success_url: `${request.nextUrl.origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${request.nextUrl.origin}/subscription`,
+          metadata: {
+            user_id: userRecovery.id,
+            plan_id: planId,
+          },
+        });
+        
+        console.log('Session créée avec succès après correction du customer');
+        return NextResponse.json({ sessionId: retrySession.id, url: retrySession.url });
+      } catch (recoveryError: any) {
+        console.error('Error recovering from customer error:', recoveryError);
+        return NextResponse.json(
+          { error: 'Erreur lors de la correction du customer. Veuillez réessayer.' },
+          { status: 500 }
+        );
+      }
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Erreur lors de la création de la session' },
       { status: 500 }
