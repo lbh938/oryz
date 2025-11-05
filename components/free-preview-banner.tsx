@@ -49,7 +49,7 @@ export function FreePreviewBanner({ timeRemaining, minutesRemaining, onSubscribe
               className="w-full sm:w-auto bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-bold text-xs sm:text-sm md:text-base h-9 sm:h-10 md:h-12 px-3 sm:px-4 md:px-6 whitespace-nowrap shadow-lg shadow-[#3498DB]/30 flex-shrink-0"
             >
               <Crown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Essai gratuit 0€</span>
+              <span className="hidden sm:inline">Commencer l'essai gratuit</span>
               <span className="sm:hidden">S'abonner</span>
             </Button>
           </div>

@@ -43,7 +43,9 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     checkAccess();
   }, []);
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
+    // Rediriger vers la page d'abonnement
+    // L'utilisateur pourra sélectionner un plan et compléter le checkout
     router.push('/subscription');
   };
 

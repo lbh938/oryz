@@ -194,7 +194,21 @@ export function SubscriptionStatus() {
             </div>
           )}
 
-          {!hasAccess && subscription.status !== 'canceled' && (
+          {subscription.status === 'incomplete' && (
+            <div className="mt-4">
+              <p className="text-yellow-400 text-sm font-sans font-semibold mb-3">
+                ⚠️ Votre abonnement n'est pas encore activé. Complétez le processus de paiement pour commencer votre essai gratuit.
+              </p>
+              <Link href="/subscription" className="inline-block">
+                <Button className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Compléter l'abonnement
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {!hasAccess && subscription.status !== 'canceled' && subscription.status !== 'incomplete' && (
             <Link href="/subscription" className="inline-block mt-4">
               <Button variant="outline" className="border-[#3498DB] text-[#3498DB] hover:bg-[#3498DB] hover:text-white font-label font-semibold">
                 Gérer l'abonnement

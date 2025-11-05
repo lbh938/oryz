@@ -160,6 +160,13 @@ export async function hasPremiumAccess(): Promise<boolean> {
   const subscription = subscriptionData.data;
   if (!subscription) return false;
   
+  // IMPORTANT: Bloquer l'accès si l'abonnement n'est pas complété
+  // Si le statut est 'incomplete', l'utilisateur n'a pas complété le checkout
+  // On ne doit pas accorder l'accès avant que le checkout soit complété
+  if (subscription.status === 'incomplete') {
+    return false;
+  }
+  
   // IMPORTANT: Vérifier que l'utilisateur a complété le checkout Stripe
   // Si pas de stripe_subscription_id, l'utilisateur n'a pas complété le checkout
   // On ne doit pas accorder l'accès avant que le checkout soit complété

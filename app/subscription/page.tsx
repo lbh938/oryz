@@ -46,23 +46,31 @@ function SubscriptionPageContent() {
         
         // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
         const autoSubscribePlanId = searchParams.get('auto-subscribe');
+        const planFromStorage = localStorage.getItem('selectedPlanId');
+        const planId = autoSubscribePlanId || planFromStorage;
         
-        if (autoSubscribePlanId && !access) {
+        if (planId && !access) {
           // Scroller vers le plan sélectionné
-          scrollToPlan(autoSubscribePlanId);
+          scrollToPlan(planId);
           
           // Trouver le plan correspondant
-          const plan = PLANS.find(p => p.id === autoSubscribePlanId);
+          const plan = PLANS.find(p => p.id === planId);
           if (plan) {
             // Attendre un peu que l'état soit mis à jour puis lancer l'abonnement
             setTimeout(() => {
               handleSubscribe(plan);
+              // Nettoyer le localStorage après utilisation
+              localStorage.removeItem('selectedPlanId');
             }, 1500);
           }
         }
       } else {
-        // Ne pas scroller automatiquement si l'utilisateur n'est pas authentifié
-        // Il sera redirigé vers la page d'inscription, pas besoin de scroller ici
+        // Vérifier si un plan est enregistré dans localStorage (pour redirection après inscription)
+        const planFromStorage = localStorage.getItem('selectedPlanId');
+        if (planFromStorage) {
+          // Scroller vers le plan sélectionné
+          scrollToPlan(planFromStorage);
+        }
       }
       
       setLoading(false);
@@ -133,20 +141,11 @@ function SubscriptionPageContent() {
         return;
       }
 
-      const stripe = await stripePromise;
-      if (!stripe) {
-        alert('Erreur de chargement de Stripe');
-        setProcessing(null);
-        return;
-      }
-
-      // Rediriger vers Stripe Checkout
-      const { error } = await (stripe as any).redirectToCheckout({
-        sessionId: data.sessionId,
-      });
-
-      if (error) {
-        alert(error.message);
+      // Rediriger directement vers l'URL de checkout Stripe
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert('Erreur : URL de checkout non disponible');
         setProcessing(null);
       }
     } catch (error: any) {
@@ -189,13 +188,13 @@ function SubscriptionPageContent() {
         </div>
 
         {/* Statut actuel */}
-        {hasAccess && subscription && (
+        {subscription && subscription.status !== 'free' && (
           <div className="mb-8 sm:mb-12">
             <Card className="bg-gradient-to-r from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Crown className="h-6 w-6 text-[#3498DB]" />
                 <h2 className="text-xl font-display font-bold text-white">
-                  Abonnement Actif
+                  {subscription.status === 'incomplete' ? 'Abonnement en attente' : 'Abonnement Actif'}
                 </h2>
               </div>
               <div className="space-y-2 text-sm text-white/80">
@@ -205,6 +204,36 @@ function SubscriptionPageContent() {
                    subscription.plan_type === 'pro_league' ? 'Pro League' :
                    subscription.plan_type === 'vip' ? 'VIP' : 'Premium'}
                 </p>
+                {subscription.status === 'incomplete' && (
+                  <div className="mt-4 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                    <p className="text-yellow-400 font-semibold mb-3">
+                      ⚠️ Votre abonnement n'est pas encore activé
+                    </p>
+                    <p className="text-white/80 mb-4">
+                      Complétez le processus de paiement pour activer votre essai gratuit de 7 jours.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        // Trouver le plan correspondant
+                        const plan = PLANS.find(p => 
+                          (p.id === 'kickoff' && subscription.plan_type === 'kickoff') ||
+                          (p.id === 'pro_league' && subscription.plan_type === 'pro_league') ||
+                          (p.id === 'vip' && subscription.plan_type === 'vip')
+                        );
+                        if (plan) {
+                          handleSubscribe(plan);
+                        } else {
+                          // Si le plan n'est pas trouvé, rediriger vers la page d'abonnement
+                          window.location.href = '/subscription';
+                        }
+                      }}
+                      className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Compléter l'abonnement
+                    </Button>
+                  </div>
+                )}
                 {subscription.status === 'trial' && subscription.trial_end && (
                   <p>
                     <span className="font-semibold">Essai gratuit jusqu'au:</span>{' '}
@@ -504,7 +533,7 @@ function SubscriptionPageContent() {
                         >
                           <Button
                             onClick={() => handleSubscribe(plan)}
-                            disabled={hasAccess || processing === plan.id}
+                            disabled={processing === plan.id || (isAuthenticated === true && hasAccess)}
                             className={`w-full sm:w-auto min-w-[140px] sm:min-w-[180px] ${
                               plan.isPopular
                                 ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white shadow-lg shadow-[#3498DB]/30'
@@ -514,17 +543,15 @@ function SubscriptionPageContent() {
                             {processing === plan.id ? (
                               <div className="flex items-center gap-2">
                                 <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
-                                <span className="hidden sm:inline">Traitement...</span>
+                                <span className="hidden sm:inline">Redirection vers Stripe...</span>
                                 <span className="sm:hidden">...</span>
                               </div>
-                            ) : !isAuthenticated ? (
-                              'Essai gratuit'
-                            ) : hasAccess ? (
+                            ) : isAuthenticated && hasAccess ? (
                               'Déjà abonné'
                             ) : (
                               <>
-                                <span className="hidden sm:inline">S'abonner maintenant</span>
-                                <span className="sm:hidden">S'abonner</span>
+                                <span className="hidden sm:inline">Commencer l'essai gratuit</span>
+                                <span className="sm:hidden">Essai gratuit</span>
                               </>
                             )}
                           </Button>
