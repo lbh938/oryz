@@ -97,6 +97,10 @@ export default function AdminPage() {
   const [scheduleSaveStatus, setScheduleSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [scheduleSaveMessage, setScheduleSaveMessage] = useState('');
   
+  // Subscriptions State
+  const [activeSubscriptions, setActiveSubscriptions] = useState<any[]>([]);
+  const [isLoadingSubscriptions, setIsLoadingSubscriptions] = useState(false);
+  
   // Sections State - Pour organiser le panel
   const [activeSection, setActiveSection] = useState<string>('overview');
 
@@ -135,6 +139,31 @@ export default function AdminPage() {
     }
   };
 
+  // Charger les abonnements actifs
+  const loadSubscriptions = async () => {
+    setIsLoadingSubscriptions(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('active_subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        console.error('Error loading subscriptions:', error);
+        setActiveSubscriptions([]);
+      } else {
+        setActiveSubscriptions(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading subscriptions:', error);
+      setActiveSubscriptions([]);
+    } finally {
+      setIsLoadingSubscriptions(false);
+    }
+  };
+
   // Charger les données
   const loadData = async () => {
     setIsLoading(true);
@@ -157,6 +186,9 @@ export default function AdminPage() {
       setGlobalStats(stats);
       setIframeSandboxEnabled(sandboxSetting !== 'false');
       setFreePreviewEnabled(freePreviewSetting !== 'false');
+      
+      // Charger les abonnements actifs
+      await loadSubscriptions();
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
@@ -164,16 +196,32 @@ export default function AdminPage() {
     }
   };
 
-  // Rafraîchir les analytics toutes les 10 secondes
+  // Rafraîchir les analytics et les abonnements toutes les 10 secondes
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const interval = setInterval(async () => {
       const visitors = await getActiveVisitorsCount();
       setActiveVisitors(visitors);
+      // Rafraîchir les abonnements actifs
+      await loadSubscriptions();
     }, 10000);
 
     return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
+  // Rafraîchir automatiquement lors du focus de la fenêtre
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleFocus = () => {
+      loadSubscriptions();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [isAuthenticated]);
 
   // Sauvegarder le paramètre sandbox
@@ -686,6 +734,96 @@ export default function AdminPage() {
         {/* Section Vue d'ensemble */}
         {activeSection === 'overview' && (
           <div className="space-y-6 sm:space-y-8">
+            {/* Abonnements Actifs */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
+                  Abonnements Actifs ({activeSubscriptions.length})
+                </h2>
+                <Button
+                  onClick={loadSubscriptions}
+                  disabled={isLoadingSubscriptions}
+                  className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold text-xs sm:text-sm h-8 sm:h-9 px-3 sm:px-4"
+                >
+                  {isLoadingSubscriptions ? (
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    'Actualiser'
+                  )}
+                </Button>
+              </div>
+              {isLoadingSubscriptions && activeSubscriptions.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-[#3498DB]" />
+                </div>
+              ) : activeSubscriptions.length > 0 ? (
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {activeSubscriptions.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`w-2 h-2 rounded-full ${
+                            sub.status === 'trial' ? 'bg-yellow-400' :
+                            sub.status === 'active' ? 'bg-green-400' :
+                            'bg-red-400'
+                          }`} />
+                          <p className="text-sm text-white font-sans font-semibold truncate">
+                            {sub.username || sub.email || 'Utilisateur'}
+                          </p>
+                          <span className={`px-2 py-0.5 rounded text-xs font-label font-semibold ${
+                            sub.status === 'trial' ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/30' :
+                            sub.status === 'active' ? 'bg-green-400/20 text-green-400 border border-green-400/30' :
+                            'bg-red-400/20 text-red-400 border border-red-400/30'
+                          }`}>
+                            {sub.status === 'trial' ? 'Essai' :
+                             sub.status === 'active' ? 'Actif' :
+                             sub.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-white/60">
+                          <p>
+                            <span className="font-semibold">Plan:</span>{' '}
+                            {sub.plan_type === 'kickoff' ? 'Kick-Off' :
+                             sub.plan_type === 'pro_league' ? 'Pro League' :
+                             sub.plan_type === 'vip' ? 'VIP' : 'Premium'}
+                          </p>
+                          {sub.trial_end && (
+                            <p>
+                              <span className="font-semibold">Fin essai:</span>{' '}
+                              {new Date(sub.trial_end).toLocaleDateString('fr-FR')}
+                            </p>
+                          )}
+                          {sub.current_period_end && (
+                            <p>
+                              <span className="font-semibold">Fin période:</span>{' '}
+                              {new Date(sub.current_period_end).toLocaleDateString('fr-FR')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="ml-4 text-right flex-shrink-0">
+                        {sub.price_monthly && (
+                          <p className="text-lg font-display font-bold text-[#3498DB]">
+                            {sub.price_monthly.toFixed(2)}€
+                          </p>
+                        )}
+                        <p className="text-xs text-white/60">
+                          /mois
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-white/40 py-8 font-sans">
+                  Aucun abonnement actif
+                </p>
+              )}
+            </div>
+
             {/* Top Pages 24h */}
             <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 uppercase">
