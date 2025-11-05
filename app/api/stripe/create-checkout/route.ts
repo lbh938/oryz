@@ -86,24 +86,39 @@ export async function POST(request: NextRequest) {
                        planId === 'vip' ? 19.99 : 19.99,
     };
 
-    // Vérifier si l'utilisateur a déjà un abonnement actif
-    const { data: existingSub } = await supabase
+    // Vérifier si l'utilisateur a déjà un ou plusieurs abonnements actifs
+    const { data: existingSubs } = await supabase
       .from('subscriptions')
       .select('id, stripe_subscription_id, status, plan_type')
       .eq('user_id', user.id)
-      .maybeSingle();
+      .in('status', ['trial', 'active']);
 
-    // Si l'utilisateur a déjà un abonnement actif (trial ou active), empêcher la création d'un nouvel abonnement
-    if (existingSub && existingSub.stripe_subscription_id && 
-        (existingSub.status === 'trial' || existingSub.status === 'active')) {
-      return NextResponse.json(
-        { 
-          error: `Vous avez déjà un abonnement actif (${existingSub.plan_type === 'kickoff' ? 'Kick-Off' : existingSub.plan_type === 'pro_league' ? 'Pro League' : existingSub.plan_type === 'vip' ? 'VIP' : 'Premium'}). Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`,
-          hasActiveSubscription: true 
-        },
-        { status: 400 }
-      );
+    // Si l'utilisateur a déjà un ou plusieurs abonnements actifs, empêcher la création d'un nouvel abonnement
+    if (existingSubs && existingSubs.length > 0) {
+      const activeSub = existingSubs.find(sub => sub.stripe_subscription_id && 
+        (sub.status === 'trial' || sub.status === 'active'));
+      
+      if (activeSub) {
+        const planName = activeSub.plan_type === 'kickoff' ? 'Kick-Off' : 
+                        activeSub.plan_type === 'pro_league' ? 'Pro League' : 
+                        activeSub.plan_type === 'vip' ? 'VIP' : 'Premium';
+        
+        return NextResponse.json(
+          { 
+            error: `Vous avez déjà un abonnement actif (${planName}). Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.${existingSubs.length > 1 ? ` (${existingSubs.length} abonnements détectés)` : ''}`,
+            hasActiveSubscription: true 
+          },
+          { status: 400 }
+        );
+      }
     }
+
+    // Récupérer l'abonnement existant (incomplete ou free) pour le mettre à jour
+    const { data: existingSub } = await supabase
+      .from('subscriptions')
+      .select('id, stripe_subscription_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
     // Si l'utilisateur n'a pas d'abonnement ou pas de stripe_subscription_id,
     // on crée juste un enregistrement avec le customer_id (mais pas de statut 'trial' encore)

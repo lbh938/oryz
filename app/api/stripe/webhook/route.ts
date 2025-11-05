@@ -65,6 +65,32 @@ export async function POST(request: NextRequest) {
           updateData.current_period_end = new Date(subscription.current_period_end * 1000).toISOString();
         }
 
+        // Vérifier s'il y a d'autres abonnements actifs pour cet utilisateur
+        const { data: otherActiveSubs } = await supabase
+          .from('subscriptions')
+          .select('id, created_at')
+          .eq('user_id', userId)
+          .in('status', ['trial', 'active'])
+          .neq('stripe_subscription_id', subscription.id)
+          .not('stripe_subscription_id', 'is', null);
+        
+        // Si d'autres abonnements actifs existent, les annuler (garder seulement le plus récent)
+        if (otherActiveSubs && otherActiveSubs.length > 0) {
+          console.warn(`Multiple active subscriptions detected for user ${userId}. Canceling older ones.`);
+          
+          await supabase
+            .from('subscriptions')
+            .update({
+              status: 'canceled',
+              canceled_at: new Date().toISOString(),
+              cancel_at_period_end: true
+            })
+            .eq('user_id', userId)
+            .in('status', ['trial', 'active'])
+            .neq('stripe_subscription_id', subscription.id)
+            .not('stripe_subscription_id', 'is', null);
+        }
+        
         const { error: updateError } = await supabase
           .from('subscriptions')
           .update(updateData)
