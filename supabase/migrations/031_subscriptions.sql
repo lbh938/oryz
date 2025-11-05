@@ -60,6 +60,7 @@ ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- Supprimer les policies existantes avant de les créer
 DROP POLICY IF EXISTS "Users can view their own subscription" ON subscriptions;
+DROP POLICY IF EXISTS "Users can insert their own subscription" ON subscriptions;
 DROP POLICY IF EXISTS "Users can update their own subscription" ON subscriptions;
 DROP POLICY IF EXISTS "Admins can view all subscriptions" ON subscriptions;
 DROP POLICY IF EXISTS "Admins can modify all subscriptions" ON subscriptions;
@@ -69,6 +70,12 @@ CREATE POLICY "Users can view their own subscription"
   ON subscriptions
   FOR SELECT
   USING (auth.uid() = user_id);
+
+-- Policy : Les utilisateurs peuvent créer leur propre abonnement
+CREATE POLICY "Users can insert their own subscription"
+  ON subscriptions
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- Policy : Les utilisateurs peuvent mettre à jour leur propre abonnement (via Stripe webhook)
 CREATE POLICY "Users can update their own subscription"

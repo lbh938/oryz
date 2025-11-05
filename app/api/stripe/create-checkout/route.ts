@@ -63,14 +63,36 @@ export async function POST(request: NextRequest) {
                        planId === 'vip' ? 19.99 : 19.99,
     };
 
-    // Utiliser upsert avec onConflict sur user_id (contrainte unique)
-    const { data: subscription, error: subError } = await supabase
+    // Vérifier d'abord si une subscription existe déjà
+    const { data: existingSub } = await supabase
       .from('subscriptions')
-      .upsert(subscriptionData, {
-        onConflict: 'user_id',
-      })
-      .select()
-      .single();
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    let subscription;
+    let subError;
+
+    if (existingSub) {
+      // Mettre à jour l'abonnement existant
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .update(subscriptionData)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+      subscription = data;
+      subError = error;
+    } else {
+      // Créer un nouvel abonnement
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .insert(subscriptionData)
+        .select()
+        .single();
+      subscription = data;
+      subError = error;
+    }
 
     if (subError) {
       console.error('Error creating subscription:', subError);
