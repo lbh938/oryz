@@ -127,7 +127,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     return () => {
       subscription.unsubscribe();
-      clearInterval(refreshInterval);
     };
   }, []);
 
