@@ -7,6 +7,7 @@ import { PopupBlocker } from "@/components/popup-blocker";
 import { SilenceConsole } from "@/components/silence-console";
 import { AdBlocker } from "@/components/ad-blocker";
 import { AuthRefreshProvider } from "@/components/auth-refresh-provider";
+import { SubscriptionProvider } from "@/contexts/subscription-context";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -108,12 +109,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthRefreshProvider>
-            <SilenceConsole />
-            <PopupBlocker />
-            <AdBlocker />
-            <SWRegister />
-            {children}
-            <PWAInstall />
+            <SubscriptionProvider>
+              <SilenceConsole />
+              <PopupBlocker />
+              <AdBlocker />
+              <SWRegister />
+              {children}
+              <PWAInstall />
+            </SubscriptionProvider>
           </AuthRefreshProvider>
         </ThemeProvider>
       </body>

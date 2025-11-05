@@ -31,12 +31,32 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.metadata?.user_id;
+        let userId = session.metadata?.user_id;
         
-        if (!userId) break;
+        // Si userId n'est pas dans metadata, essayer de le trouver via customer_id
+        if (!userId && session.customer) {
+          const { data: subData } = await supabase
+            .from('subscriptions')
+            .select('user_id')
+            .eq('stripe_customer_id', session.customer as string)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (subData) {
+            userId = subData.user_id;
+            console.log(`Found user_id via customer_id: ${userId}`);
+          }
+        }
+        
+        if (!userId) {
+          console.error('No user_id found in checkout.session.completed event');
+          break;
+        }
 
         // Vérifier si c'est une session de subscription
         if (session.mode !== 'subscription' || !session.subscription) {
+          console.log('Not a subscription session, skipping');
           break;
         }
 
@@ -91,15 +111,52 @@ export async function POST(request: NextRequest) {
             .not('stripe_subscription_id', 'is', null);
         }
         
-        const { error: updateError } = await supabase
+        // Trouver l'abonnement de l'utilisateur (incomplete ou celui qui correspond au customer_id)
+        const { data: existingSub } = await supabase
           .from('subscriptions')
-          .update(updateData)
-          .eq('user_id', userId);
+          .select('id, status, stripe_customer_id')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
         
-        if (updateError) {
-          console.error('Error updating subscription in webhook:', updateError);
+        if (existingSub) {
+          // Mettre à jour l'abonnement existant
+          const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update({
+              ...updateData,
+              stripe_customer_id: session.customer as string, // S'assurer que le customer_id est à jour
+            })
+            .eq('id', existingSub.id);
+          
+          if (updateError) {
+            console.error('Error updating subscription in webhook:', updateError);
+          } else {
+            console.log(`Subscription updated successfully for user ${userId}:`, updateData);
+          }
         } else {
-          console.log(`Subscription updated successfully for user ${userId}:`, updateData);
+          // Créer un nouvel abonnement si aucun n'existe
+          const planId = session.metadata?.plan_id || 'kickoff';
+          const { error: insertError } = await supabase
+            .from('subscriptions')
+            .insert({
+              user_id: userId,
+              stripe_customer_id: session.customer as string,
+              ...updateData,
+              plan_type: planId === 'kickoff' ? 'kickoff' :
+                         planId === 'pro_league' ? 'pro_league' :
+                         planId === 'vip' ? 'vip' : 'kickoff',
+              price_monthly: planId === 'kickoff' ? 9.99 :
+                             planId === 'pro_league' ? 14.99 :
+                             planId === 'vip' ? 19.99 : 9.99,
+            });
+          
+          if (insertError) {
+            console.error('Error creating subscription in webhook:', insertError);
+          } else {
+            console.log(`Subscription created successfully for user ${userId}:`, updateData);
+          }
         }
 
         break;
