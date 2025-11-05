@@ -92,23 +92,16 @@ export function useAuthRefresh() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // Rafraîchir avant les clics sur les liens (interception)
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const link = target.closest('a');
-      if (link && link.href) {
-        // Rafraîchir avant la navigation
-        refreshSession(true);
-      }
-    };
-    document.addEventListener('click', handleClick, true);
+    // NE PAS rafraîchir sur tous les clics de liens - cela peut causer des déconnexions
+    // Le refresh se fait déjà automatiquement toutes les 3 minutes et sur focus/visibility
+    // Retirer cette interception pour éviter les déconnexions lors de la navigation
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('click', handleClick, true);
+      // Ne plus retirer handleClick car on ne l'ajoute plus
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }

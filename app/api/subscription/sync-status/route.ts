@@ -9,11 +9,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user) {
+    // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
+
+    const user = session.user;
 
     // Récupérer l'abonnement de l'utilisateur le plus récent
     const { data: subscription, error: subError } = await supabase

@@ -18,6 +18,30 @@ export function useSubscriptionSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
+  // Fonction pour déterminer le statut rapidement depuis l'abonnement
+  const determineStatusFromSubscription = useCallback((sub: any): UserStatus => {
+    if (!sub || sub.status === 'free') {
+      return 'free';
+    }
+
+    if (sub.status === 'trial' || sub.status === 'active') {
+      if (sub.plan_type === 'kickoff') return 'kickoff';
+      if (sub.plan_type === 'pro_league') return 'pro_league';
+      if (sub.plan_type === 'vip') return 'vip';
+      return 'trial';
+    }
+
+    if (sub.status === 'incomplete' && sub.stripe_subscription_id) {
+      // Si incomplete mais avec stripe_subscription_id, considérer comme actif
+      if (sub.plan_type === 'kickoff') return 'kickoff';
+      if (sub.plan_type === 'pro_league') return 'pro_league';
+      if (sub.plan_type === 'vip') return 'vip';
+      return 'trial';
+    }
+
+    return 'free';
+  }, []);
+
   const syncSubscription = useCallback(async (force = false) => {
     const supabase = createClient();
     
@@ -28,149 +52,102 @@ export function useSubscriptionSync() {
       setStatus('anonymous');
       setIsAdmin(false);
       setSubscription(null);
+      setIsSyncing(false);
       return;
     }
 
     const user = session.user;
 
-    // Vérifier si l'utilisateur est admin
-    const { data: adminData } = await supabase
-      .from('admin_users')
-      .select('is_super_admin')
-      .eq('id', user.id)
-      .maybeSingle();
+    // Vérifier si l'utilisateur est admin EN PARALLÈLE avec le chargement de l'abonnement
+    const [adminData, sub] = await Promise.all([
+      supabase
+        .from('admin_users')
+        .select('is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle(),
+      getCurrentSubscription()
+    ]);
 
-    const isUserAdmin = adminData?.is_super_admin === true;
+    const isUserAdmin = adminData.data?.is_super_admin === true;
     setIsAdmin(isUserAdmin);
 
-    // Si admin, donner accès complet
+    // Si admin, donner accès complet IMMÉDIATEMENT
     if (isUserAdmin) {
       setStatus('admin');
-      setSubscription(null); // Pas besoin d'abonnement pour les admins
+      setSubscription(null);
+      setIsSyncing(false);
       return;
     }
 
-    // Charger l'abonnement depuis la base de données
-    const sub = await getCurrentSubscription();
-    
+    // Déterminer et définir le statut IMMÉDIATEMENT depuis la DB (sans attendre Stripe)
     if (!sub || sub.status === 'free') {
       setStatus('free');
-      setSubscription(sub);
+      setSubscription(sub || null);
+      setIsSyncing(false);
       return;
     }
 
-    // Si l'abonnement est "incomplete" avec stripe_customer_id mais sans stripe_subscription_id,
-    // ou si force = true, synchroniser avec Stripe
-    if (force || (sub.status === 'incomplete' && sub.stripe_customer_id && !sub.stripe_subscription_id)) {
-      setIsSyncing(true);
-      try {
-        const response = await fetch('/api/subscription/sync-status', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    // Définir le statut IMMÉDIATEMENT depuis l'abonnement
+    const userStatus = determineStatusFromSubscription(sub);
+    setSubscription(sub);
+    setStatus(userStatus);
+    setIsSyncing(false); // Ne pas bloquer l'affichage
 
-        const data: SubscriptionSyncResult = await response.json();
-        
-        if (data.subscription) {
-          setSubscription(data.subscription);
-          setStatus(data.status as UserStatus);
-          setLastSync(new Date());
-        } else {
-          // Déterminer le statut utilisateur basé sur l'abonnement
-          let userStatus: UserStatus = 'free';
-          
-          if (sub.status === 'trial' || sub.status === 'active') {
-            if (sub.plan_type === 'kickoff') {
-              userStatus = 'kickoff';
-            } else if (sub.plan_type === 'pro_league') {
-              userStatus = 'pro_league';
-            } else if (sub.plan_type === 'vip') {
-              userStatus = 'vip';
-            } else {
-              userStatus = 'trial';
-            }
-          } else if (sub.status === 'incomplete' && sub.stripe_subscription_id) {
-            if (sub.plan_type === 'kickoff') {
-              userStatus = 'kickoff';
-            } else if (sub.plan_type === 'pro_league') {
-              userStatus = 'pro_league';
-            } else if (sub.plan_type === 'vip') {
-              userStatus = 'vip';
-            } else {
-              userStatus = 'trial';
-            }
+    // Synchroniser avec Stripe EN ARRIÈRE-PLAN seulement si nécessaire
+    const needsSync = force || (sub.status === 'incomplete' && sub.stripe_customer_id && !sub.stripe_subscription_id);
+    
+    if (needsSync) {
+      // Ne pas mettre isSyncing à true pour éviter de bloquer l'UI
+      // Synchroniser en arrière-plan sans bloquer
+      fetch('/api/subscription/sync-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => response.json())
+        .then((data: SubscriptionSyncResult) => {
+          if (data.subscription && data.status) {
+            // Mettre à jour seulement si la synchronisation a réussi
+            setSubscription(data.subscription);
+            setStatus(data.status as UserStatus);
+            setLastSync(new Date());
           }
-          
-          setSubscription(sub);
-          setStatus(userStatus);
-        }
-      } catch (error) {
-        console.error('Error syncing subscription:', error);
-        setSubscription(sub);
-        setStatus(sub.status as UserStatus);
-      } finally {
-        setIsSyncing(false);
-      }
-    } else {
-      // Déterminer le statut utilisateur immédiatement
-      let userStatus: UserStatus = 'free';
-      
-      if (sub.status === 'trial' || sub.status === 'active') {
-        if (sub.plan_type === 'kickoff') {
-          userStatus = 'kickoff';
-        } else if (sub.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (sub.plan_type === 'vip') {
-          userStatus = 'vip';
-        } else {
-          userStatus = 'trial';
-        }
-      } else if (sub.status === 'incomplete' && sub.stripe_subscription_id) {
-        // Si incomplete mais avec stripe_subscription_id, considérer comme actif
-        if (sub.plan_type === 'kickoff') {
-          userStatus = 'kickoff';
-        } else if (sub.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (sub.plan_type === 'vip') {
-          userStatus = 'vip';
-        } else {
-          userStatus = 'trial';
-        }
-      }
-      
-      setSubscription(sub);
-      setStatus(userStatus);
-      setIsSyncing(false); // S'assurer que isSyncing est false après avoir défini le statut
+        })
+        .catch(error => {
+          console.error('Error syncing subscription in background:', error);
+          // Ne pas changer le statut en cas d'erreur, garder celui de la DB
+        });
     }
-  }, []);
+  }, [determineStatusFromSubscription]);
 
-  // Charger l'abonnement au montage - S'assurer que c'est appelé immédiatement
+  // Charger l'abonnement au montage - IMMÉDIATEMENT et de manière optimisée
   useEffect(() => {
-    syncSubscription(false); // false = ne pas forcer la synchronisation
-  }, []); // [] = seulement au montage, pas de dépendances pour éviter les re-renders
+    syncSubscription(false); // false = ne pas forcer la synchronisation Stripe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // [] = seulement au montage, syncSubscription est stable grâce à useCallback
 
-  // Rafraîchir automatiquement lors du focus de la fenêtre
+  // Rafraîchir automatiquement lors du focus de la fenêtre (sans bloquer)
   useEffect(() => {
     const handleFocus = () => {
-      syncSubscription();
+      // Rafraîchir en arrière-plan sans bloquer l'UI
+      syncSubscription(false);
     };
     window.addEventListener('focus', handleFocus);
 
-    // Rafraîchir toutes les 30 secondes si l'abonnement est incomplete
+    // Rafraîchir toutes les 60 secondes si l'abonnement est incomplete (moins agressif)
     let interval: NodeJS.Timeout | null = null;
-    if (subscription?.status === 'incomplete' && subscription.stripe_customer_id) {
+    if (subscription?.status === 'incomplete' && subscription.stripe_customer_id && !subscription.stripe_subscription_id) {
       interval = setInterval(() => {
-        syncSubscription(true);
-      }, 30000); // 30 secondes
+        syncSubscription(true); // Forcer la synchronisation seulement pour incomplete
+      }, 60000); // 60 secondes (moins agressif)
       
-      // Arrêter après 5 minutes
+      // Arrêter après 10 minutes
       setTimeout(() => {
         if (interval) {
           clearInterval(interval);
         }
-      }, 300000); // 5 minutes
+      }, 600000); // 10 minutes
     }
 
     return () => {
@@ -179,7 +156,7 @@ export function useSubscriptionSync() {
         clearInterval(interval);
       }
     };
-  }, [subscription?.status, subscription?.stripe_customer_id, syncSubscription]);
+  }, [subscription?.status, subscription?.stripe_customer_id, subscription?.stripe_subscription_id, syncSubscription]);
 
   return {
     subscription,
