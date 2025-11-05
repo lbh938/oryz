@@ -1,18 +1,58 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PLANS, Plan } from '@/lib/subscriptions';
-import { Crown, Check, ArrowRight } from 'lucide-react';
+import { PLANS, Plan, getCurrentSubscription } from '@/lib/subscriptions';
+import { Crown, Check, ArrowRight, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export function SubscriptionCards() {
   const router = useRouter();
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        const sub = await getCurrentSubscription();
+        setCurrentSubscription(sub);
+      } catch (error) {
+        console.error('Error loading subscription:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSubscription();
+  }, []);
 
   const handleCardClick = (plan: Plan) => {
     // Rediriger vers la page d'abonnement avec le plan sélectionné
     router.push(`/subscription#plan-${plan.id}`);
+  };
+
+  // Fonction pour vérifier si un plan est un upgrade
+  const isUpgrade = (planId: string): boolean => {
+    if (!currentSubscription) return false;
+    const currentPlan = currentSubscription.plan_type;
+    
+    // Ordre des plans : free < kickoff < pro_league < vip
+    const planOrder: Record<string, number> = {
+      'free': 0,
+      'kickoff': 1,
+      'pro_league': 2,
+      'vip': 3
+    };
+    
+    return planOrder[planId] > (planOrder[currentPlan] || 0);
+  };
+
+  // Fonction pour vérifier si c'est le plan actuel
+  const isCurrentPlan = (planId: string): boolean => {
+    if (!currentSubscription) return false;
+    return currentSubscription.plan_type === planId && 
+           (currentSubscription.status === 'active' || currentSubscription.status === 'trial');
   };
 
   return (
@@ -77,18 +117,48 @@ export function SubscriptionCards() {
               </div>
 
               {/* Bouton */}
-              <Button
-                onClick={() => handleCardClick(plan)}
-                className={`w-full h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base ${
-                  plan.isPopular
-                    ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white'
-                    : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                } font-label font-semibold`}
-              >
-                <span className="hidden sm:inline">{plan.isPopular ? 'Commencer maintenant' : 'Voir les détails'}</span>
-                <span className="sm:hidden">{plan.isPopular ? 'Commencer' : 'Détails'}</span>
-                <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
-              </Button>
+              {loading ? (
+                <Button
+                  disabled
+                  className="w-full h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base bg-white/5 text-white/50 border border-white/10 font-label font-semibold"
+                >
+                  Chargement...
+                </Button>
+              ) : isCurrentPlan(plan.id) ? (
+                <Button
+                  disabled
+                  className="w-full h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base bg-green-600/20 text-green-400 border border-green-600/30 font-label font-semibold"
+                >
+                  ✓ Plan actuel
+                </Button>
+              ) : isUpgrade(plan.id) ? (
+                <Button
+                  onClick={() => handleCardClick(plan)}
+                  className={`w-full h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base ${
+                    plan.isPopular
+                      ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white'
+                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  } font-label font-semibold`}
+                >
+                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                  <span className="hidden sm:inline">Upgrade vers {plan.name}</span>
+                  <span className="sm:hidden">Upgrade</span>
+                  <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => handleCardClick(plan)}
+                  className={`w-full h-10 sm:h-11 md:h-12 text-xs sm:text-sm md:text-base ${
+                    plan.isPopular
+                      ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white'
+                      : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
+                  } font-label font-semibold`}
+                >
+                  <span className="hidden sm:inline">{plan.isPopular ? 'Commencer maintenant' : 'Voir les détails'}</span>
+                  <span className="sm:hidden">{plan.isPopular ? 'Commencer' : 'Détails'}</span>
+                  <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1.5 sm:ml-2" />
+                </Button>
+              )}
             </div>
           </Card>
         ))}

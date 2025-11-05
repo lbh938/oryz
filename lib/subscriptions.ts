@@ -95,13 +95,14 @@ export async function getCurrentSubscription(): Promise<Subscription | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Utiliser maybeSingle() pour éviter l'erreur si aucune ligne n'est trouvée
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return null;
   
@@ -130,14 +131,33 @@ export async function isAdmin(): Promise<boolean> {
 /**
  * Vérifier si l'utilisateur a accès premium
  * Les admins ont automatiquement accès premium
+ * Version optimisée avec une seule requête
  */
 export async function hasPremiumAccess(): Promise<boolean> {
-  // Vérifier si l'utilisateur est admin - les admins ont accès automatique
-  const admin = await isAdmin();
-  if (admin) return true;
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
 
-  const subscription = await getCurrentSubscription();
-  
+  // Vérifier si l'utilisateur est admin en parallèle avec la subscription
+  const [adminData, subscriptionData] = await Promise.all([
+    supabase
+      .from('admin_users')
+      .select('is_super_admin')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('subscriptions')
+      .select('status, trial_end, current_period_end')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+  ]);
+
+  // Si admin, retourner true immédiatement
+  if (adminData.data?.is_super_admin === true) return true;
+
+  const subscription = subscriptionData.data;
   if (!subscription) return false;
   
   // Vérifier si l'abonnement est actif ou en essai

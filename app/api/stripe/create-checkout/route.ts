@@ -49,21 +49,24 @@ export async function POST(request: NextRequest) {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 7); // 7 jours d'essai
 
-    const { data: subscription, error: subError } = await supabase
-      .from('subscriptions')
-      .upsert({
-        user_id: user.id,
-        stripe_customer_id: customerId,
-        status: 'trial',
-        trial_start: trialStart.toISOString(),
-        trial_end: trialEnd.toISOString(),
-        plan_type: planId === 'kickoff' ? 'kickoff' :
+    const subscriptionData = {
+      user_id: user.id,
+      stripe_customer_id: customerId,
+      status: 'trial' as const,
+      trial_start: trialStart.toISOString(),
+      trial_end: trialEnd.toISOString(),
+      plan_type: (planId === 'kickoff' ? 'kickoff' :
                    planId === 'pro_league' ? 'pro_league' :
-                   planId === 'vip' ? 'vip' : 'premium',
-        price_monthly: planId === 'kickoff' ? 9.99 :
+                   planId === 'vip' ? 'vip' : 'premium') as any,
+      price_monthly: planId === 'kickoff' ? 9.99 :
                        planId === 'pro_league' ? 14.99 :
                        planId === 'vip' ? 19.99 : 19.99,
-      }, {
+    };
+
+    // Utiliser upsert avec onConflict sur user_id (contrainte unique)
+    const { data: subscription, error: subError } = await supabase
+      .from('subscriptions')
+      .upsert(subscriptionData, {
         onConflict: 'user_id',
       })
       .select()
@@ -71,6 +74,7 @@ export async function POST(request: NextRequest) {
 
     if (subError) {
       console.error('Error creating subscription:', subError);
+      // Ne pas bloquer le processus si l'upsert échoue, on continue quand même
     }
 
     // Créer la session Checkout de Stripe avec essai gratuit de 7 jours
