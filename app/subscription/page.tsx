@@ -4,24 +4,25 @@ import { useState, useEffect, Suspense } from 'react';
 import { MainLayout } from '@/components/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { PLANS, Plan, hasPremiumAccess, getCurrentSubscription } from '@/lib/subscriptions';
+import { PLANS, Plan } from '@/lib/subscriptions';
 import { Check, Crown, X, Monitor, Smartphone, Tablet, Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 function SubscriptionPageContent() {
-  const [subscription, setSubscription] = useState<any>(null);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+  
+  // Utiliser le contexte global pour le statut d'abonnement (plus rapide et cohérent)
+  const { subscription, status, isAdmin } = useSubscriptionContext();
 
   // Fonction pour scroller vers un plan spécifique
   const scrollToPlan = (planId: string) => {
@@ -31,25 +32,21 @@ function SubscriptionPageContent() {
     }
   };
 
-  // Vérifier l'authentification au chargement
+  // Vérifier l'authentification au chargement (utiliser getSession() pour éviter les déconnexions)
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       setUser(user);
       setIsAuthenticated(!!user);
       
+      // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
       if (user) {
-        const sub = await getCurrentSubscription();
-        const access = await hasPremiumAccess();
-        setSubscription(sub);
-        setHasAccess(access);
-        
-        // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
         const autoSubscribePlanId = searchParams.get('auto-subscribe');
         const planFromStorage = localStorage.getItem('selectedPlanId');
         const planId = autoSubscribePlanId || planFromStorage;
         
-        if (planId && !access) {
+        if (planId && (status === 'free' || status === 'anonymous')) {
           // Scroller vers le plan sélectionné
           scrollToPlan(planId);
           
@@ -72,87 +69,26 @@ function SubscriptionPageContent() {
           scrollToPlan(planFromStorage);
         }
       }
-      
-      setLoading(false);
     };
 
     checkAuth();
 
     // Écouter les changements d'authentification
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session?.user);
-      
-      if (session?.user) {
-        const sub = await getCurrentSubscription();
-        const access = await hasPremiumAccess();
-        setSubscription(sub);
-        setHasAccess(access);
-      }
+    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null;
+      setUser(user);
+      setIsAuthenticated(!!user);
     });
 
-    // Rafraîchir automatiquement lors du focus de la fenêtre
-    const handleFocus = () => {
-      if (user) {
-        checkAuth();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-
-    // Rafraîchir toutes les 3 secondes si l'abonnement est incomplete ou si on n'a pas accès
-    // (pour détecter les changements après paiement)
-    let interval: NodeJS.Timeout | null = null;
-    if (subscription && 
-        ((subscription as any).status === 'incomplete' || 
-         (hasAccess === false && (subscription as any).status !== 'free'))) {
-      interval = setInterval(() => {
-        if (user) {
-          checkAuth();
-        }
-      }, 3000);
-      
-      // Arrêter le rafraîchissement après 2 minutes pour éviter une boucle infinie
-      setTimeout(() => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      }, 120000); // 2 minutes
-    }
-
     return () => {
-      subscription.unsubscribe();
-      window.removeEventListener('focus', handleFocus);
-      if (interval) {
-        clearInterval(interval);
-      }
+      authSubscription.unsubscribe();
     };
-  }, [(subscription as any)?.status]); // Re-exécuter si le statut change
+  }, [status, searchParams]); // Dépendances stables
 
-  // Fonction pour vérifier si l'utilisateur a un abonnement actif (même avec statut incomplete mais avec stripe_subscription_id)
+  // Fonction pour vérifier si l'utilisateur a un abonnement actif (utilise le contexte global)
   const hasActiveSubscription = (): boolean => {
-    if (!subscription) return false;
-    
-    // Si le statut est 'active' ou 'trial', c'est actif
-    if (subscription.status === 'active' || subscription.status === 'trial') {
-      return true;
-    }
-    
-    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
-    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
-    // On considère l'abonnement comme actif si les dates sont valides ou si stripe_subscription_id existe
-    if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
-      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
-      if (subscription.trial_end && new Date(subscription.trial_end) > new Date()) {
-        return true;
-      }
-      if (subscription.current_period_end && new Date(subscription.current_period_end) > new Date()) {
-        return true;
-      }
-      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
-      return true;
-    }
-    
-    return false;
+    // Utiliser le statut du contexte global (plus rapide et cohérent)
+    return status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin';
   };
 
   // Fonction pour vérifier si c'est le plan actuel
@@ -162,27 +98,8 @@ function SubscriptionPageContent() {
     // Vérifier que c'est le bon plan
     if (subscription.plan_type !== planId) return false;
     
-    // Si le statut est 'active' ou 'trial', c'est le plan actuel
-    if (subscription.status === 'active' || subscription.status === 'trial') {
-      return true;
-    }
-    
-    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
-    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
-    // On considère l'abonnement comme actif si les dates sont valides
-    if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
-      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
-      if (subscription.trial_end) {
-        return new Date(subscription.trial_end) > new Date();
-      }
-      if (subscription.current_period_end) {
-        return new Date(subscription.current_period_end) > new Date();
-      }
-      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
-      return true;
-    }
-    
-    return false;
+    // Utiliser le statut du contexte global
+    return hasActiveSubscription();
   };
 
   // Fonction pour vérifier si un plan est un upgrade
@@ -248,12 +165,8 @@ function SubscriptionPageContent() {
             router.push('/auth/login?redirect=/subscription');
           }
         } else if (data.hasActiveSubscription) {
-          // Si l'utilisateur a déjà un abonnement actif, rafraîchir les données et afficher l'erreur
-          // Recharger l'abonnement pour mettre à jour l'état
-          const sub = await getCurrentSubscription();
-          const access = await hasPremiumAccess();
-          setSubscription(sub);
-          setHasAccess(access);
+          // Si l'utilisateur a déjà un abonnement actif, afficher l'erreur
+          // Le contexte global se mettra à jour automatiquement
           alert(data.error);
         } else {
           alert(data.error);
@@ -276,17 +189,8 @@ function SubscriptionPageContent() {
     }
   };
 
-  if (loading) {
-    return (
-      <MainLayout>
-        <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
+  // Pas besoin de loader car le contexte global charge déjà le statut rapidement
+  // Le composant peut s'afficher immédiatement
 
   return (
     <MainLayout>

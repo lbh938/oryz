@@ -102,14 +102,8 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     // Écouter les changements d'auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Rafraîchir la session si elle change
-      if (session && event !== 'SIGNED_OUT') {
-        try {
-          await supabase.auth.refreshSession();
-        } catch (error) {
-          console.error('Error refreshing session on auth change:', error);
-        }
-      }
+      // NE PAS rafraîchir la session à chaque changement d'auth - cela peut causer des déconnexions
+      // Le rafraîchissement est géré par useAuthRefresh
       
       setUser(session?.user ?? null);
       
@@ -127,17 +121,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       }
     });
 
-    // Rafraîchir la session toutes les 3 minutes pour éviter les déconnexions (plus agressif)
-    const refreshInterval = setInterval(async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await supabase.auth.refreshSession();
-        }
-      } catch (error) {
-        console.error('Error refreshing session:', error);
-      }
-    }, 3 * 60 * 1000); // Toutes les 3 minutes
+    // NE PAS rafraîchir la session dans main-layout - cela peut causer des déconnexions
+    // Le rafraîchissement est géré par useAuthRefresh qui est plus optimisé
+    // Pas besoin d'intervalle ici
 
     return () => {
       subscription.unsubscribe();
