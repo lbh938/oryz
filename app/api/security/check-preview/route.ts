@@ -92,6 +92,26 @@ export async function POST(request: NextRequest) {
     // Utiliser session.user au lieu de getUser() pour éviter les appels API supplémentaires
     const user = session?.user ?? null;
 
+    // Si l'utilisateur est admin, autoriser l'accès sans restriction
+    if (user) {
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('is_super_admin')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (adminData?.is_super_admin === true) {
+        return NextResponse.json({
+          canUse: true,
+          reason: 'Admin - Accès complet',
+          trustScore: 1.0,
+          isVPN: false,
+          isProxy: false,
+          isTor: false,
+        });
+      }
+    }
+
     const { deviceFingerprint, userAgent } = await request.json();
 
     if (!deviceFingerprint) {

@@ -92,8 +92,11 @@ export const PLANS: Plan[] = [
 export async function getCurrentSubscription(): Promise<Subscription | null> {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return null;
+
+  const user = session.user;
 
   // Utiliser maybeSingle() pour éviter l'erreur si aucune ligne n'est trouvée
   // Filtrer les abonnements invalides (incomplete sans stripe_subscription_id)
@@ -117,14 +120,15 @@ export async function getCurrentSubscription(): Promise<Subscription | null> {
 export async function isAdmin(): Promise<boolean> {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return false;
 
   // Vérifier dans admin_users
   const { data: adminData } = await supabase
     .from('admin_users')
     .select('is_super_admin')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .maybeSingle();
 
   return adminData?.is_super_admin === true;
@@ -137,8 +141,12 @@ export async function isAdmin(): Promise<boolean> {
  */
 export async function hasPremiumAccess(): Promise<boolean> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+  
+  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return false;
+
+  const user = session.user;
 
   // Vérifier si l'utilisateur est admin en parallèle avec la subscription
   const [adminData, subscriptionData] = await Promise.all([

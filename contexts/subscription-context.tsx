@@ -6,6 +6,7 @@ import { useSubscriptionSync, UserStatus } from '@/hooks/use-subscription-sync';
 interface SubscriptionContextType {
   subscription: any;
   status: UserStatus;
+  isAdmin: boolean;
   isSyncing: boolean;
   lastSync: Date | null;
   syncSubscription: () => void;
@@ -14,13 +15,14 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { subscription, status, isSyncing, lastSync, syncSubscription } = useSubscriptionSync();
+  const { subscription, status, isAdmin, isSyncing, lastSync, syncSubscription } = useSubscriptionSync();
 
   return (
     <SubscriptionContext.Provider
       value={{
         subscription,
         status,
+        isAdmin,
         isSyncing,
         lastSync,
         syncSubscription,

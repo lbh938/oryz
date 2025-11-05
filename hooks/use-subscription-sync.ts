@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getCurrentSubscription } from '@/lib/subscriptions';
 
-export type UserStatus = 'anonymous' | 'free' | 'trial' | 'kickoff' | 'pro_league' | 'vip';
+export type UserStatus = 'anonymous' | 'free' | 'trial' | 'kickoff' | 'pro_league' | 'vip' | 'admin';
 
 interface SubscriptionSyncResult {
   subscription: any;
@@ -14,16 +14,39 @@ interface SubscriptionSyncResult {
 export function useSubscriptionSync() {
   const [subscription, setSubscription] = useState<any>(null);
   const [status, setStatus] = useState<UserStatus>('anonymous');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
 
   const syncSubscription = useCallback(async (force = false) => {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
     
-    if (!user) {
+    // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
       setStatus('anonymous');
+      setIsAdmin(false);
       setSubscription(null);
+      return;
+    }
+
+    const user = session.user;
+
+    // Vérifier si l'utilisateur est admin
+    const { data: adminData } = await supabase
+      .from('admin_users')
+      .select('is_super_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isUserAdmin = adminData?.is_super_admin === true;
+    setIsAdmin(isUserAdmin);
+
+    // Si admin, donner accès complet
+    if (isUserAdmin) {
+      setStatus('admin');
+      setSubscription(null); // Pas besoin d'abonnement pour les admins
       return;
     }
 
@@ -160,6 +183,7 @@ export function useSubscriptionSync() {
   return {
     subscription,
     status,
+    isAdmin,
     isSyncing,
     lastSync,
     syncSubscription: () => syncSubscription(true),

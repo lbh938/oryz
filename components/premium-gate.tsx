@@ -24,9 +24,11 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
   const isPremium = isPremiumChannel(channelName);
   
   // Utiliser le contexte de subscription pour un accès instantané
-  const { subscription, status, isSyncing } = useSubscriptionContext();
+  const { subscription, status, isAdmin, isSyncing } = useSubscriptionContext();
   
-  // Utiliser le hook de prévisualisation gratuite uniquement pour les chaînes premium
+  // Utiliser le hook de prévisualisation gratuite uniquement pour les chaînes premium ET si l'utilisateur n'est pas admin
+  // Les admins n'ont pas besoin de vérification de prévisualisation
+  const shouldUsePreview = isPremium && !isAdmin && status !== 'admin';
   const { 
     timeRemaining, 
     hasExceededLimit, 
@@ -35,10 +37,17 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     authorizationError,
     formatTimeRemaining, 
     minutesRemaining 
-  } = useFreePreview(isPremium ? channelId : 'not-premium');
+  } = useFreePreview(shouldUsePreview ? channelId : 'not-premium');
 
   // Déterminer l'accès premium basé sur le contexte de subscription (rapide)
   useEffect(() => {
+    // Si l'utilisateur est admin, accès complet sans restriction
+    if (isAdmin || status === 'admin') {
+      setHasAccess(true);
+      setLoading(false);
+      return;
+    }
+
     // Si le statut indique un abonnement actif, l'utilisateur a accès
     if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial') {
       setHasAccess(true);
@@ -88,7 +97,7 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     // Sinon, pas d'accès
     setHasAccess(false);
     setLoading(false);
-  }, [subscription, status, isSyncing]);
+  }, [subscription, status, isAdmin, isSyncing]);
 
   const handleSubscribe = async () => {
     // Rediriger vers la page d'abonnement
