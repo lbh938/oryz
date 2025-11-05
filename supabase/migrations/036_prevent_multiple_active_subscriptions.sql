@@ -1,6 +1,9 @@
 -- Migration pour empêcher plusieurs abonnements actifs pour un même utilisateur
 -- Cette migration vérifie et nettoie les abonnements multiples
 
+-- Supprimer la fonction existante si elle existe (pour permettre le changement de type de retour)
+DROP FUNCTION IF EXISTS check_and_cleanup_multiple_subscriptions();
+
 -- Fonction pour vérifier et nettoyer les abonnements multiples
 CREATE OR REPLACE FUNCTION check_and_cleanup_multiple_subscriptions()
 RETURNS TABLE(user_id UUID, kept_subscription_id UUID, canceled_count BIGINT) AS $$
