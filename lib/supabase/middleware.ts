@@ -44,15 +44,14 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  // NE PAS rafraîchir la session dans le middleware à chaque navigation
-  // Cela peut causer des déconnexions. Le rafraîchissement se fait côté client.
-  // Juste vérifier la session sans la rafraîchir pour éviter les déconnexions
+  // Utiliser getClaims() pour vérifier l'authentification sans rafraîchir la session
+  // Cela évite les déconnexions tout en maintenant la sécurité
   
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
   
-  // Vérifier la session sans la rafraîchir (pour éviter les déconnexions)
-  // Le rafraîchissement est géré côté client via useAuthRefresh
+  // NE PAS rafraîchir la session dans le middleware - cela cause des déconnexions
+  // Le rafraîchissement est géré côté client via useAuthRefresh de manière optimisée
 
   // Protéger /protected
   if (

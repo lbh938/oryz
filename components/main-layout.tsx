@@ -50,7 +50,8 @@ export function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        // Toujours utiliser getSession() au lieu de getUser() pour éviter les déconnexions
+        // Utiliser getSession() pour une vérification rapide côté client
+        // Pour les vérifications critiques, utiliser getUser() après
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -59,23 +60,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           return;
         }
         
-        // Si la session existe mais est proche d'expirer, la rafraîchir
-        if (session && session.expires_at) {
-          const expiresAt = new Date(session.expires_at * 1000);
-          const now = new Date();
-          const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-          const fifteenMinutes = 15 * 60 * 1000;
-          
-          // Si la session expire dans moins de 15 minutes, la rafraîchir
-          if (timeUntilExpiry < fifteenMinutes && timeUntilExpiry > 0) {
-            await supabase.auth.refreshSession();
-          }
-        } else if (session) {
-          // Si pas de expires_at mais session existe, rafraîchir quand même
-          await supabase.auth.refreshSession();
-        }
+        // NE PAS rafraîchir la session ici - cela cause des déconnexions
+        // Le rafraîchissement est géré par useAuthRefresh de manière optimisée
         
-        // Utiliser session.user au lieu de getUser() pour éviter les appels API supplémentaires
+        // Utiliser session.user pour l'affichage (rapide)
+        // Pour les opérations critiques, getUser() sera appelé ailleurs
         setUser(session?.user ?? null);
         
         // Charger le profil si l'utilisateur est connecté
