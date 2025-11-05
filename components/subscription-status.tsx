@@ -95,8 +95,52 @@ export function SubscriptionStatus() {
 
   // Afficher le statut de l'abonnement
   const getStatusInfo = () => {
-    // Si le statut est 'incomplete', c'est que le checkout n'a pas été complété
-    if (subscription.status === 'incomplete') {
+    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+    // On affiche "Essai gratuit" au lieu de "En attente"
+    if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+      // Si les dates sont valides, afficher comme essai actif
+      if (subscription.trial_end && new Date(subscription.trial_end) > new Date()) {
+        return {
+          icon: Clock,
+          color: 'text-[#3498DB]',
+          bgColor: 'bg-[#3498DB]/10',
+          borderColor: 'border-[#3498DB]/30',
+          label: 'Essai gratuit',
+          description: `Jusqu'au ${new Date(subscription.trial_end).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}`
+        };
+      }
+      if (subscription.current_period_end && new Date(subscription.current_period_end) > new Date()) {
+        return {
+          icon: CheckCircle,
+          color: 'text-green-500',
+          bgColor: 'bg-green-500/10',
+          borderColor: 'border-green-500/30',
+          label: 'Actif',
+          description: `Renouvellement le ${new Date(subscription.current_period_end).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}`
+        };
+      }
+      // Si pas de dates mais qu'il y a un stripe_subscription_id, afficher comme essai actif
+      return {
+        icon: Clock,
+        color: 'text-[#3498DB]',
+        bgColor: 'bg-[#3498DB]/10',
+        borderColor: 'border-[#3498DB]/30',
+        label: 'Essai gratuit',
+        description: 'Actif'
+      };
+    }
+    
+    // Si le statut est 'incomplete' SANS stripe_subscription_id, c'est que le checkout n'a pas été complété
+    if (subscription.status === 'incomplete' && !subscription.stripe_subscription_id) {
       return {
         icon: AlertCircle,
         color: 'text-yellow-500',
@@ -226,7 +270,7 @@ export function SubscriptionStatus() {
             </div>
           )}
 
-          {subscription.status === 'incomplete' && (
+          {subscription.status === 'incomplete' && !subscription.stripe_subscription_id && (
             <div className="mt-4">
               <p className="text-yellow-400 text-sm font-sans font-semibold mb-3">
                 ⚠️ Votre abonnement n'est pas encore activé. Complétez le processus de paiement pour commencer votre essai gratuit.

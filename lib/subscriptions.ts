@@ -160,10 +160,25 @@ export async function hasPremiumAccess(): Promise<boolean> {
   const subscription = subscriptionData.data;
   if (!subscription) return false;
   
-  // IMPORTANT: Bloquer l'accès si l'abonnement n'est pas complété
-  // Si le statut est 'incomplete', l'utilisateur n'a pas complété le checkout
-  // On ne doit pas accorder l'accès avant que le checkout soit complété
-  if (subscription.status === 'incomplete') {
+  // IMPORTANT: Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+  // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+  // On considère l'abonnement comme actif si les dates sont valides
+  if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+    // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
+    if (subscription.trial_end) {
+      return new Date(subscription.trial_end) > new Date();
+    }
+    if (subscription.current_period_end) {
+      return new Date(subscription.current_period_end) > new Date();
+    }
+    // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
+    // (le webhook va mettre à jour les dates prochainement)
+    return true;
+  }
+  
+  // IMPORTANT: Bloquer l'accès si le statut est 'incomplete' SANS stripe_subscription_id
+  // Cela signifie que l'utilisateur n'a pas complété le checkout
+  if (subscription.status === 'incomplete' && !subscription.stripe_subscription_id) {
     return false;
   }
   

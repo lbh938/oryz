@@ -85,8 +85,31 @@ export function SubscriptionCards() {
   // Fonction pour vérifier si c'est le plan actuel
   const isCurrentPlan = (planId: string): boolean => {
     if (!currentSubscription) return false;
-    return currentSubscription.plan_type === planId && 
-           (currentSubscription.status === 'active' || currentSubscription.status === 'trial');
+    
+    // Vérifier que c'est le bon plan
+    if (currentSubscription.plan_type !== planId) return false;
+    
+    // Si le statut est 'active' ou 'trial', c'est le plan actuel
+    if (currentSubscription.status === 'active' || currentSubscription.status === 'trial') {
+      return true;
+    }
+    
+    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+    // On considère l'abonnement comme actif si les dates sont valides
+    if (currentSubscription.status === 'incomplete' && currentSubscription.stripe_subscription_id) {
+      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
+      if (currentSubscription.trial_end) {
+        return new Date(currentSubscription.trial_end) > new Date();
+      }
+      if (currentSubscription.current_period_end) {
+        return new Date(currentSubscription.current_period_end) > new Date();
+      }
+      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
+      return true;
+    }
+    
+    return false;
   };
 
   return (
