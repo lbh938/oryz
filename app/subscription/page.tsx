@@ -99,15 +99,24 @@ function SubscriptionPageContent() {
     };
     window.addEventListener('focus', handleFocus);
 
-    // Rafraîchir toutes les 5 secondes si l'abonnement est incomplete
+    // Rafraîchir toutes les 3 secondes si l'abonnement est incomplete ou si on n'a pas accès
     // (pour détecter les changements après paiement)
     let interval: NodeJS.Timeout | null = null;
-    if (subscription && (subscription as any).status === 'incomplete') {
+    if (subscription && 
+        ((subscription as any).status === 'incomplete' || 
+         (hasAccess === false && (subscription as any).status !== 'free'))) {
       interval = setInterval(() => {
         if (user) {
           checkAuth();
         }
-      }, 5000);
+      }, 3000);
+      
+      // Arrêter le rafraîchissement après 2 minutes pour éviter une boucle infinie
+      setTimeout(() => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      }, 120000); // 2 minutes
     }
 
     return () => {
@@ -126,6 +135,15 @@ function SubscriptionPageContent() {
       localStorage.setItem('selectedPlanId', plan.id);
       // Utiliser window.location.href pour éviter les problèmes de navigation Next.js
       window.location.href = `/auth/sign-up?redirect=/subscription&plan=${plan.id}`;
+      return;
+    }
+
+    // Vérifier si l'utilisateur a déjà un abonnement actif pour ce plan
+    if (subscription && subscription.status !== 'free' && 
+        subscription.status !== 'incomplete' && 
+        subscription.status !== 'canceled' &&
+        subscription.plan_type === plan.id) {
+      alert(`Vous avez déjà un abonnement actif pour le plan ${plan.name}. Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`);
       return;
     }
 
@@ -159,6 +177,14 @@ function SubscriptionPageContent() {
           if (confirmCreate) {
             router.push('/auth/login?redirect=/subscription');
           }
+        } else if (data.hasActiveSubscription) {
+          // Si l'utilisateur a déjà un abonnement actif, rafraîchir les données et afficher l'erreur
+          // Recharger l'abonnement pour mettre à jour l'état
+          const sub = await getCurrentSubscription();
+          const access = await hasPremiumAccess();
+          setSubscription(sub);
+          setHasAccess(access);
+          alert(data.error);
         } else {
           alert(data.error);
         }
@@ -593,8 +619,23 @@ function SubscriptionPageContent() {
                           }`}
                         >
                           <Button
-                            onClick={() => handleSubscribe(plan)}
-                            disabled={processing === plan.id || (isAuthenticated === true && hasAccess)}
+                            onClick={async () => {
+                              // Vérifier si l'utilisateur a déjà un abonnement actif pour ce plan
+                              if (subscription && subscription.status !== 'free' && 
+                                  subscription.status !== 'incomplete' && 
+                                  subscription.status !== 'canceled' &&
+                                  subscription.plan_type === plan.id) {
+                                alert(`Vous avez déjà un abonnement actif pour le plan ${plan.name}. Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`);
+                                return;
+                              }
+                              
+                              handleSubscribe(plan);
+                            }}
+                            disabled={processing === plan.id || 
+                                    (isAuthenticated === true && hasAccess && 
+                                     subscription && subscription.status !== 'free' && 
+                                     subscription.status !== 'incomplete' && 
+                                     subscription.status !== 'canceled')}
                             className={`w-full sm:w-auto min-w-[140px] sm:min-w-[180px] ${
                               plan.isPopular
                                 ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white shadow-lg shadow-[#3498DB]/30'
@@ -607,8 +648,11 @@ function SubscriptionPageContent() {
                                 <span className="hidden sm:inline">Redirection vers Stripe...</span>
                                 <span className="sm:hidden">...</span>
                               </div>
-                            ) : isAuthenticated && hasAccess ? (
-                              'Déjà abonné'
+                            ) : isAuthenticated && hasAccess && 
+                                 subscription && subscription.status !== 'free' && 
+                                 subscription.status !== 'incomplete' && 
+                                 subscription.status !== 'canceled' ? (
+                              subscription.plan_type === plan.id ? 'Plan actuel' : 'Déjà abonné'
                             ) : (
                               <>
                                 <span className="hidden sm:inline">Commencer l'essai gratuit</span>

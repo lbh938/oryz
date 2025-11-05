@@ -32,13 +32,20 @@ export function SubscriptionStatus() {
     };
     window.addEventListener('focus', handleFocus);
 
-    // Rafraîchir toutes les 5 secondes si l'abonnement est incomplete
+    // Rafraîchir toutes les 3 secondes si l'abonnement est incomplete ou si on a un accès
     // (pour détecter les changements après paiement)
     let interval: NodeJS.Timeout | null = null;
-    if (subscription?.status === 'incomplete') {
+    if (subscription?.status === 'incomplete' || (subscription && hasAccess === false && subscription.status !== 'free')) {
       interval = setInterval(() => {
         loadSubscription();
-      }, 5000);
+      }, 3000);
+      
+      // Arrêter le rafraîchissement après 2 minutes pour éviter une boucle infinie
+      setTimeout(() => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      }, 120000); // 2 minutes
     }
 
     return () => {
@@ -47,7 +54,7 @@ export function SubscriptionStatus() {
         clearInterval(interval);
       }
     };
-  }, [subscription?.status]); // Re-exécuter si le statut change
+  }, [subscription?.status, hasAccess]); // Re-exécuter si le statut change
 
   if (loading) {
     return (

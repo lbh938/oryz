@@ -65,10 +65,16 @@ export async function POST(request: NextRequest) {
           updateData.current_period_end = new Date(subscription.current_period_end * 1000).toISOString();
         }
 
-        await supabase
+        const { error: updateError } = await supabase
           .from('subscriptions')
           .update(updateData)
           .eq('user_id', userId);
+        
+        if (updateError) {
+          console.error('Error updating subscription in webhook:', updateError);
+        } else {
+          console.log(`Subscription updated successfully for user ${userId}:`, updateData);
+        }
 
         break;
       }

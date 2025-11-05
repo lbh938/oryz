@@ -13,19 +13,53 @@ export function SubscriptionCards() {
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadSubscription = async () => {
+    try {
+      const sub = await getCurrentSubscription();
+      setCurrentSubscription(sub);
+    } catch (error) {
+      console.error('Error loading subscription:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadSubscription = async () => {
-      try {
-        const sub = await getCurrentSubscription();
-        setCurrentSubscription(sub);
-      } catch (error) {
-        console.error('Error loading subscription:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadSubscription();
   }, []);
+
+  useEffect(() => {
+    // Rafraîchir automatiquement lors du focus de la fenêtre
+    const handleFocus = () => {
+      loadSubscription();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Rafraîchir toutes les 3 secondes si l'abonnement existe mais n'est pas encore actif
+    // (pour détecter les changements après paiement)
+    let interval: NodeJS.Timeout | null = null;
+    if (currentSubscription && 
+        (currentSubscription.status === 'incomplete' || 
+         (currentSubscription.status !== 'trial' && currentSubscription.status !== 'active'))) {
+      interval = setInterval(() => {
+        loadSubscription();
+      }, 3000);
+      
+      // Arrêter le rafraîchissement après 2 minutes
+      setTimeout(() => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      }, 120000); // 2 minutes
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [currentSubscription?.status]); // Re-exécuter si le statut change
 
   const handleCardClick = (plan: Plan) => {
     // Rediriger vers la page d'abonnement avec le plan sélectionné

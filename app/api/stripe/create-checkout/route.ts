@@ -86,18 +86,25 @@ export async function POST(request: NextRequest) {
                        planId === 'vip' ? 19.99 : 19.99,
     };
 
-    // NE PAS créer l'abonnement dans la DB avant le checkout complété
-    // On attendra le webhook checkout.session.completed pour créer l'abonnement
-    // Cela évite d'accorder l'accès avant que l'utilisateur n'ait complété le checkout
-    // On crée juste un enregistrement temporaire avec le customer_id pour éviter les erreurs
+    // Vérifier si l'utilisateur a déjà un abonnement actif
     const { data: existingSub } = await supabase
       .from('subscriptions')
-      .select('id, stripe_subscription_id')
+      .select('id, stripe_subscription_id, status, plan_type')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    // Si l'utilisateur a déjà un abonnement avec un stripe_subscription_id, 
-    // on ne fait rien ici (le webhook gérera la mise à jour)
+    // Si l'utilisateur a déjà un abonnement actif (trial ou active), empêcher la création d'un nouvel abonnement
+    if (existingSub && existingSub.stripe_subscription_id && 
+        (existingSub.status === 'trial' || existingSub.status === 'active')) {
+      return NextResponse.json(
+        { 
+          error: `Vous avez déjà un abonnement actif (${existingSub.plan_type === 'kickoff' ? 'Kick-Off' : existingSub.plan_type === 'pro_league' ? 'Pro League' : existingSub.plan_type === 'vip' ? 'VIP' : 'Premium'}). Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`,
+          hasActiveSubscription: true 
+        },
+        { status: 400 }
+      );
+    }
+
     // Si l'utilisateur n'a pas d'abonnement ou pas de stripe_subscription_id,
     // on crée juste un enregistrement avec le customer_id (mais pas de statut 'trial' encore)
     if (!existingSub || !existingSub.stripe_subscription_id) {
