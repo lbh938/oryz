@@ -29,10 +29,31 @@ export async function POST(request: NextRequest) {
       .from('subscriptions')
       .select('stripe_customer_id')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
+    // Si un customer_id existe, vérifier qu'il existe toujours dans Stripe
     if (existingSubscription?.stripe_customer_id) {
-      customerId = existingSubscription.stripe_customer_id;
+      try {
+        // Vérifier que le customer existe dans Stripe
+        await stripe.customers.retrieve(existingSubscription.stripe_customer_id);
+        customerId = existingSubscription.stripe_customer_id;
+      } catch (error: any) {
+        // Si le customer n'existe pas (erreur "no such customer"), créer un nouveau
+        console.warn(`Customer ${existingSubscription.stripe_customer_id} n'existe plus dans Stripe, création d'un nouveau customer`);
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          metadata: {
+            user_id: user.id,
+          },
+        });
+        customerId = customer.id;
+        
+        // Mettre à jour la base de données avec le nouveau customer_id
+        await supabase
+          .from('subscriptions')
+          .update({ stripe_customer_id: customerId })
+          .eq('user_id', user.id);
+      }
     } else {
       // Créer un nouveau customer Stripe
       const customer = await stripe.customers.create({
