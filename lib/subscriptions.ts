@@ -96,10 +96,12 @@ export async function getCurrentSubscription(): Promise<Subscription | null> {
   if (!user) return null;
 
   // Utiliser maybeSingle() pour éviter l'erreur si aucune ligne n'est trouvée
+  // Filtrer les abonnements invalides (incomplete sans stripe_subscription_id)
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
     .eq('user_id', user.id)
+    .or('status.in.(trial,active),and(status.eq.incomplete,stripe_subscription_id.not.is.null)')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

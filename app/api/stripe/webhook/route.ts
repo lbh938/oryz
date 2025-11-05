@@ -66,9 +66,27 @@ export async function POST(request: NextRequest) {
 
         // Mettre à jour l'abonnement dans la base de données
         // C'est ici qu'on active vraiment l'abonnement avec le statut 'trial'
+        const priceId = subscription.items.data[0]?.price.id;
+        
+        // Déterminer plan_type à partir du price_id ou metadata
+        let planType = session.metadata?.plan_id || 'kickoff';
+        if (priceId) {
+          // Vérifier si le price_id correspond à un plan spécifique
+          if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_LEAGUE) {
+            planType = 'pro_league';
+          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP) {
+            planType = 'vip';
+          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF) {
+            planType = 'kickoff';
+          }
+        }
+        
         const updateData: any = {
           stripe_subscription_id: subscription.id,
-          stripe_price_id: subscription.items.data[0]?.price.id,
+          stripe_price_id: priceId,
+          plan_type: planType === 'kickoff' ? 'kickoff' :
+                     planType === 'pro_league' ? 'pro_league' :
+                     planType === 'vip' ? 'vip' : 'kickoff',
           status: subscription.status === 'trialing' ? 'trial' : 'active',
         };
 
@@ -175,18 +193,37 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.user_id;
+        let userId = subscription.metadata?.user_id;
 
         if (!userId) {
-          // Essayer de trouver l'utilisateur via le customer_id
+          // Essayer de trouver l'utilisateur via le stripe_subscription_id
           const { data: subData } = await supabase
             .from('subscriptions')
             .select('user_id')
             .eq('stripe_subscription_id', subscription.id)
-            .single();
+            .maybeSingle();
 
-          if (!subData) break;
-          // userId sera utilisé ci-dessous
+          if (subData) {
+            userId = subData.user_id;
+          } else if (subscription.customer) {
+            // Essayer via customer_id
+            const { data: customerData } = await supabase
+              .from('subscriptions')
+              .select('user_id')
+              .eq('stripe_customer_id', subscription.customer as string)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            if (customerData) {
+              userId = customerData.user_id;
+            }
+          }
+        }
+
+        if (!userId) {
+          console.error('No user_id found in customer.subscription.updated event');
+          break;
         }
 
         // Déterminer le statut
@@ -201,9 +238,33 @@ export async function POST(request: NextRequest) {
           status = 'incomplete';
         }
 
+        // Déterminer plan_type à partir du price_id
+        const priceId = subscription.items.data[0]?.price.id;
+        let planType = 'kickoff';
+        if (priceId) {
+          if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_LEAGUE) {
+            planType = 'pro_league';
+          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP) {
+            planType = 'vip';
+          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF) {
+            planType = 'kickoff';
+          }
+        }
+
         const updateData: any = {
           status,
+          stripe_price_id: priceId,
+          plan_type: planType === 'kickoff' ? 'kickoff' :
+                     planType === 'pro_league' ? 'pro_league' :
+                     planType === 'vip' ? 'vip' : 'kickoff',
         };
+
+        if (subscription.trial_start) {
+          updateData.trial_start = new Date(subscription.trial_start * 1000).toISOString();
+        }
+        if (subscription.trial_end) {
+          updateData.trial_end = new Date(subscription.trial_end * 1000).toISOString();
+        }
 
         if ('current_period_start' in subscription && typeof subscription.current_period_start === 'number') {
           updateData.current_period_start = new Date(subscription.current_period_start * 1000).toISOString();

@@ -87,16 +87,20 @@ export async function POST(request: NextRequest) {
     };
 
     // Vérifier si l'utilisateur a déjà un ou plusieurs abonnements actifs
+    // Inclure aussi les abonnements 'incomplete' avec stripe_subscription_id (paiement effectué mais webhook pas encore traité)
     const { data: existingSubs } = await supabase
       .from('subscriptions')
       .select('id, stripe_subscription_id, status, plan_type')
       .eq('user_id', user.id)
-      .in('status', ['trial', 'active']);
+      .or('status.in.(trial,active),and(status.eq.incomplete,stripe_subscription_id.not.is.null)');
 
     // Si l'utilisateur a déjà un ou plusieurs abonnements actifs, empêcher la création d'un nouvel abonnement
     if (existingSubs && existingSubs.length > 0) {
-      const activeSub = existingSubs.find(sub => sub.stripe_subscription_id && 
-        (sub.status === 'trial' || sub.status === 'active'));
+      const activeSub = existingSubs.find(sub => 
+        sub.stripe_subscription_id && 
+        (sub.status === 'trial' || sub.status === 'active' || 
+         (sub.status === 'incomplete' && sub.stripe_subscription_id))
+      );
       
       if (activeSub) {
         const planName = activeSub.plan_type === 'kickoff' ? 'Kick-Off' : 
@@ -113,11 +117,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Récupérer l'abonnement existant (incomplete ou free) pour le mettre à jour
+    // Récupérer l'abonnement existant le plus récent (incomplete ou free) pour le mettre à jour
     const { data: existingSub } = await supabase
       .from('subscriptions')
       .select('id, stripe_subscription_id')
       .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     // Si l'utilisateur n'a pas d'abonnement ou pas de stripe_subscription_id,
