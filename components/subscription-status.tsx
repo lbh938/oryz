@@ -13,17 +13,41 @@ export function SubscriptionStatus() {
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
 
-  useEffect(() => {
-    const loadSubscription = async () => {
-      const sub = await getCurrentSubscription();
-      const access = await hasPremiumAccess();
-      setSubscription(sub);
-      setHasAccess(access);
-      setLoading(false);
-    };
+  const loadSubscription = async () => {
+    const sub = await getCurrentSubscription();
+    const access = await hasPremiumAccess();
+    setSubscription(sub);
+    setHasAccess(access);
+    setLoading(false);
+  };
 
+  useEffect(() => {
     loadSubscription();
   }, []);
+
+  useEffect(() => {
+    // Rafraîchir automatiquement lors du focus de la fenêtre
+    const handleFocus = () => {
+      loadSubscription();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Rafraîchir toutes les 5 secondes si l'abonnement est incomplete
+    // (pour détecter les changements après paiement)
+    let interval: NodeJS.Timeout | null = null;
+    if (subscription?.status === 'incomplete') {
+      interval = setInterval(() => {
+        loadSubscription();
+      }, 5000);
+    }
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [subscription?.status]); // Re-exécuter si le statut change
 
   if (loading) {
     return (

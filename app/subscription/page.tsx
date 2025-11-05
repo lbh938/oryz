@@ -91,8 +91,33 @@ function SubscriptionPageContent() {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Rafraîchir automatiquement lors du focus de la fenêtre
+    const handleFocus = () => {
+      if (user) {
+        checkAuth();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Rafraîchir toutes les 5 secondes si l'abonnement est incomplete
+    // (pour détecter les changements après paiement)
+    let interval: NodeJS.Timeout | null = null;
+    if (subscription && (subscription as any).status === 'incomplete') {
+      interval = setInterval(() => {
+        if (user) {
+          checkAuth();
+        }
+      }, 5000);
+    }
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [(subscription as any)?.status]); // Re-exécuter si le statut change
 
   const handleSubscribe = async (plan: Plan) => {
     // Si l'utilisateur n'est pas authentifié, rediriger vers l'inscription avec le plan sélectionné
