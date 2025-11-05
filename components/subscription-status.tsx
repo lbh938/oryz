@@ -261,7 +261,8 @@ export function SubscriptionStatus() {
             )}
           </div>
 
-          {hasAccess && (
+          {/* Afficher l'accès premium si l'abonnement est actif (même avec statut incomplete mais avec stripe_subscription_id) */}
+          {(hasAccess || (subscription.status === 'incomplete' && subscription.stripe_subscription_id)) && (
             <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30">
               <p className="text-green-400 text-sm font-sans font-semibold flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
@@ -270,6 +271,7 @@ export function SubscriptionStatus() {
             </div>
           )}
 
+          {/* Afficher le message d'attente seulement si le statut est incomplete SANS stripe_subscription_id */}
           {subscription.status === 'incomplete' && !subscription.stripe_subscription_id && (
             <div className="mt-4">
               <p className="text-yellow-400 text-sm font-sans font-semibold mb-3">

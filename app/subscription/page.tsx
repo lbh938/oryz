@@ -5,7 +5,7 @@ import { MainLayout } from '@/components/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { PLANS, Plan, hasPremiumAccess, getCurrentSubscription } from '@/lib/subscriptions';
-import { Check, Crown, X, Monitor, Smartphone, Tablet } from 'lucide-react';
+import { Check, Crown, X, Monitor, Smartphone, Tablet, Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -128,6 +128,79 @@ function SubscriptionPageContent() {
     };
   }, [(subscription as any)?.status]); // Re-exécuter si le statut change
 
+  // Fonction pour vérifier si l'utilisateur a un abonnement actif (même avec statut incomplete mais avec stripe_subscription_id)
+  const hasActiveSubscription = (): boolean => {
+    if (!subscription) return false;
+    
+    // Si le statut est 'active' ou 'trial', c'est actif
+    if (subscription.status === 'active' || subscription.status === 'trial') {
+      return true;
+    }
+    
+    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+    // On considère l'abonnement comme actif si les dates sont valides ou si stripe_subscription_id existe
+    if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
+      if (subscription.trial_end && new Date(subscription.trial_end) > new Date()) {
+        return true;
+      }
+      if (subscription.current_period_end && new Date(subscription.current_period_end) > new Date()) {
+        return true;
+      }
+      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Fonction pour vérifier si c'est le plan actuel
+  const isCurrentPlan = (planId: string): boolean => {
+    if (!subscription) return false;
+    
+    // Vérifier que c'est le bon plan
+    if (subscription.plan_type !== planId) return false;
+    
+    // Si le statut est 'active' ou 'trial', c'est le plan actuel
+    if (subscription.status === 'active' || subscription.status === 'trial') {
+      return true;
+    }
+    
+    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+    // On considère l'abonnement comme actif si les dates sont valides
+    if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
+      if (subscription.trial_end) {
+        return new Date(subscription.trial_end) > new Date();
+      }
+      if (subscription.current_period_end) {
+        return new Date(subscription.current_period_end) > new Date();
+      }
+      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
+      return true;
+    }
+    
+    return false;
+  };
+
+  // Fonction pour vérifier si un plan est un upgrade
+  const isUpgrade = (planId: string): boolean => {
+    if (!subscription || !hasActiveSubscription()) return false;
+    const currentPlan = subscription.plan_type;
+    
+    // Ordre des plans : free < kickoff < pro_league < vip
+    const planOrder: Record<string, number> = {
+      'free': 0,
+      'kickoff': 1,
+      'pro_league': 2,
+      'vip': 3
+    };
+    
+    return planOrder[planId] > (planOrder[currentPlan] || 0);
+  };
+
   const handleSubscribe = async (plan: Plan) => {
     // Si l'utilisateur n'est pas authentifié, rediriger vers l'inscription avec le plan sélectionné
     if (!isAuthenticated || !user) {
@@ -139,10 +212,7 @@ function SubscriptionPageContent() {
     }
 
     // Vérifier si l'utilisateur a déjà un abonnement actif pour ce plan
-    if (subscription && subscription.status !== 'free' && 
-        subscription.status !== 'incomplete' && 
-        subscription.status !== 'canceled' &&
-        subscription.plan_type === plan.id) {
+    if (isCurrentPlan(plan.id)) {
       alert(`Vous avez déjà un abonnement actif pour le plan ${plan.name}. Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`);
       return;
     }
@@ -621,21 +691,14 @@ function SubscriptionPageContent() {
                           <Button
                             onClick={async () => {
                               // Vérifier si l'utilisateur a déjà un abonnement actif pour ce plan
-                              if (subscription && subscription.status !== 'free' && 
-                                  subscription.status !== 'incomplete' && 
-                                  subscription.status !== 'canceled' &&
-                                  subscription.plan_type === plan.id) {
+                              if (isCurrentPlan(plan.id)) {
                                 alert(`Vous avez déjà un abonnement actif pour le plan ${plan.name}. Veuillez annuler votre abonnement actuel avant d'en créer un nouveau.`);
                                 return;
                               }
                               
                               handleSubscribe(plan);
                             }}
-                            disabled={processing === plan.id || 
-                                    (isAuthenticated === true && hasAccess && 
-                                     subscription && subscription.status !== 'free' && 
-                                     subscription.status !== 'incomplete' && 
-                                     subscription.status !== 'canceled')}
+                            disabled={processing === plan.id || isCurrentPlan(plan.id)}
                             className={`w-full sm:w-auto min-w-[140px] sm:min-w-[180px] ${
                               plan.isPopular
                                 ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white shadow-lg shadow-[#3498DB]/30'
@@ -644,15 +707,19 @@ function SubscriptionPageContent() {
                           >
                             {processing === plan.id ? (
                               <div className="flex items-center gap-2">
-                                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white"></div>
+                                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                                 <span className="hidden sm:inline">Redirection vers Stripe...</span>
                                 <span className="sm:hidden">...</span>
                               </div>
-                            ) : isAuthenticated && hasAccess && 
-                                 subscription && subscription.status !== 'free' && 
-                                 subscription.status !== 'incomplete' && 
-                                 subscription.status !== 'canceled' ? (
-                              subscription.plan_type === plan.id ? 'Plan actuel' : 'Déjà abonné'
+                            ) : isCurrentPlan(plan.id) ? (
+                              'Plan actuel'
+                            ) : isUpgrade(plan.id) ? (
+                              <>
+                                <span className="hidden sm:inline">Upgrade vers {plan.name}</span>
+                                <span className="sm:hidden">Upgrade</span>
+                              </>
+                            ) : hasActiveSubscription() && subscription.plan_type !== plan.id ? (
+                              'Déjà abonné'
                             ) : (
                               <>
                                 <span className="hidden sm:inline">Commencer l'essai gratuit</span>

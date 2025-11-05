@@ -66,9 +66,36 @@ export function SubscriptionCards() {
     router.push(`/subscription#plan-${plan.id}`);
   };
 
+  // Fonction pour vérifier si l'utilisateur a un abonnement actif (même avec statut incomplete mais avec stripe_subscription_id)
+  const hasActiveSubscription = (): boolean => {
+    if (!currentSubscription) return false;
+    
+    // Si le statut est 'active' ou 'trial', c'est actif
+    if (currentSubscription.status === 'active' || currentSubscription.status === 'trial') {
+      return true;
+    }
+    
+    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
+    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
+    // On considère l'abonnement comme actif si les dates sont valides ou si stripe_subscription_id existe
+    if (currentSubscription.status === 'incomplete' && currentSubscription.stripe_subscription_id) {
+      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
+      if (currentSubscription.trial_end && new Date(currentSubscription.trial_end) > new Date()) {
+        return true;
+      }
+      if (currentSubscription.current_period_end && new Date(currentSubscription.current_period_end) > new Date()) {
+        return true;
+      }
+      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
+      return true;
+    }
+    
+    return false;
+  };
+
   // Fonction pour vérifier si un plan est un upgrade
   const isUpgrade = (planId: string): boolean => {
-    if (!currentSubscription) return false;
+    if (!currentSubscription || !hasActiveSubscription()) return false;
     const currentPlan = currentSubscription.plan_type;
     
     // Ordre des plans : free < kickoff < pro_league < vip
