@@ -44,6 +44,22 @@ export async function updateSession(request: NextRequest) {
 
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
+  // Rafraîchir automatiquement la session si elle est proche d'expirer
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  // Si la session existe et est proche d'expirer (moins de 5 minutes), la rafraîchir
+  if (session && session.expires_at) {
+    const expiresAt = new Date(session.expires_at * 1000);
+    const now = new Date();
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    // Si la session expire dans moins de 5 minutes, la rafraîchir
+    if (timeUntilExpiry < fiveMinutes && timeUntilExpiry > 0) {
+      await supabase.auth.refreshSession();
+    }
+  }
+  
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims;
 

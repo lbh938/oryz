@@ -49,29 +49,50 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Vérifier l'état de connexion et charger le profil
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      // Charger le profil si l'utilisateur est connecté
-      if (user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('username, avatar_url')
-          .eq('id', user.id)
-          .single();
+      try {
+        // Vérifier d'abord la session
+        const { data: { session } } = await supabase.auth.getSession();
         
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
+        // Si la session existe mais est proche d'expirer, la rafraîchir
+        if (session && session.expires_at) {
+          const expiresAt = new Date(session.expires_at * 1000);
+          const now = new Date();
+          const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+          const tenMinutes = 10 * 60 * 1000;
+          
+          // Si la session expire dans moins de 10 minutes, la rafraîchir
+          if (timeUntilExpiry < tenMinutes && timeUntilExpiry > 0) {
+            await supabase.auth.refreshSession();
+          }
+        }
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        
+        // Charger le profil si l'utilisateur est connecté
+        if (user) {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('username, avatar_url')
+            .eq('id', user.id)
+            .single();
+          
+          setUserProfile(profile);
+        } else {
+          setUserProfile(null);
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking user:', error);
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     checkUser();
 
     // Écouter les changements d'auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
       
       // Recharger le profil
@@ -88,7 +109,22 @@ export function MainLayout({ children }: MainLayoutProps) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Rafraîchir la session toutes les 10 minutes pour éviter les déconnexions
+    const refreshInterval = setInterval(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase.auth.refreshSession();
+        }
+      } catch (error) {
+        console.error('Error refreshing session:', error);
+      }
+    }, 10 * 60 * 1000); // Toutes les 10 minutes
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   return (
