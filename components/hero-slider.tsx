@@ -147,8 +147,8 @@ export function HeroSlider({ heroes, autoPlayInterval = 5000 }: HeroSliderProps)
               style={{
                 transition: 'opacity 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 1000ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                 willChange: index === currentIndex ? 'auto' : 'opacity, transform',
-                // Sur mobile, ajouter un padding-top pour que le contenu soit visible sous la navigation fixe
-                paddingTop: isMobile ? '88px' : undefined,
+                // Sur mobile, ajouter un padding-top minimal pour que l'image hero soit visible entièrement sous la navigation
+                paddingTop: isMobile ? '64px' : undefined,
               }}
             >
               <div className={`${isMobile ? 'space-y-3' : 'space-y-2 sm:space-y-3 md:space-y-4'}`}>

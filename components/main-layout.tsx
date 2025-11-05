@@ -222,8 +222,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </nav>
 
-      {/* Contenu avec padding pour la nav */}
-      <div className="pt-[88px] sm:pt-20 flex-1 flex flex-col">
+      {/* Contenu avec padding pour la nav - Réduit sur mobile pour voir le hero entièrement */}
+      <div className="pt-14 sm:pt-20 flex-1 flex flex-col">
         {children}
       </div>
 

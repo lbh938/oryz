@@ -6,9 +6,10 @@ import { Button } from './ui/button';
 import { Crown, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { hasPremiumAccess, isPremiumChannel } from '@/lib/subscriptions';
+import { isPremiumChannel } from '@/lib/subscriptions';
 import { useFreePreview } from '@/hooks/use-free-preview';
 import { FreePreviewBanner } from './free-preview-banner';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 
 interface PremiumGateProps {
   channelName: string;
@@ -18,9 +19,12 @@ interface PremiumGateProps {
 
 export function PremiumGate({ channelName, channelId, children }: PremiumGateProps) {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Commencer à false car on utilise le contexte
   const router = useRouter();
   const isPremium = isPremiumChannel(channelName);
+  
+  // Utiliser le contexte de subscription pour un accès instantané
+  const { subscription, status, isSyncing } = useSubscriptionContext();
   
   // Utiliser le hook de prévisualisation gratuite uniquement pour les chaînes premium
   const { 
@@ -33,15 +37,58 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     minutesRemaining 
   } = useFreePreview(isPremium ? channelId : 'not-premium');
 
+  // Déterminer l'accès premium basé sur le contexte de subscription (rapide)
   useEffect(() => {
-    const checkAccess = async () => {
-      const access = await hasPremiumAccess();
-      setHasAccess(access);
+    // Si le statut indique un abonnement actif, l'utilisateur a accès
+    if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial') {
+      setHasAccess(true);
       setLoading(false);
-    };
-
-    checkAccess();
-  }, []);
+      return;
+    }
+    
+    // Si l'abonnement est incomplete mais avec stripe_subscription_id, considérer comme actif
+    if (subscription && subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+      // Vérifier les dates si disponibles
+      const now = new Date();
+      if (subscription.trial_end && new Date(subscription.trial_end) > now) {
+        setHasAccess(true);
+        setLoading(false);
+        return;
+      }
+      if (subscription.current_period_end && new Date(subscription.current_period_end) > now) {
+        setHasAccess(true);
+        setLoading(false);
+        return;
+      }
+      // Si pas de dates mais stripe_subscription_id existe, considérer actif
+      setHasAccess(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Si l'abonnement est trial ou active, vérifier les dates
+    if (subscription && (subscription.status === 'trial' || subscription.status === 'active')) {
+      const now = new Date();
+      if (subscription.status === 'trial' && subscription.trial_end) {
+        setHasAccess(new Date(subscription.trial_end) > now);
+        setLoading(false);
+        return;
+      }
+      if (subscription.status === 'active' && subscription.current_period_end) {
+        setHasAccess(new Date(subscription.current_period_end) > now);
+        setLoading(false);
+        return;
+      }
+      // Si pas de dates mais statut actif, considérer comme actif
+      setHasAccess(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Sinon, pas d'accès
+    setHasAccess(false);
+    setLoading(false);
+  }, [subscription, status, isSyncing]);
 
   const handleSubscribe = async () => {
     // Rediriger vers la page d'abonnement
@@ -49,7 +96,8 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     router.push('/subscription');
   };
 
-  if (loading || previewLoading) {
+  // Afficher le loader seulement si on est en train de synchroniser ou si le preview charge
+  if (isSyncing || previewLoading || hasAccess === null) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>
