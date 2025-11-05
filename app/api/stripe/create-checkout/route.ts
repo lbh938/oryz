@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     
     // Rafraîchir la session avant de vérifier l'utilisateur
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && session.expires_at) {
-      const expiresAt = new Date(session.expires_at * 1000);
+    const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+    if (supabaseSession && supabaseSession.expires_at) {
+      const expiresAt = new Date(supabaseSession.expires_at * 1000);
       const now = new Date();
       const timeUntilExpiry = expiresAt.getTime() - now.getTime();
       const fifteenMinutes = 15 * 60 * 1000;
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Utiliser session.user au lieu de getUser()
-    const user = session?.user ?? null;
+    // Utiliser supabaseSession.user au lieu de getUser()
+    const user = supabaseSession?.user ?? null;
     
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
     // Créer la session Checkout de Stripe avec essai gratuit de 7 jours
     // Une carte de paiement est REQUISE pour facturer automatiquement à la fin de l'essai
     // Le paiement sera collecté seulement à la fin de l'essai (0€ pendant 7 jours)
-    const session = await stripe.checkout.sessions.create({
+    const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -227,7 +227,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ sessionId: session.id, url: session.url });
+    return NextResponse.json({ sessionId: checkoutSession.id, url: checkoutSession.url });
   } catch (error: any) {
     console.error('Error creating checkout session:', error);
     
