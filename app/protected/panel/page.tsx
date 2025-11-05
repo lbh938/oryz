@@ -32,6 +32,7 @@ import { PushDevicesList } from '@/components/admin/push-devices-list';
 import { NotificationDiagnostic } from '@/components/admin/notification-diagnostic';
 import { TestNotificationAll } from '@/components/admin/test-notification-all';
 import { NotificationDebugPanel } from '@/components/admin/notification-debug-panel';
+import { ScheduledNotificationsManager } from '@/components/admin/scheduled-notifications-manager';
 import {
   Save, Users, Eye, TrendingUp, Calendar,
   Loader2, Lock, AlertCircle, CheckCircle2, KeyRound, LogOut, Home, ArrowLeft,
@@ -1342,7 +1343,61 @@ export default function AdminPage() {
         {/* Section Notifications */}
         {activeSection === 'notifications' && (
           <div className="space-y-6 sm:space-y-8">
-            {/* Contenu des notifications déjà présent */}
+            {/* Statistiques des Notifications */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Statistiques des Notifications
+              </h2>
+              <NotificationStatsCard />
+            </div>
+
+            {/* Envoi de Notification */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Envoyer une Notification
+              </h2>
+              <NotificationManager />
+            </div>
+
+            {/* Notifications Programmées */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Notifications Programmées
+              </h2>
+              <ScheduledNotificationsManager />
+            </div>
+
+            {/* Liste des Appareils Push */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Appareils avec Notifications Push
+              </h2>
+              <PushDevicesList />
+            </div>
+
+            {/* Test de Notification */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Test de Notification
+              </h2>
+              <TestNotificationAll />
+            </div>
+
+            {/* Diagnostic des Notifications */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Diagnostic des Notifications
+              </h2>
+              <NotificationDiagnostic />
+            </div>
+
+            {/* Panel de Debug */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 sm:mb-6">
+                Panel de Debug
+              </h2>
+              <NotificationDebugPanel />
+            </div>
           </div>
         )}
 
