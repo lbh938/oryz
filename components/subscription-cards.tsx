@@ -99,6 +99,10 @@ export function SubscriptionCards() {
                 {plan.trialDays && (
                   <p className="text-[#3498DB] text-xs sm:text-sm font-semibold mt-1">
                     🎁 {plan.trialDays} jours d'essai gratuit (0€)
+                    <br />
+                    <span className="text-white/60 text-[10px] sm:text-xs font-normal">
+                      Carte requise, aucun débit pendant l'essai
+                    </span>
                   </p>
                 )}
               </div>

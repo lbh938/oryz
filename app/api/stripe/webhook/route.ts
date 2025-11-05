@@ -35,15 +35,21 @@ export async function POST(request: NextRequest) {
         
         if (!userId) break;
 
+        // Vérifier si c'est une session de subscription
+        if (session.mode !== 'subscription' || !session.subscription) {
+          break;
+        }
+
         const subscription = await stripe.subscriptions.retrieve(
           session.subscription as string
         ) as Stripe.Subscription;
 
         // Mettre à jour l'abonnement dans la base de données
+        // C'est ici qu'on active vraiment l'abonnement avec le statut 'trial'
         const updateData: any = {
           stripe_subscription_id: subscription.id,
           stripe_price_id: subscription.items.data[0]?.price.id,
-          status: 'trial',
+          status: subscription.status === 'trialing' ? 'trial' : 'active',
         };
 
         if (subscription.trial_start) {

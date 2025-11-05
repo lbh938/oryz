@@ -63,43 +63,54 @@ export async function POST(request: NextRequest) {
                        planId === 'vip' ? 19.99 : 19.99,
     };
 
-    // Vérifier d'abord si une subscription existe déjà
+    // NE PAS créer l'abonnement dans la DB avant le checkout complété
+    // On attendra le webhook checkout.session.completed pour créer l'abonnement
+    // Cela évite d'accorder l'accès avant que l'utilisateur n'ait complété le checkout
+    // On crée juste un enregistrement temporaire avec le customer_id pour éviter les erreurs
     const { data: existingSub } = await supabase
       .from('subscriptions')
-      .select('id')
+      .select('id, stripe_subscription_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    let subscription;
-    let subError;
+    // Si l'utilisateur a déjà un abonnement avec un stripe_subscription_id, 
+    // on ne fait rien ici (le webhook gérera la mise à jour)
+    // Si l'utilisateur n'a pas d'abonnement ou pas de stripe_subscription_id,
+    // on crée juste un enregistrement avec le customer_id (mais pas de statut 'trial' encore)
+    if (!existingSub || !existingSub.stripe_subscription_id) {
+      const tempSubscriptionData = {
+        user_id: user.id,
+        stripe_customer_id: customerId,
+        status: 'incomplete' as const, // Statut temporaire jusqu'à ce que le checkout soit complété
+        plan_type: (planId === 'kickoff' ? 'kickoff' :
+                     planId === 'pro_league' ? 'pro_league' :
+                     planId === 'vip' ? 'vip' : 'premium') as any,
+        price_monthly: planId === 'kickoff' ? 9.99 :
+                       planId === 'pro_league' ? 14.99 :
+                       planId === 'vip' ? 19.99 : 19.99,
+      };
 
-    if (existingSub) {
-      // Mettre à jour l'abonnement existant
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .update(subscriptionData)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-      subscription = data;
-      subError = error;
-    } else {
-      // Créer un nouvel abonnement
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .insert(subscriptionData)
-        .select()
-        .single();
-      subscription = data;
-      subError = error;
-    }
-
-    if (subError) {
-      console.error('Error creating subscription:', subError);
-      // Ne pas bloquer le processus si l'upsert échoue, on continue quand même
+      if (existingSub) {
+        // Mettre à jour avec le customer_id
+        await supabase
+          .from('subscriptions')
+          .update({
+            stripe_customer_id: customerId,
+            status: 'incomplete',
+            plan_type: tempSubscriptionData.plan_type,
+            price_monthly: tempSubscriptionData.price_monthly,
+          })
+          .eq('user_id', user.id);
+      } else {
+        // Créer un nouvel enregistrement temporaire
+        await supabase
+          .from('subscriptions')
+          .insert(tempSubscriptionData);
+      }
     }
 
     // Créer la session Checkout de Stripe avec essai gratuit de 7 jours
+    // Une carte de paiement est REQUISE pour facturer automatiquement à la fin de l'essai
     // Le paiement sera collecté seulement à la fin de l'essai (0€ pendant 7 jours)
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -118,8 +129,9 @@ export async function POST(request: NextRequest) {
           plan_id: planId,
         },
       },
-      // Configuration pour ne pas charger immédiatement (0€ pendant l'essai)
-      payment_method_collection: 'if_required', // Collecte la carte mais ne charge pas pendant l'essai
+      // Configuration pour exiger la carte de paiement avant l'essai
+      // La carte est nécessaire pour facturer automatiquement à la fin de l'essai gratuit
+      payment_method_collection: 'always', // Exige toujours une carte avant de commencer l'essai
       success_url: `${request.nextUrl.origin}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.nextUrl.origin}/subscription`,
       metadata: {

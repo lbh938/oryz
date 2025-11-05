@@ -147,7 +147,7 @@ export async function hasPremiumAccess(): Promise<boolean> {
       .maybeSingle(),
     supabase
       .from('subscriptions')
-      .select('status, trial_end, current_period_end')
+      .select('status, trial_end, current_period_end, stripe_subscription_id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -159,6 +159,16 @@ export async function hasPremiumAccess(): Promise<boolean> {
 
   const subscription = subscriptionData.data;
   if (!subscription) return false;
+  
+  // IMPORTANT: Vérifier que l'utilisateur a complété le checkout Stripe
+  // Si pas de stripe_subscription_id, l'utilisateur n'a pas complété le checkout
+  // On ne doit pas accorder l'accès avant que le checkout soit complété
+  if (!subscription.stripe_subscription_id && subscription.status === 'trial') {
+    // Si le statut est 'trial' mais pas de stripe_subscription_id, 
+    // cela signifie que le checkout n'a pas été complété
+    // On ne doit pas accorder l'accès
+    return false;
+  }
   
   // Vérifier si l'abonnement est actif ou en essai
   if (subscription.status === 'trial') {

@@ -182,7 +182,7 @@ function SubscriptionPageContent() {
           {!isAuthenticated && (
             <Card className="bg-gradient-to-r from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
               <p className="text-white/90 text-sm sm:text-base font-label font-semibold text-center">
-                🎁 Cliquez sur "Essai gratuit" pour commencer votre essai de 7 jours (0€)
+                🎁 Cliquez sur "Essai gratuit" pour commencer votre essai de 7 jours (0€). Une carte de paiement est requise pour facturer automatiquement à la fin de l'essai.
               </p>
             </Card>
           )}
@@ -273,9 +273,12 @@ function SubscriptionPageContent() {
                               <span className="text-white/60 text-[10px] sm:text-xs">/mois</span>
                             </div>
                             {plan.trialDays && (
-                              <p className="text-[#3498DB] text-[10px] sm:text-xs font-semibold text-center">
-                                🎁 {plan.trialDays} jours d'essai gratuit
-                              </p>
+                              <div className="text-[#3498DB] text-[10px] sm:text-xs font-semibold text-center">
+                                <p>🎁 {plan.trialDays} jours d'essai gratuit (0€)</p>
+                                <p className="text-white/60 text-[9px] sm:text-[10px] font-normal mt-0.5">
+                                  Carte requise, aucun débit pendant l'essai
+                                </p>
+                              </div>
                             )}
                           </div>
                         </th>

@@ -63,6 +63,18 @@ export function SubscriptionStatus() {
 
   // Afficher le statut de l'abonnement
   const getStatusInfo = () => {
+    // Si le statut est 'incomplete', c'est que le checkout n'a pas été complété
+    if (subscription.status === 'incomplete') {
+      return {
+        icon: AlertCircle,
+        color: 'text-yellow-500',
+        bgColor: 'bg-yellow-500/10',
+        borderColor: 'border-yellow-500/30',
+        label: 'En attente',
+        description: 'Veuillez compléter le processus de paiement pour activer votre essai gratuit'
+      };
+    }
+    
     switch (subscription.status) {
       case 'trial':
         return {

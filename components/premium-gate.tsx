@@ -99,7 +99,7 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
                   <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                  <span>7 jours d'essai gratuit (0€) - Aucune carte requise</span>
+                  <span>7 jours d'essai gratuit (0€) - Carte requise, aucun débit pendant l'essai</span>
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
                   <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
@@ -171,7 +171,7 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
                   <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                  <span>7 jours d'essai gratuit (0€) - Aucune carte requise</span>
+                  <span>7 jours d'essai gratuit (0€) - Carte requise, aucun débit pendant l'essai</span>
                 </li>
                 <li className="flex items-start gap-2 sm:gap-3">
                   <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
