@@ -1,7 +1,7 @@
 -- Migration de diagnostic pour la vue active_subscriptions
 -- Cette migration vérifie pourquoi la vue peut être vide
 
--- Vérifier tous les abonnements dans la table subscriptions
+-- Vérifier tous les abonnements dans la table subscriptions avec détails complets
 SELECT 
   'All subscriptions' as check_type,
   COUNT(*) as count,
@@ -9,11 +9,25 @@ SELECT
     'id', id,
     'user_id', user_id,
     'status', status,
+    'trial_start', trial_start,
     'trial_end', trial_end,
+    'current_period_start', current_period_start,
     'current_period_end', current_period_end,
     'stripe_subscription_id', stripe_subscription_id,
-    'created_at', created_at
-  )) as details
+    'stripe_customer_id', stripe_customer_id,
+    'plan_type', plan_type,
+    'created_at', created_at,
+    'updated_at', updated_at,
+    'why_not_in_view', CASE
+      WHEN status NOT IN ('trial', 'active') THEN 'Status is not trial or active'
+      WHEN stripe_subscription_id IS NULL THEN 'stripe_subscription_id is NULL'
+      WHEN status = 'trial' AND trial_end IS NULL THEN 'trial_end is NULL for trial status'
+      WHEN status = 'trial' AND trial_end IS NOT NULL AND trial_end <= NOW() THEN 'trial_end is expired'
+      WHEN status = 'active' AND current_period_end IS NULL THEN 'current_period_end is NULL for active status'
+      WHEN status = 'active' AND current_period_end IS NOT NULL AND current_period_end <= NOW() THEN 'current_period_end is expired'
+      ELSE 'Should be in view'
+    END
+  ) ORDER BY created_at DESC) as details
 FROM subscriptions;
 
 -- Vérifier les abonnements avec status 'trial' ou 'active'
