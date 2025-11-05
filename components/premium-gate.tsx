@@ -65,63 +65,68 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     // Si l'utilisateur n'est pas autorisé (VPN, proxy, limite atteinte, etc.)
     if (isAuthorized === false) {
       return (
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500/30 p-8 sm:p-12 text-center">
-            <div className="flex justify-center mb-6">
-              <div className="rounded-full bg-red-500/20 p-4">
-                <Lock className="h-12 w-12 text-red-500" />
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
+          <Card className="bg-gradient-to-br from-[#3498DB]/20 via-[#0F4C81]/20 to-[#3498DB]/20 border-[#3498DB]/30 p-6 sm:p-8 md:p-12 text-center">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="rounded-full bg-gradient-to-br from-[#3498DB]/30 to-[#0F4C81]/30 p-3 sm:p-4">
+                <Crown className="h-8 w-8 sm:h-12 sm:w-12 text-[#3498DB]" />
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              Accès Restreint
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white mb-3 sm:mb-4">
+              🎁 Débloquez l'accès complet
             </h1>
 
-            <p className="text-white/80 text-lg mb-2">
-              {authorizationError || 'Accès non autorisé'}
+            <p className="text-white/90 text-base sm:text-lg md:text-xl mb-3 sm:mb-4 font-sans">
+              Profitez de toutes les chaînes premium sans limite
             </p>
 
-            <p className="text-white/70 text-sm sm:text-base mb-8">
-              L'utilisation de VPN, proxy ou le dépassement de la limite d'essais gratuits est détecté.
+            <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 px-2">
+              Accédez à beIN SPORT, DAZN, Canal+, RMC Sport et plus encore avec un abonnement premium
             </p>
 
-            <div className="bg-white/5 backdrop-blur-xl rounded-lg p-6 mb-8">
-              <div className="flex items-center gap-3 justify-center mb-4">
-                <Crown className="h-6 w-6 text-[#3498DB]" />
-                <h2 className="text-xl font-display font-bold text-white">
-                  Abonnez-vous pour continuer
+            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 justify-center mb-3 sm:mb-4">
+                <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-[#3498DB]" />
+                <h2 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white">
+                  Avantages Premium
                 </h2>
               </div>
-              <ul className="text-left space-y-2 text-white/80 max-w-md mx-auto">
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>Accès illimité sans restriction</span>
+              <ul className="text-left space-y-2 sm:space-y-3 text-white/90 max-w-md mx-auto text-sm sm:text-base">
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Accès illimité à toutes les chaînes premium</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>7 jours d'essai gratuit (0€)</span>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>7 jours d'essai gratuit (0€) - Aucune carte requise</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>Sans engagement</span>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Qualité HD/4K sans limite</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Sans engagement - Résiliez à tout moment</span>
                 </li>
               </ul>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <Button
                 onClick={handleSubscribe}
-                className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold h-12 px-8"
+                className="w-full sm:w-auto mx-auto bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-bold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-10 shadow-lg shadow-[#3498DB]/30"
               >
-                <Crown className="h-4 w-4 mr-2" />
-                S'abonner maintenant (0€ pendant 7 jours)
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden sm:inline">Commencer l'essai gratuit (0€)</span>
+                <span className="sm:hidden">Essai gratuit 0€</span>
               </Button>
               <Button
                 onClick={() => router.push('/')}
                 variant="outline"
-                className="border-[#3498DB] text-[#3498DB] hover:bg-[#3498DB] hover:text-white font-label font-semibold h-12 px-8"
+                className="w-full sm:w-auto mx-auto border-white/20 text-white/80 hover:bg-white/10 hover:text-white font-label text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8"
               >
-                Retour à l'accueil
+                Découvrir plus de contenu
               </Button>
             </div>
           </Card>
@@ -129,74 +134,71 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
       );
     }
 
-    // Si le temps gratuit est dépassé, bloquer
+    // Si le temps gratuit est dépassé, afficher un message de conversion positif
     if (hasExceededLimit) {
       return (
-        <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <Card className="bg-gradient-to-br from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-8 sm:p-12 text-center">
-            <div className="flex justify-center mb-6">
-              <div className="rounded-full bg-[#3498DB]/20 p-4">
-                <Lock className="h-12 w-12 text-[#3498DB]" />
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
+          <Card className="bg-gradient-to-br from-[#3498DB]/20 via-[#0F4C81]/20 to-[#3498DB]/20 border-[#3498DB]/30 p-6 sm:p-8 md:p-12 text-center">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="rounded-full bg-gradient-to-br from-[#3498DB]/30 to-[#0F4C81]/30 p-3 sm:p-4">
+                <Crown className="h-8 w-8 sm:h-12 sm:w-12 text-[#3498DB]" />
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              Temps gratuit écoulé
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white mb-3 sm:mb-4">
+              🎉 Continuez votre expérience premium
             </h1>
 
-            <p className="text-white/80 text-lg mb-2">
-              Vous avez utilisé vos 15 minutes gratuites pour {channelName}
+            <p className="text-white/90 text-base sm:text-lg md:text-xl mb-2 sm:mb-3 font-sans">
+              Vous avez profité de vos 15 minutes gratuites sur {channelName}
             </p>
 
-            <p className="text-white/70 text-sm sm:text-base mb-8">
-              Abonnez-vous pour continuer à regarder toutes les chaînes premium
+            <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 px-2">
+              Abonnez-vous maintenant pour un accès illimité à toutes les chaînes premium
             </p>
 
-            <div className="bg-white/5 backdrop-blur-xl rounded-lg p-6 mb-8">
-              <div className="flex items-center gap-3 justify-center mb-4">
-                <Crown className="h-6 w-6 text-[#3498DB]" />
-                <h2 className="text-xl font-display font-bold text-white">
-                  Avantages Premium
+            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 justify-center mb-3 sm:mb-4">
+                <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-[#3498DB]" />
+                <h2 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white">
+                  Pourquoi s'abonner ?
                 </h2>
               </div>
-              <ul className="text-left space-y-2 text-white/80 max-w-md mx-auto">
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>Accès illimité à toutes les chaînes premium</span>
+              <ul className="text-left space-y-2 sm:space-y-3 text-white/90 max-w-md mx-auto text-sm sm:text-base">
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Accès illimité à toutes les chaînes premium (beIN SPORT, DAZN, Canal+, RMC Sport)</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>beIN SPORT, DAZN, Canal+, RMC Sport</span>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>7 jours d'essai gratuit (0€) - Aucune carte requise</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>Qualité HD sans limite</span>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Qualité HD/4K sans limite</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>7 jours d'essai gratuit (0€)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-[#3498DB]">✓</span>
-                  <span>Sans engagement</span>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Sans engagement - Résiliez à tout moment</span>
                 </li>
               </ul>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col gap-3 sm:gap-4">
               <Button
                 onClick={handleSubscribe}
-                className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold h-12 px-8"
+                className="w-full sm:w-auto mx-auto bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-bold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-10 shadow-lg shadow-[#3498DB]/30"
               >
-                <Crown className="h-4 w-4 mr-2" />
-                S'abonner maintenant (0€ pendant 7 jours)
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden sm:inline">Commencer l'essai gratuit (0€)</span>
+                <span className="sm:hidden">Essai gratuit 0€</span>
               </Button>
               <Button
                 onClick={() => router.push('/')}
                 variant="outline"
-                className="border-[#3498DB] text-[#3498DB] hover:bg-[#3498DB] hover:text-white font-label font-semibold h-12 px-8"
+                className="w-full sm:w-auto mx-auto border-white/20 text-white/80 hover:bg-white/10 hover:text-white font-label text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8"
               >
-                Retour à l'accueil
+                Découvrir plus de contenu
               </Button>
             </div>
           </Card>

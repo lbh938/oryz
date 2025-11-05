@@ -92,14 +92,33 @@ export async function POST(request: NextRequest) {
     const cfConnectingIp = request.headers.get('cf-connecting-ip'); // Cloudflare
     const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp || cfConnectingIp || 'unknown';
 
-    // Détecter VPN/Proxy
-    const vpnProxyInfo = await detectVPNProxy(clientIp);
-
-    // Vérifier dans la base de données si l'IP/device peut utiliser l'essai
+    // Créer le client Supabase admin
     const supabaseAdmin = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+
+    // Vérifier si le free preview est activé dans les paramètres
+    const { data: freePreviewSetting } = await supabaseAdmin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'free_preview_enabled')
+      .single();
+
+    // Si le free preview est désactivé, bloquer l'accès
+    if (freePreviewSetting?.value === 'false') {
+      return NextResponse.json({
+        canUse: false,
+        reason: 'Visionnage gratuit désactivé',
+        trustScore: 0,
+        isVPN: false,
+        isProxy: false,
+        isTor: false,
+      });
+    }
+
+    // Détecter VPN/Proxy
+    const vpnProxyInfo = await detectVPNProxy(clientIp);
 
     const { data: checkResult, error: checkError } = await supabaseAdmin.rpc(
       'can_use_free_preview',
@@ -130,19 +149,7 @@ export async function POST(request: NextRequest) {
       !!user
     );
 
-    // Si la base de données dit non, bloquer
-    if (!canUse) {
-      return NextResponse.json({
-        canUse: false,
-        reason: checkResult?.reason || 'Accès restreint',
-        trustScore,
-        isVPN: vpnProxyInfo.isVPN,
-        isProxy: vpnProxyInfo.isProxy,
-        isTor: vpnProxyInfo.isTor,
-      });
-    }
-
-    // Si VPN/Proxy/Tor détecté, bloquer
+    // Si VPN/Proxy/Tor détecté, bloquer (priorité absolue)
     if (vpnProxyInfo.isVPN || vpnProxyInfo.isProxy || vpnProxyInfo.isTor) {
       return NextResponse.json({
         canUse: false,
@@ -154,8 +161,54 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Si le score de confiance est trop bas, bloquer
-    if (trustScore < 0.5) {
+    // Si la base de données dit non ET que ce n'est pas juste un nouveau compte, bloquer
+    // Permettre aux nouveaux utilisateurs d'utiliser leur essai gratuit
+    if (!canUse && checkResult?.reason && !checkResult.reason.includes('Premier essai')) {
+      // Si l'utilisateur a un compte mais n'a pas encore utilisé l'essai, autoriser
+      if (user && checkResult?.preview_count === 0) {
+        // Autoriser même si la DB dit non (première fois pour cet utilisateur)
+        // Enregistrer l'essai si autorisé
+        const { error: recordError } = await supabaseAdmin.rpc('record_free_preview', {
+          p_ip_address: clientIp,
+          p_device_fingerprint: deviceFingerprint,
+          p_user_id: user.id,
+          p_user_agent: userAgent || null,
+          p_is_vpn: vpnProxyInfo.isVPN,
+          p_is_proxy: vpnProxyInfo.isProxy,
+          p_is_tor: vpnProxyInfo.isTor,
+          p_trust_score: 1.0, // Score maximal pour nouveau compte
+          p_country_code: vpnProxyInfo.countryCode || null,
+          p_city: vpnProxyInfo.city || null,
+          p_asn: vpnProxyInfo.asn || null,
+        });
+
+        if (recordError) {
+          console.error('Error recording free preview:', recordError);
+        }
+
+        return NextResponse.json({
+          canUse: true,
+          reason: 'Autorisé - Premier essai',
+          trustScore: 1.0,
+          previewCount: 1,
+          isVPN: vpnProxyInfo.isVPN,
+          isProxy: vpnProxyInfo.isProxy,
+          isTor: vpnProxyInfo.isTor,
+        });
+      }
+      
+      return NextResponse.json({
+        canUse: false,
+        reason: checkResult?.reason || 'Accès restreint',
+        trustScore,
+        isVPN: vpnProxyInfo.isVPN,
+        isProxy: vpnProxyInfo.isProxy,
+        isTor: vpnProxyInfo.isTor,
+      });
+    }
+
+    // Si le score de confiance est trop bas ET que ce n'est pas un nouveau compte, bloquer
+    if (trustScore < 0.5 && previewCount > 0) {
       return NextResponse.json({
         canUse: false,
         reason: 'Score de confiance trop bas',

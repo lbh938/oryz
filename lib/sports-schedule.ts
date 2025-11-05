@@ -6,29 +6,145 @@ export interface SportMatch {
 }
 
 export interface SportsSchedule {
-  channels: Record<string, string>;
+  channelsByDay: Record<string, Record<string, string>>;
   matches: Record<string, SportMatch[]>;
 }
 
 export const sportsSchedule: SportsSchedule = {
-  channels: {
-  "HD1": "ENGLISH",
-  "HD2": "ENGLISH",
-  "HD3": "GERMAN",
-  "HD4": "FRENCH",
-  "HD5": "ENGLISH & SPANISH",
-  "HD6": "SPANISH",
-  "HD7": "ITALIAN",
-  "HD8": "ITALIAN & SPANISH",
-  "HD9": "SPANISH",
-  "HD10": "ENGLISH & DUTCH & SPANISH",
-  "HD11": "SPANISH",
-  "BR1": "BRAZILIAN",
-  "BR2": "BRAZILIAN",
-  "BR3": "BRAZILIAN",
-  "BR4": "BRAZILIAN",
-  "BR5": "BRAZILIAN",
-  "BR6": "BRAZILIAN"
+  channelsByDay: {
+  "SUNDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "SPANISH",
+    "HD9": "GREEK & SPANISH",
+    "HD10": "SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "MONDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH & SPANISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN & SPANISH",
+    "HD9": "SPANISH",
+    "HD10": "ENGLISH & DUTCH & SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "TUESDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH & SPANISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN & SPANISH",
+    "HD9": "SPANISH",
+    "HD10": "ENGLISH & DUTCH & SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "WEDNESDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH & SPANISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN & SPANISH",
+    "HD9": "SPANISH",
+    "HD10": "ENGLISH & DUTCH & SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "THURSDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH & SPANISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN & SPANISH",
+    "HD9": "SPANISH",
+    "HD10": "ENGLISH & DUTCH & SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "FRIDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH & SPANISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN & SPANISH",
+    "HD9": "SPANISH",
+    "HD10": "ENGLISH & DUTCH & SPANISH",
+    "HD11": "SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  },
+  "SATURDAY": {
+    "HD1": "ENGLISH",
+    "HD2": "ENGLISH",
+    "HD3": "GERMAN",
+    "HD4": "FRENCH",
+    "HD5": "ENGLISH",
+    "HD6": "SPANISH",
+    "HD7": "ITALIAN",
+    "HD8": "ITALIAN",
+    "HD9": "ENGLISH & DUTCH & SPANISH",
+    "HD10": "GERMAN & TURKISH & SPANISH",
+    "HD11": "GERMAN & ENGLISH & SPANISH",
+    "BR1": "BRAZILIAN",
+    "BR2": "BRAZILIAN",
+    "BR3": "BRAZILIAN",
+    "BR4": "BRAZILIAN",
+    "BR5": "BRAZILIAN",
+    "BR6": "BRAZILIAN"
+  }
 },
   matches: {
   "SUNDAY": [
@@ -1367,6 +1483,548 @@ export const sportsSchedule: SportsSchedule = {
       "name": "Mazatlán x Necaxa",
       "url": "https://sportzonline.live/channels/hd/hd5.php"
     }
+  ],
+  "SATURDAY": [
+    {
+      "time": "04:00",
+      "name": "AFLW: Carlton v WC Eagles",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "06:00",
+      "name": "Wellington x Auckland FC",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "07:00",
+      "name": "DP World Tour: Abu Dhabi Championship - D2",
+      "url": "https://sportzonline.live/channels/pt/sporttv3.php"
+    },
+    {
+      "time": "08:30",
+      "name": "Moto2/3: Portugal FP2",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "08:30",
+      "name": "Moto2/3: Portugal FP2",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "08:30",
+      "name": "Moto2/3: Portugal FP2",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "10:00",
+      "name": "MotoGP: Portugal Qualifying",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "10:00",
+      "name": "MotoGP: Portugal Qualifying",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "10:00",
+      "name": "MotoGP: Portugal Qualifying",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "11:00",
+      "name": "Penafiel x Sporting CP B",
+      "url": "https://sportzonline.live/channels/pt/sporttv1.php"
+    },
+    {
+      "time": "12:00",
+      "name": "Schalke 04 x Elversberg",
+      "url": "https://sportzonline.live/channels/hd/hd10.php"
+    },
+    {
+      "time": "12:00",
+      "name": "Schalke 04 x Elversberg",
+      "url": "https://sportzonline.live/channels/pt/eleven3.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Tottenham Hotspur x Manchester United",
+      "url": "https://sportzonline.live/channels/hd/hd1.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Tottenham Hotspur x Manchester United",
+      "url": "https://sportzonline.live/channels/pt/eleven1.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Tottenham Hotspur x Manchester United",
+      "url": "https://sportzonline.live/channels/bra/br3.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Millwall x Preston North End",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Blackburn Rovers x Derby County",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "12:30",
+      "name": "Blackburn Rovers x Derby County",
+      "url": "https://sportzonline.live/channels/bra/br2.php"
+    },
+    {
+      "time": "12:45",
+      "name": "Moto2/3: Portugal Qualifying",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "12:45",
+      "name": "Moto2/3: Portugal Qualifying",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "13:00",
+      "name": "Girona x Deportivo Alavés",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "13:00",
+      "name": "Girona x Deportivo Alavés",
+      "url": "https://sportzonline.live/channels/pt/eleven2.php"
+    },
+    {
+      "time": "13:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Sprint",
+      "url": "https://sportzonline.live/channels/hd/hd5.php"
+    },
+    {
+      "time": "13:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Sprint",
+      "url": "https://sportzonline.live/channels/hd/hd8.php"
+    },
+    {
+      "time": "13:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Sprint",
+      "url": "https://sportzonline.live/channels/bra/br5.php"
+    },
+    {
+      "time": "13:50",
+      "name": "NEOM x Al Nassr",
+      "url": "https://sportzonline.live/channels/pt/sporttv3.php"
+    },
+    {
+      "time": "13:50",
+      "name": "NEOM x Al Nassr",
+      "url": "https://sportzonline.live/channels/bra/br1.php"
+    },
+    {
+      "time": "14:00",
+      "name": "Como x Cagliari",
+      "url": "https://sportzonline.live/channels/hd/hd7.php"
+    },
+    {
+      "time": "14:00",
+      "name": "Como x Cagliari",
+      "url": "https://sportzonline.live/channels/pt/sporttv1.php"
+    },
+    {
+      "time": "14:00",
+      "name": "Lecce x Hellas Verona",
+      "url": "https://sportzonline.live/channels/hd/hd8.php"
+    },
+    {
+      "time": "14:30",
+      "name": "Union Berlin x Bayern München",
+      "url": "https://sportzonline.live/channels/hd/hd11.php"
+    },
+    {
+      "time": "14:30",
+      "name": "Bayer Leverkusen x Heidenheim",
+      "url": "https://sportzonline.live/channels/hd/hd10.php"
+    },
+    {
+      "time": "14:30",
+      "name": "Hamburger SV x Borussia Dortmund",
+      "url": "https://sportzonline.live/channels/hd/hd3.php"
+    },
+    {
+      "time": "14:45",
+      "name": "MotoGP: Portugal Sprint Race",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "14:45",
+      "name": "MotoGP: Portugal Sprint Race",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "15:00",
+      "name": "Everton x Fulham",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "15:00",
+      "name": "Everton x Fulham",
+      "url": "https://sportzonline.live/channels/pt/eleven1.php"
+    },
+    {
+      "time": "15:00",
+      "name": "West Ham United x Burnley",
+      "url": "https://sportzonline.live/channels/hd/hd1.php"
+    },
+    {
+      "time": "15:00",
+      "name": "West Ham United x Burnley",
+      "url": "https://sportzonline.live/channels/pt/eleven3.php"
+    },
+    {
+      "time": "15:00",
+      "name": "West Ham United x Burnley",
+      "url": "https://sportzonline.live/channels/bra/br2.php"
+    },
+    {
+      "time": "15:00",
+      "name": "Stoke City x Coventry City",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "15:00",
+      "name": "Stoke City x Coventry City",
+      "url": "https://sportzonline.live/channels/pt/sporttv5.php"
+    },
+    {
+      "time": "15:15",
+      "name": "Sevilla x Osasuna",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "15:15",
+      "name": "Sevilla x Osasuna",
+      "url": "https://sportzonline.live/channels/pt/eleven2.php"
+    },
+    {
+      "time": "15:15",
+      "name": "Sevilla x Osasuna",
+      "url": "https://sportzonline.live/channels/bra/br4.php"
+    },
+    {
+      "time": "15:30",
+      "name": "Alverca x Rio Ave",
+      "url": "https://sportzonline.live/channels/pt/sporttv2.php"
+    },
+    {
+      "time": "16:00",
+      "name": "Olympique Marseille x Brest",
+      "url": "https://sportzonline.live/channels/hd/hd4.php"
+    },
+    {
+      "time": "16:00",
+      "name": "Olympique Marseille x Brest",
+      "url": "https://sportzonline.live/channels/pt/sporttv3.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Juventus x Torino",
+      "url": "https://sportzonline.live/channels/hd/hd11.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Juventus x Torino",
+      "url": "https://sportzonline.live/channels/hd/hd7.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Juventus x Torino",
+      "url": "https://sportzonline.live/channels/pt/sporttv5.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Juventus x Torino",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Antalyaspor x Beşiktaş",
+      "url": "https://sportzonline.live/channels/hd/hd10.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Qualifying",
+      "url": "https://sportzonline.live/channels/hd/hd5.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Qualifying",
+      "url": "https://sportzonline.live/channels/hd/hd8.php"
+    },
+    {
+      "time": "17:00",
+      "name": "Formula 1: Sao Paulo Grand Prix: Qualifying",
+      "url": "https://sportzonline.live/channels/bra/br5.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Sunderland x Arsenal",
+      "url": "https://sportzonline.live/channels/hd/hd1.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Sunderland x Arsenal",
+      "url": "https://sportzonline.live/channels/pt/eleven1.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Sunderland x Arsenal",
+      "url": "https://sportzonline.live/channels/bra/br2.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Borussia M'gladbach x Köln",
+      "url": "https://sportzonline.live/channels/hd/hd3.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Borussia M'gladbach x Köln",
+      "url": "https://sportzonline.live/channels/pt/eleven3.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Atlético Madrid x Levante",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Atlético Madrid x Levante",
+      "url": "https://sportzonline.live/channels/pt/eleven2.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Atlético Madrid x Levante",
+      "url": "https://sportzonline.live/channels/bra/br4.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Al Ittihad x Al Ahli",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "17:30",
+      "name": "Al Ittihad x Al Ahli",
+      "url": "https://sportzonline.live/channels/bra/br1.php"
+    },
+    {
+      "time": "17:45",
+      "name": "St. Mirren x Hibernian",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "17:45",
+      "name": "Volendam x NAC Breda",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "18:00",
+      "name": "Le Havre x Nantes",
+      "url": "https://sportzonline.live/channels/hd/hd4.php"
+    },
+    {
+      "time": "18:00",
+      "name": "Le Havre x Nantes",
+      "url": "https://sportzonline.live/channels/pt/sporttv3.php"
+    },
+    {
+      "time": "18:00",
+      "name": "Tondela x Vitória Guimarães",
+      "url": "https://sportzonline.live/channels/pt/sporttv2.php"
+    },
+    {
+      "time": "19:00",
+      "name": "Novorizontino x Remo",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "19:00",
+      "name": "Sport Recife x Atlético Mineiro",
+      "url": "https://sportzonline.live/channels/bra/br5.php"
+    },
+    {
+      "time": "19:30",
+      "name": "Kaiserslautern x Hertha BSC",
+      "url": "https://sportzonline.live/channels/hd/hd3.php"
+    },
+    {
+      "time": "19:45",
+      "name": "Parma x Milan",
+      "url": "https://sportzonline.live/channels/hd/hd11.php"
+    },
+    {
+      "time": "19:45",
+      "name": "Parma x Milan",
+      "url": "https://sportzonline.live/channels/hd/hd7.php"
+    },
+    {
+      "time": "19:45",
+      "name": "Parma x Milan",
+      "url": "https://sportzonline.live/channels/pt/sporttv4.php"
+    },
+    {
+      "time": "19:45",
+      "name": "Parma x Milan",
+      "url": "https://sportzonline.live/channels/bra/br3.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Chelsea x Wolverhampton Wanderers",
+      "url": "https://sportzonline.live/channels/hd/hd1.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Chelsea x Wolverhampton Wanderers",
+      "url": "https://sportzonline.live/channels/pt/eleven1.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Chelsea x Wolverhampton Wanderers",
+      "url": "https://sportzonline.live/channels/bra/br2.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Espanyol x Villarreal",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Espanyol x Villarreal",
+      "url": "https://sportzonline.live/channels/pt/eleven2.php"
+    },
+    {
+      "time": "20:00",
+      "name": "PEC Zwolle x Sparta Rotterdam",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "20:00",
+      "name": "Racing x Defensa y Justicia",
+      "url": "https://sportzonline.live/channels/pt/sporttv5.php"
+    },
+    {
+      "time": "20:05",
+      "name": "Monaco x Lens",
+      "url": "https://sportzonline.live/channels/hd/hd4.php"
+    },
+    {
+      "time": "20:05",
+      "name": "Monaco x Lens",
+      "url": "https://sportzonline.live/channels/pt/sporttv3.php"
+    },
+    {
+      "time": "20:30",
+      "name": "Santa Clara x Sporting CP",
+      "url": "https://sportzonline.live/channels/pt/sporttv1.php"
+    },
+    {
+      "time": "20:30",
+      "name": "Santa Clara x Sporting CP",
+      "url": "https://sportzonline.live/channels/bra/br4.php"
+    },
+    {
+      "time": "20:30",
+      "name": "Palestino x Coquimbo Unido",
+      "url": "https://sportzonline.live/channels/hd/hd10.php"
+    },
+    {
+      "time": "21:00",
+      "name": "Inter Miami x Nashville SC",
+      "url": "https://sportzonline.live/channels/hd/hd2.php"
+    },
+    {
+      "time": "21:00",
+      "name": "Vasco da Gama x Juventude",
+      "url": "https://sportzonline.live/channels/bra/br1.php"
+    },
+    {
+      "time": "21:30",
+      "name": "Internacional x Bahia",
+      "url": "https://sportzonline.live/channels/bra/br5.php"
+    },
+    {
+      "time": "22:00",
+      "name": "UFC Fight Night: Prelims",
+      "url": "https://sportzonline.live/channels/hd/hd11.php"
+    },
+    {
+      "time": "22:15",
+      "name": "Talleres Córdoba x Platense",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "23:30",
+      "name": "O'Higgins x Ñublense",
+      "url": "https://sportzonline.live/channels/hd/hd10.php"
+    },
+    {
+      "time": "00:00",
+      "name": "São Paulo x RB Bragantino",
+      "url": "https://sportzonline.live/channels/bra/br1.php"
+    },
+    {
+      "time": "00:00",
+      "name": "UFC Fight Night: Gabriel Bonfim v Randy Brown",
+      "url": "https://sportzonline.live/channels/hd/hd11.php"
+    },
+    {
+      "time": "00:00",
+      "name": "UFC Fight Night: Gabriel Bonfim v Randy Brown",
+      "url": "https://sportzonline.live/channels/pt/sporttv1.php"
+    },
+    {
+      "time": "00:30",
+      "name": "San Martín San Juan x Lanús",
+      "url": "https://sportzonline.live/channels/hd/hd6.php"
+    },
+    {
+      "time": "01:00",
+      "name": "Toluca x América",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "01:00",
+      "name": "Boxing: Vergil Ortiz x Erickson Lubin",
+      "url": "https://sportzonline.live/channels/bra/br6.php"
+    },
+    {
+      "time": "01:00",
+      "name": "NBA: Los Angeles Lakers @ Atlanta Hawks",
+      "url": "https://sportzonline.live/channels/hd/hd5.php"
+    },
+    {
+      "time": "01:00",
+      "name": "NBA: Los Angeles Lakers @ Atlanta Hawks",
+      "url": "https://sportzonline.live/channels/pt/sporttv2.php"
+    },
+    {
+      "time": "01:00",
+      "name": "NBA: Los Angeles Lakers @ Atlanta Hawks",
+      "url": "https://sportzonline.live/channels/bra/br4.php"
+    },
+    {
+      "time": "03:05",
+      "name": "Cruz Azul x Pumas UNAM",
+      "url": "https://sportzonline.live/channels/hd/hd9.php"
+    },
+    {
+      "time": "03:30",
+      "name": "NBA: Phoenix Suns @ LA Clippers",
+      "url": "https://sportzonline.live/channels/hd/hd1.php"
+    },
+    {
+      "time": "03:30",
+      "name": "NBA: Phoenix Suns @ LA Clippers",
+      "url": "https://sportzonline.live/channels/bra/br4.php"
+    }
   ]
 }
 };
@@ -1374,6 +2032,21 @@ export const sportsSchedule: SportsSchedule = {
 // Fonctions utilitaires
 export function getMatchesByDay(day: string): SportMatch[] {
   return sportsSchedule.matches[day.toUpperCase()] || [];
+}
+
+/**
+ * Obtenir les langues des chaînes pour un jour donné
+ */
+export function getChannelsByDay(day: string): Record<string, string> {
+  return sportsSchedule.channelsByDay[day.toUpperCase()] || {};
+}
+
+/**
+ * Obtenir la langue d'une chaîne spécifique pour un jour donné
+ */
+export function getChannelLanguage(day: string, channelId: string): string {
+  const dayChannels = getChannelsByDay(day);
+  return dayChannels[channelId.toUpperCase()] || '';
 }
 
 export function getTodayMatches(): SportMatch[] {
@@ -1494,7 +2167,118 @@ export function getLiveMatches(): SportMatch[] {
 export interface GroupedSportMatch {
   time: string;
   name: string;
+  sport: string;
   sources: Array<{ url: string; label?: string }>;
+}
+
+/**
+ * Détecter le sport d'un match basé sur son nom
+ */
+export function detectSport(matchName: string): string {
+  const nameLower = matchName.toLowerCase();
+  
+  // Football / Soccer
+  if (
+    nameLower.includes('vs') || nameLower.includes('x') || nameLower.includes(' v ') ||
+    nameLower.includes('football') || nameLower.includes('soccer') ||
+    nameLower.includes('premier league') || nameLower.includes('la liga') ||
+    nameLower.includes('serie a') || nameLower.includes('bundesliga') ||
+    nameLower.includes('ligue 1') || nameLower.includes('champions league') ||
+    nameLower.includes('europa league') || nameLower.includes('world cup') ||
+    nameLower.includes('euro') || nameLower.includes('copa') ||
+    nameLower.includes('fc') || nameLower.includes('united') ||
+    nameLower.includes('city') || nameLower.includes('real') ||
+    nameLower.includes('barcelona') || nameLower.includes('bayern') ||
+    nameLower.includes('juventus') || nameLower.includes('milan') ||
+    nameLower.includes('arsenal') || nameLower.includes('chelsea') ||
+    nameLower.includes('liverpool') || nameLower.includes('manchester')
+  ) {
+    return 'Football';
+  }
+  
+  // MotoGP / Motorcycle
+  if (
+    nameLower.includes('motogp') || nameLower.includes('moto2') ||
+    nameLower.includes('moto3') || nameLower.includes('moto e') ||
+    nameLower.includes('motoe') || nameLower.includes('motorcycle') ||
+    nameLower.includes('portugal fp') || nameLower.includes('portugal qualifying') ||
+    nameLower.includes('portugal sprint')
+  ) {
+    return 'MotoGP';
+  }
+  
+  // Formula 1
+  if (
+    nameLower.includes('formula 1') || nameLower.includes('f1') ||
+    nameLower.includes('grand prix') || nameLower.includes('gp:') ||
+    nameLower.includes('qualifying') || nameLower.includes('sprint') ||
+    nameLower.includes('practice') || nameLower.includes('fp1') ||
+    nameLower.includes('fp2') || nameLower.includes('fp3')
+  ) {
+    return 'Formula 1';
+  }
+  
+  // Basketball
+  if (
+    nameLower.includes('nba') || nameLower.includes('basketball') ||
+    nameLower.includes('basket') || nameLower.includes('lakers') ||
+    nameLower.includes('warriors') || nameLower.includes('celtics') ||
+    nameLower.includes('bulls') || nameLower.includes('heat') ||
+    nameLower.includes('clippers') || nameLower.includes('suns')
+  ) {
+    return 'Basketball';
+  }
+  
+  // UFC / MMA / Boxing
+  if (
+    nameLower.includes('ufc') || nameLower.includes('mma') ||
+    nameLower.includes('boxing') || nameLower.includes('fight night') ||
+    nameLower.includes('prelims') || nameLower.includes('main event') ||
+    nameLower.includes('vs') && (nameLower.includes('ufc') || nameLower.includes('boxing'))
+  ) {
+    return 'Combat Sports';
+  }
+  
+  // Tennis
+  if (
+    nameLower.includes('tennis') || nameLower.includes('atp') ||
+    nameLower.includes('wta') || nameLower.includes('wimbledon') ||
+    nameLower.includes('french open') || nameLower.includes('us open') ||
+    nameLower.includes('australian open') || nameLower.includes('roland garros')
+  ) {
+    return 'Tennis';
+  }
+  
+  // Golf
+  if (
+    nameLower.includes('golf') || nameLower.includes('pga') ||
+    nameLower.includes('masters') || nameLower.includes('dp world tour') ||
+    nameLower.includes('championship')
+  ) {
+    return 'Golf';
+  }
+  
+  // Rugby
+  if (
+    nameLower.includes('rugby') || nameLower.includes('six nations') ||
+    nameLower.includes('world cup') && nameLower.includes('rugby')
+  ) {
+    return 'Rugby';
+  }
+  
+  // Autres sports
+  if (
+    nameLower.includes('aflw') || nameLower.includes('australian football')
+  ) {
+    return 'Australian Football';
+  }
+  
+  // Par défaut, considérer comme Football si c'est un match entre deux équipes
+  if (nameLower.includes('x') || nameLower.includes('vs') || nameLower.includes(' v ')) {
+    return 'Football';
+  }
+  
+  return 'Autre';
 }
 
 /**
@@ -1510,6 +2294,7 @@ export function groupMatchesByTimeAndName(matches: SportMatch[]): GroupedSportMa
       grouped.set(key, {
         time: match.time,
         name: match.name,
+        sport: detectSport(match.name),
         sources: []
       });
     }
@@ -1537,6 +2322,68 @@ export function groupMatchesByTimeAndName(matches: SportMatch[]): GroupedSportMa
   });
   
   return Array.from(grouped.values());
+}
+
+/**
+ * Grouper les matches par sport
+ */
+export function groupMatchesBySport(matches: GroupedSportMatch[]): Map<string, GroupedSportMatch[]> {
+  const grouped = new Map<string, GroupedSportMatch[]>();
+  
+  matches.forEach(match => {
+    const sport = match.sport || 'Autre';
+    
+    if (!grouped.has(sport)) {
+      grouped.set(sport, []);
+    }
+    
+    grouped.get(sport)!.push(match);
+  });
+  
+  // Trier les matches dans chaque sport par heure
+  grouped.forEach((matches, sport) => {
+    matches.sort((a, b) => a.time.localeCompare(b.time));
+  });
+  
+  return grouped;
+}
+
+/**
+ * Ordre d'affichage des sports (priorité)
+ */
+const SPORT_ORDER = [
+  'Football',
+  'Basketball',
+  'Formula 1',
+  'MotoGP',
+  'Combat Sports',
+  'Tennis',
+  'Golf',
+  'Rugby',
+  'Australian Football',
+  'Autre'
+];
+
+/**
+ * Trier les sports selon l'ordre de priorité
+ */
+export function sortSportsByPriority(sports: string[]): string[] {
+  return sports.sort((a, b) => {
+    const indexA = SPORT_ORDER.indexOf(a);
+    const indexB = SPORT_ORDER.indexOf(b);
+    
+    // Si les deux sports sont dans l'ordre, les trier selon l'ordre
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+    
+    // Si un seul est dans l'ordre, le mettre en premier
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    
+    // Sinon, trier alphabétiquement
+    return a.localeCompare(b);
+  });
 }
 
 /**

@@ -13,10 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 
-export function SignUpForm({
+function SignUpFormContent({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
@@ -27,6 +27,7 @@ export function SignUpForm({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,8 +109,34 @@ export function SignUpForm({
         }
       }
       
-      // Redirection directe vers la page de connexion avec message de succès
-      router.push("/auth/login?message=" + encodeURIComponent("✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter."));
+      // Vérifier s'il y a un redirect et un plan dans l'URL
+      const redirect = searchParams.get('redirect');
+      const planId = searchParams.get('plan') || localStorage.getItem('selectedPlanId');
+      
+      if (redirect === '/subscription' && planId) {
+        // Si l'utilisateur vient de la page d'abonnement, le connecter automatiquement
+        // et le rediriger vers Stripe checkout
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (!signInError) {
+          // Nettoyer localStorage
+          localStorage.removeItem('selectedPlanId');
+          // Rediriger vers la page d'abonnement avec le plan sélectionné
+          router.push(`/subscription?auto-subscribe=${planId}`);
+        } else {
+          // Si la connexion automatique échoue, rediriger vers la page de connexion
+          router.push("/auth/login?redirect=/subscription&plan=" + planId + "&message=" + encodeURIComponent("✅ Compte créé avec succès ! Connectez-vous pour continuer."));
+        }
+      } else if (redirect) {
+        // Redirection normale
+        router.push(redirect);
+      } else {
+        // Redirection par défaut vers la page de connexion
+        router.push("/auth/login?message=" + encodeURIComponent("✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter."));
+      }
     } catch (error: unknown) {
       console.error('Signup error:', error);
       setError(error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription");
@@ -195,5 +222,16 @@ export function SignUpForm({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export function SignUpForm({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<"div">) {
+  return (
+    <Suspense fallback={<div className="text-white">Chargement...</div>}>
+      <SignUpFormContent className={className} {...props} />
+    </Suspense>
   );
 }

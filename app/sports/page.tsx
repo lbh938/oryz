@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration, SportMatch } from '@/lib/sports-schedule';
+import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration, SportMatch, groupMatchesBySport, sortSportsByPriority } from '@/lib/sports-schedule';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, ExternalLink, Play, ChevronDown } from 'lucide-react';
@@ -128,6 +128,8 @@ export default function SportsPage() {
   });
   
   const groupedMatches = groupMatchesByTimeAndName(matches);
+  const matchesBySport = groupMatchesBySport(groupedMatches);
+  const sortedSports = sortSportsByPriority(Array.from(matchesBySport.keys()));
 
   // Créer un ID unique pour chaque match (basé sur le nom)
   const createMatchId = (matchName: string, url: string): string => {
@@ -187,8 +189,27 @@ export default function SportsPage() {
 
           {/* Matches du jour sélectionné */}
           {groupedMatches.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-              {groupedMatches.map((match, index) => {
+            <div className="space-y-8 sm:space-y-12">
+              {sortedSports.map((sport) => {
+                const sportMatches = matchesBySport.get(sport) || [];
+                
+                return (
+                  <div key={sport} className="space-y-4 sm:space-y-6">
+                    {/* Titre du sport */}
+                    <div className="flex items-center gap-3">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#3498DB]/50 to-transparent"></div>
+                      <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white whitespace-nowrap">
+                        {sport}
+                      </h2>
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#3498DB]/50 to-transparent"></div>
+                      <span className="text-white/60 text-sm sm:text-base font-label">
+                        {sportMatches.length} match{sportMatches.length > 1 ? 'es' : ''}
+                      </span>
+                    </div>
+                    
+                    {/* Grille de matches pour ce sport */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+                      {sportMatches.map((match, index) => {
                 const hasMultipleSources = match.sources.length > 1;
                 const primarySource = match.sources[0];
                 const matchId = createMatchId(match.name, primarySource.url);
@@ -280,6 +301,10 @@ export default function SportsPage() {
                       </div>
                     </div>
                   </Card>
+                      );
+                    })}
+                    </div>
+                  </div>
                 );
               })}
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { MainLayout } from '@/components/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -8,11 +8,11 @@ import { PLANS, Plan, hasPremiumAccess, getCurrentSubscription } from '@/lib/sub
 import { Check, Crown, X, Monitor, Smartphone, Tablet } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
-export default function SubscriptionPage() {
+function SubscriptionPageContent() {
   const [subscription, setSubscription] = useState<any>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,16 @@ export default function SubscriptionPage() {
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Fonction pour scroller vers un plan spécifique
+  const scrollToPlan = (planId: string) => {
+    const element = document.getElementById(`plan-${planId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Vérifier l'authentification au chargement
   useEffect(() => {
@@ -34,6 +43,26 @@ export default function SubscriptionPage() {
         const access = await hasPremiumAccess();
         setSubscription(sub);
         setHasAccess(access);
+        
+        // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
+        const autoSubscribePlanId = searchParams.get('auto-subscribe');
+        
+        if (autoSubscribePlanId && !access) {
+          // Scroller vers le plan sélectionné
+          scrollToPlan(autoSubscribePlanId);
+          
+          // Trouver le plan correspondant
+          const plan = PLANS.find(p => p.id === autoSubscribePlanId);
+          if (plan) {
+            // Attendre un peu que l'état soit mis à jour puis lancer l'abonnement
+            setTimeout(() => {
+              handleSubscribe(plan);
+            }, 1500);
+          }
+        }
+      } else {
+        // Ne pas scroller automatiquement si l'utilisateur n'est pas authentifié
+        // Il sera redirigé vers la page d'inscription, pas besoin de scroller ici
       }
       
       setLoading(false);
@@ -58,14 +87,12 @@ export default function SubscriptionPage() {
   }, []);
 
   const handleSubscribe = async (plan: Plan) => {
-    // Vérifier l'authentification avant de permettre l'abonnement
+    // Si l'utilisateur n'est pas authentifié, rediriger vers l'inscription avec le plan sélectionné
     if (!isAuthenticated || !user) {
-      const confirmCreate = window.confirm(
-        'Vous devez créer un compte pour vous abonner. Souhaitez-vous être redirigé vers la page d\'inscription ?'
-      );
-      if (confirmCreate) {
-        router.push('/auth/sign-up?redirect=/subscription');
-      }
+      // Sauvegarder le plan sélectionné dans localStorage pour le récupérer après inscription
+      localStorage.setItem('selectedPlanId', plan.id);
+      // Utiliser window.location.href pour éviter les problèmes de navigation Next.js
+      window.location.href = `/auth/sign-up?redirect=/subscription&plan=${plan.id}`;
       return;
     }
 
@@ -154,24 +181,9 @@ export default function SubscriptionPage() {
           </p>
           {!isAuthenticated && (
             <Card className="bg-gradient-to-r from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
-              <p className="text-white/90 text-sm sm:text-base font-label font-semibold mb-3">
-                📝 Pour vous abonner, vous devez créer un compte
+              <p className="text-white/90 text-sm sm:text-base font-label font-semibold text-center">
+                🎁 Cliquez sur "Essai gratuit" pour commencer votre essai de 7 jours (0€)
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  onClick={() => router.push('/auth/sign-up?redirect=/subscription')}
-                  className="bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold"
-                >
-                  Créer un compte
-                </Button>
-                <Button
-                  onClick={() => router.push('/auth/login?redirect=/subscription')}
-                  variant="outline"
-                  className="border-[#3498DB]/50 bg-white/5 text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold"
-                >
-                  J'ai déjà un compte
-                </Button>
-              </div>
             </Card>
           )}
         </div>
@@ -236,6 +248,7 @@ export default function SubscriptionPage() {
                       </th>
                       {PLANS.map((plan) => (
                         <th
+                          id={`plan-${plan.id}`}
                           key={plan.id}
                           className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center ${
                             plan.isPopular
@@ -488,14 +501,12 @@ export default function SubscriptionPage() {
                         >
                           <Button
                             onClick={() => handleSubscribe(plan)}
-                            disabled={!isAuthenticated || hasAccess || processing === plan.id}
+                            disabled={hasAccess || processing === plan.id}
                             className={`w-full sm:w-auto min-w-[140px] sm:min-w-[180px] ${
                               plan.isPopular
                                 ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white shadow-lg shadow-[#3498DB]/30'
                                 : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'
-                            } font-label font-semibold h-10 sm:h-11 text-xs sm:text-sm ${
-                              !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
-                            }`}
+                            } font-label font-semibold h-10 sm:h-11 text-xs sm:text-sm`}
                           >
                             {processing === plan.id ? (
                               <div className="flex items-center gap-2">
@@ -504,7 +515,7 @@ export default function SubscriptionPage() {
                                 <span className="sm:hidden">...</span>
                               </div>
                             ) : !isAuthenticated ? (
-                              'Créer un compte'
+                              'Essai gratuit'
                             ) : hasAccess ? (
                               'Déjà abonné'
                             ) : (
@@ -532,6 +543,22 @@ export default function SubscriptionPage() {
         </div>
       </div>
     </MainLayout>
+  );
+}
+
+export default function SubscriptionPage() {
+  return (
+    <Suspense fallback={
+      <MainLayout>
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>
+          </div>
+        </div>
+      </MainLayout>
+    }>
+      <SubscriptionPageContent />
+    </Suspense>
   );
 }
 

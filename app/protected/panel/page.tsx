@@ -35,7 +35,7 @@ import { NotificationDebugPanel } from '@/components/admin/notification-debug-pa
 import {
   Save, Users, Eye, TrendingUp, Calendar,
   Loader2, Lock, AlertCircle, CheckCircle2, KeyRound, LogOut, Home, ArrowLeft,
-  Plus, Edit, Trash2, ArrowUp, ArrowDown, X, ChevronDown
+  Plus, Edit, Trash2, ArrowUp, ArrowDown, X, ChevronDown, ChevronRight, Clock, Settings, Image, Bell, Calendar as CalendarIcon
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -86,6 +86,18 @@ export default function AdminPage() {
   // App Settings State
   const [iframeSandboxEnabled, setIframeSandboxEnabled] = useState(false);
   const [isSavingSandbox, setIsSavingSandbox] = useState(false);
+  const [freePreviewEnabled, setFreePreviewEnabled] = useState(true);
+  const [isSavingFreePreview, setIsSavingFreePreview] = useState(false);
+
+  // Sports Schedule State
+  const [isSportsScheduleOpen, setIsSportsScheduleOpen] = useState(false);
+  const [sportsScheduleText, setSportsScheduleText] = useState('');
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
+  const [scheduleSaveStatus, setScheduleSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [scheduleSaveMessage, setScheduleSaveMessage] = useState('');
+  
+  // Sections State - Pour organiser le panel
+  const [activeSection, setActiveSection] = useState<string>('overview');
 
   // Vérifier l'authentification
   useEffect(() => {
@@ -127,22 +139,23 @@ export default function AdminPage() {
     setIsLoading(true);
 
     try {
-      const [allHeroes, visitors, pages24h, pages7d, stats, sandboxSetting] = await Promise.all([
+      const [allHeroes, visitors, pages24h, pages7d, stats, sandboxSetting, freePreviewSetting] = await Promise.all([
         getAllHeroes(),
         getActiveVisitorsCount(),
         getTopPages24h(),
         getTopPages7d(),
         getGlobalStats(),
-        getAppSetting('iframe_sandbox_enabled')
+        getAppSetting('iframe_sandbox_enabled'),
+        getAppSetting('free_preview_enabled')
       ]);
 
       setHeroes(allHeroes);
-
       setActiveVisitors(visitors);
       setTopPages24h(pages24h);
       setTopPages7d(pages7d);
       setGlobalStats(stats);
-      setIframeSandboxEnabled(sandboxSetting === 'true');
+      setIframeSandboxEnabled(sandboxSetting !== 'false');
+      setFreePreviewEnabled(freePreviewSetting !== 'false');
     } catch (error) {
       console.error('Error loading admin data:', error);
     } finally {
@@ -185,6 +198,76 @@ export default function AdminPage() {
       setSaveStatus('error');
     } finally {
       setIsSavingSandbox(false);
+    }
+  };
+
+  // Sauvegarder le paramètre free preview
+  const handleSaveFreePreview = async () => {
+    setIsSavingFreePreview(true);
+    setSaveStatus('idle');
+
+    try {
+      const success = await updateAppSetting(
+        'free_preview_enabled',
+        freePreviewEnabled ? 'true' : 'false',
+        'Active ou désactive le visionnage gratuit de 15 minutes pour les chaînes premium'
+      );
+
+      if (success) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      console.error('Error saving free preview setting:', error);
+      setSaveStatus('error');
+    } finally {
+      setIsSavingFreePreview(false);
+    }
+  };
+
+  // Sauvegarder le planning sportif
+  const handleSaveSportsSchedule = async () => {
+    if (!sportsScheduleText.trim()) {
+      setScheduleSaveStatus('error');
+      setScheduleSaveMessage('Veuillez coller le planning sportif');
+      return;
+    }
+
+    setIsSavingSchedule(true);
+    setScheduleSaveStatus('idle');
+    setScheduleSaveMessage('');
+
+    try {
+      const response = await fetch('/api/admin/sports-schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          scheduleText: sportsScheduleText,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la mise à jour');
+      }
+
+      setScheduleSaveStatus('success');
+      setScheduleSaveMessage(
+        `✅ Planning mis à jour : ${data.stats?.totalMatches || 0} matches, ${data.stats?.totalChannels || 0} jours. ` +
+        `⚠️ Note : Vous devez redémarrer le serveur pour voir les changements.`
+      );
+      setSportsScheduleText(''); // Vider le texte après sauvegarde
+    } catch (error: any) {
+      console.error('Error saving sports schedule:', error);
+      setScheduleSaveStatus('error');
+      setScheduleSaveMessage(error.message || 'Erreur lors de la sauvegarde');
+    } finally {
+      setIsSavingSchedule(false);
     }
   };
 
@@ -538,510 +621,71 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Paramètres Iframe - Sandbox */}
-        <div className="bg-gradient-to-br from-[#0F4C81]/20 to-[#3498DB]/20 border border-[#3498DB]/30 rounded-xl p-6 sm:p-8 mb-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-[#0F4C81] to-[#3498DB]">
-              <Lock className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-display font-bold text-white">
-                Paramètres Iframe
-              </h2>
-              <p className="text-sm text-white/60 font-sans">
-                Gérer l'attribut sandbox des iframes de lecture vidéo
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
-              <div className="flex-1">
-                <Label htmlFor="sandbox-toggle" className="text-white font-label font-semibold text-base mb-1 block">
-                  Activer le sandbox
-                </Label>
-                <p className="text-sm text-white/60 font-sans">
-                  Active l'attribut sandbox sur les iframes pour plus de sécurité. 
-                  Désactivez si certains lecteurs vidéo ne fonctionnent pas correctement.
-                </p>
-              </div>
-              <div className="flex items-center gap-3 ml-4">
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={iframeSandboxEnabled}
-                    onChange={(e) => setIframeSandboxEnabled(e.target.checked)}
-                    className="sr-only peer"
-                    id="sandbox-toggle"
-                  />
-                  <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#3498DB]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3498DB]"></div>
-                </label>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3">
-              <Button
-                onClick={handleSaveSandbox}
-                disabled={isSavingSandbox}
-                className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
-              >
-                {isSavingSandbox ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Enregistrer
-                  </>
-                )}
-              </Button>
-              {saveStatus === 'success' && (
-                <div className="flex items-center gap-2 text-green-400">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span className="text-sm font-label">Enregistré !</span>
-                </div>
-              )}
-              {saveStatus === 'error' && (
-                <div className="flex items-center gap-2 text-red-400">
-                  <AlertCircle className="h-5 w-5" />
-                  <span className="text-sm font-label">Erreur</span>
-                </div>
-              )}
-            </div>
+        {/* Navigation par sections */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-wrap gap-2 sm:gap-3 p-1 bg-white/5 rounded-lg border border-white/10">
+            <button
+              onClick={() => setActiveSection('overview')}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-label font-semibold rounded-md transition-all ${
+                activeSection === 'overview'
+                  ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] text-white shadow-lg shadow-[#3498DB]/30'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Eye className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1.5 sm:mr-2" />
+              Vue d'ensemble
+            </button>
+            <button
+              onClick={() => setActiveSection('content')}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-label font-semibold rounded-md transition-all ${
+                activeSection === 'content'
+                  ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] text-white shadow-lg shadow-[#3498DB]/30'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Image className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1.5 sm:mr-2" />
+              Contenu
+            </button>
+            <button
+              onClick={() => setActiveSection('settings')}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-label font-semibold rounded-md transition-all ${
+                activeSection === 'settings'
+                  ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] text-white shadow-lg shadow-[#3498DB]/30'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1.5 sm:mr-2" />
+              Paramètres
+            </button>
+            <button
+              onClick={() => setActiveSection('notifications')}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-label font-semibold rounded-md transition-all ${
+                activeSection === 'notifications'
+                  ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] text-white shadow-lg shadow-[#3498DB]/30'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Bell className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1.5 sm:mr-2" />
+              Notifications
+            </button>
+            <button
+              onClick={() => setActiveSection('sports')}
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-label font-semibold rounded-md transition-all ${
+                activeSection === 'sports'
+                  ? 'bg-gradient-to-r from-[#3498DB] to-[#0F4C81] text-white shadow-lg shadow-[#3498DB]/30'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1.5 sm:mr-2" />
+              Sports
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-          {/* Heroes List */}
-          <div className="space-y-6">
-            <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
-                  Gestion des Heroes
-              </h2>
-                <Button
-                  onClick={handleCreateHero}
-                  className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nouveau Hero
-                </Button>
-              </div>
-
-              {/* Liste des heroes */}
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {heroes.map((hero, index) => (
-                  <div
-                    key={hero.id}
-                    className={`p-4 rounded-lg border ${
-                      hero.is_active
-                        ? 'bg-[#333333]/50 border-[#3498DB]/30'
-                        : 'bg-[#333333]/30 border-[#333333] opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Image thumbnail */}
-                      {hero.image_url && (
-                        <div className="w-20 h-12 rounded overflow-hidden flex-shrink-0 bg-[#1a1a1a]">
-                          <img
-                            src={hero.image_url}
-                            alt={hero.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-white font-display font-bold text-sm line-clamp-1">
-                              {hero.title || 'Sans titre'}
-                            </h3>
-                            <p className="text-white/60 font-sans text-xs line-clamp-1 mt-1">
-                              {hero.subtitle || 'Sans sous-titre'}
-                            </p>
-                            <div className="flex items-center gap-2 mt-2">
-                              {hero.is_active ? (
-                                <span className="px-2 py-0.5 rounded text-xs bg-green-600/20 text-green-400 border border-green-600/30">
-                                  Actif
-                                </span>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded text-xs bg-gray-600/20 text-gray-400 border border-gray-600/30">
-                                  Inactif
-                                </span>
-                              )}
-                              <span className="text-xs text-white/40">
-                                Ordre: {hero.display_order || 0}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Actions */}
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <Button
-                              onClick={() => handleMoveHero(hero.id!, 'up')}
-                              disabled={index === 0}
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
-                              title="Déplacer vers le haut"
-                            >
-                              <ArrowUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleMoveHero(hero.id!, 'down')}
-                              disabled={index === heroes.length - 1}
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
-                              title="Déplacer vers le bas"
-                            >
-                              <ArrowDown className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleEditHero(hero)}
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
-                              title="Modifier"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleToggleHeroActive(hero.id!, !hero.is_active)}
-                              variant="ghost"
-                              size="icon"
-                              className={`h-8 w-8 ${
-                                hero.is_active
-                                  ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
-                                  : 'text-green-400 hover:text-green-300 hover:bg-green-400/10'
-                              }`}
-                              title={hero.is_active ? 'Désactiver' : 'Activer'}
-                            >
-                              <Eye className={`h-4 w-4 ${hero.is_active ? '' : 'opacity-50'}`} />
-                            </Button>
-                            <Button
-                              onClick={() => handleDeleteHero(hero.id!)}
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-red-400/70 hover:text-red-400 hover:bg-red-400/10"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {heroes.length === 0 && (
-                  <div className="text-center py-8 text-white/60">
-                    <p className="font-sans">Aucun hero configuré</p>
-                    <Button
-                      onClick={handleCreateHero}
-                      className="mt-4 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Créer le premier hero
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Formulaire de création/édition */}
-            {(isCreatingHero || editingHero) && (
-              <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
-                    {editingHero ? 'Modifier le Hero' : 'Nouveau Hero'}
-                  </h2>
-                  <Button
-                    onClick={handleCancelHero}
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title" className="text-white font-label">
-                    Titre
-                  </Label>
-                  <Input
-                    id="title"
-                    value={heroConfig.title}
-                    onChange={(e) => setHeroConfig({ ...heroConfig, title: e.target.value })}
-                    className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white"
-                    placeholder="Titre du hero"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="subtitle" className="text-white font-label">
-                    Sous-titre
-                  </Label>
-                  <Input
-                    id="subtitle"
-                    value={heroConfig.subtitle}
-                    onChange={(e) => setHeroConfig({ ...heroConfig, subtitle: e.target.value })}
-                    className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white"
-                    placeholder="Description"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="cta_text" className="text-white font-label">
-                      Texte du bouton
-                    </Label>
-                    <Input
-                      id="cta_text"
-                      value={heroConfig.cta_text}
-                      onChange={(e) => setHeroConfig({ ...heroConfig, cta_text: e.target.value })}
-                      className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white"
-                      placeholder="Ex: Regarder"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="cta_url" className="text-white font-label">
-                      Lien du bouton
-                    </Label>
-                    <Input
-                      id="cta_url"
-                      value={heroConfig.cta_url}
-                      onChange={(e) => setHeroConfig({ ...heroConfig, cta_url: e.target.value })}
-                      className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white"
-                      placeholder="/watch/1"
-                    />
-                  </div>
-                </div>
-
-                {/* Ratio Mobile - Sélectionnable */}
-                <div>
-                  <Label htmlFor="mobile-aspect-ratio" className="text-white font-label mb-2 block">
-                    Ratio Mobile
-                  </Label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full sm:w-auto min-w-[200px] justify-between bg-[#333333] border-[#3498DB]/30 text-white hover:border-[#3498DB]/50 hover:bg-[#3498DB]/10"
-                      >
-                        <span className="font-label">
-                          {(() => {
-                          const ratio = heroConfig.mobile_aspect_ratio || 16 / 9;
-                          // Utiliser une comparaison avec tolérance pour éviter les problèmes de précision des floats
-                          if (Math.abs(ratio - (16 / 9)) < 0.001) return '16:9 (Cinéma)';
-                          if (Math.abs(ratio - (21 / 9)) < 0.001) return '21:9 (Ultra large)';
-                          if (Math.abs(ratio - (4 / 3)) < 0.001) return '4:3 (Classique)';
-                          if (Math.abs(ratio - 1) < 0.001) return '1:1 (Carré)';
-                          if (Math.abs(ratio - (9 / 16)) < 0.001) return '9:16 (Portrait)';
-                          if (Math.abs(ratio - (3 / 4)) < 0.001) return '3:4 (Portrait classique)';
-                          if (Math.abs(ratio - (2 / 3)) < 0.001) return '2:3 (Portrait)';
-                          if (Math.abs(ratio - (4 / 5)) < 0.001) return '4:5 (Portrait Instagram)';
-                          return `${ratio.toFixed(2)}:1`;
-                          })()}
-                        </span>
-                        <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      className="w-[200px] bg-[#1a1a1a] border-[#333333]"
-                      align="start"
-                    >
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 16 / 9 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (16 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        16:9 (Cinéma)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 21 / 9 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (21 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        21:9 (Ultra large)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 3 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        4:3 (Classique)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 1 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - 1) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        1:1 (Carré)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 9 / 16 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (9 / 16)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        9:16 (Portrait)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 3 / 4 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (3 / 4)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        3:4 (Portrait classique)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 2 / 3 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (2 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        2:3 (Portrait)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 5 })}
-                        className={`cursor-pointer ${
-                          Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 5)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
-                        }`}
-                      >
-                        4:5 (Portrait Instagram)
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <p className="text-xs text-white/50 mt-2 font-sans">
-                    Sélectionnez le ratio souhaité pour le recadrage mobile
-                  </p>
-                </div>
-
-                {/* Image Upload with Crop */}
-                <ImageCropUpload
-                  bucket="hero-images"
-                  currentImage={heroConfig.image_url}
-                  currentMobileImage={heroConfig.image_mobile_url}
-                  currentDesktopImage={heroConfig.image_desktop_url}
-                  label="Image Hero"
-                  onUploadComplete={(url) => {
-                    setHeroConfig(prev => ({ 
-                      ...prev, 
-                      image_url: url || '' 
-                    }));
-                    // Si url est vide, c'est une suppression - recharger les données
-                    if (!url) {
-                      setTimeout(() => loadData(), 500);
-                    }
-                  }}
-                  onUploadCompleteMobile={(url) => {
-                    setHeroConfig(prev => ({ 
-                      ...prev, 
-                      image_mobile_url: url || undefined 
-                    }));
-                    // Si url est vide, c'est une suppression - recharger les données
-                    if (!url) {
-                      setTimeout(() => loadData(), 500);
-                    }
-                  }}
-                  onUploadCompleteDesktop={(url) => {
-                    setHeroConfig(prev => ({ 
-                      ...prev, 
-                      image_desktop_url: url || undefined 
-                    }));
-                    // Si url est vide, c'est une suppression - recharger les données
-                    if (!url) {
-                      setTimeout(() => loadData(), 500);
-                    }
-                  }}
-                  maxSizeMB={10}
-                  aspectRatio={21 / 9}
-                  mobileAspectRatio={heroConfig.mobile_aspect_ratio || 16 / 9} // Ratio mobile depuis la base de données
-                  allowSeparateMobileDesktop={true}
-                />
-
-                <div>
-                  <Label htmlFor="image_url" className="text-white font-label text-xs text-white/60">
-                    Ou entrez une URL manuellement
-                  </Label>
-                  <Input
-                    id="image_url"
-                    value={heroConfig.image_url}
-                    onChange={(e) => setHeroConfig({ ...heroConfig, image_url: e.target.value })}
-                    className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-sm"
-                    placeholder="https://... ou /images/hero/banner.jpg"
-                  />
-                </div>
-
-                {/* Preview */}
-                {heroConfig.image_url && (
-                  <div className="mt-4">
-                    <Label className="text-white font-label mb-2 block">
-                      Aperçu
-                    </Label>
-                    <div className="relative h-32 rounded-lg overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
-                      <img
-                        src={heroConfig.image_url}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center p-4">
-                        <div>
-                          <p className="text-white font-display font-bold text-sm line-clamp-1">
-                            {heroConfig.title || 'Titre'}
-                          </p>
-                          <p className="text-white/70 font-sans text-xs line-clamp-1 mt-1">
-                            {heroConfig.subtitle || 'Sous-titre'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleSaveHero}
-                  disabled={isSaving}
-                  className="w-full bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold h-12"
-                >
-                  {isSaving ? (
-                    <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Enregistrement...</>
-                  ) : saveStatus === 'success' ? (
-                    <><CheckCircle2 className="h-5 w-5 mr-2" /> Enregistré !</>
-                  ) : saveStatus === 'error' ? (
-                    <><AlertCircle className="h-5 w-5 mr-2" /> Erreur</>
-                  ) : (
-                    <><Save className="h-5 w-5 mr-2" /> Enregistrer</>
-                  )}
-                </Button>
-              </div>
-            </div>
-            )}
-          </div>
-
-          {/* Top Pages */}
-          <div className="space-y-6">
-            {/* Pages 24h */}
+        {/* Section Vue d'ensemble */}
+        {activeSection === 'overview' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Top Pages 24h */}
             <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 uppercase">
                 Top Pages (24h)
@@ -1078,7 +722,7 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Pages 7 jours */}
+            {/* Top Pages 7 jours */}
             <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-display font-bold text-white mb-4 uppercase">
                 Top Pages (7 jours)
@@ -1115,37 +759,686 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Diagnostic et Tests rapides */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mt-8">
-          <div className="lg:col-span-2">
-            <NotificationDiagnostic />
+        {/* Section Contenu */}
+        {activeSection === 'content' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Heroes List */}
+            <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg sm:text-xl font-display font-bold text-white uppercase">
+                  Gestion des Heroes
+                </h2>
+                <Button
+                  onClick={handleCreateHero}
+                  className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Nouveau Hero</span>
+                  <span className="sm:hidden">Nouveau</span>
+                </Button>
+              </div>
+
+              {/* Liste des heroes */}
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {heroes.map((hero, index) => (
+                  <div
+                    key={hero.id}
+                    className={`p-3 sm:p-4 rounded-lg border ${
+                      hero.is_active
+                        ? 'bg-[#333333]/50 border-[#3498DB]/30'
+                        : 'bg-[#333333]/30 border-[#333333] opacity-60'
+                    }`}
+                  >
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      {/* Image thumbnail */}
+                      {hero.image_url && (
+                        <div className="w-16 h-10 sm:w-20 sm:h-12 rounded overflow-hidden flex-shrink-0 bg-[#1a1a1a]">
+                          <img
+                            src={hero.image_url}
+                            alt={hero.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-display font-bold text-xs sm:text-sm line-clamp-1">
+                              {hero.title || 'Sans titre'}
+                            </h3>
+                            <p className="text-white/60 font-sans text-[10px] sm:text-xs line-clamp-1 mt-1">
+                              {hero.subtitle || 'Sans sous-titre'}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5 sm:mt-2 flex-wrap">
+                              {hero.is_active ? (
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs bg-green-600/20 text-green-400 border border-green-600/30">
+                                  Actif
+                                </span>
+                              ) : (
+                                <span className="px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs bg-gray-600/20 text-gray-400 border border-gray-600/30">
+                                  Inactif
+                                </span>
+                              )}
+                              <span className="text-[10px] sm:text-xs text-white/40">
+                                Ordre: {hero.display_order || 0}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                            <Button
+                              onClick={() => handleMoveHero(hero.id!, 'up')}
+                              disabled={index === 0}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                              title="Déplacer vers le haut"
+                            >
+                              <ArrowUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleMoveHero(hero.id!, 'down')}
+                              disabled={index === heroes.length - 1}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30"
+                              title="Déplacer vers le bas"
+                            >
+                              <ArrowDown className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleEditHero(hero)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+                              title="Modifier"
+                            >
+                              <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleToggleHeroActive(hero.id!, !hero.is_active)}
+                              variant="ghost"
+                              size="icon"
+                              className={`h-7 w-7 sm:h-8 sm:w-8 ${
+                                hero.is_active
+                                  ? 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-400/10'
+                                  : 'text-green-400 hover:text-green-300 hover:bg-green-400/10'
+                              }`}
+                              title={hero.is_active ? 'Désactiver' : 'Activer'}
+                            >
+                              <Eye className={`h-3 w-3 sm:h-4 sm:w-4 ${hero.is_active ? '' : 'opacity-50'}`} />
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteHero(hero.id!)}
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 sm:h-8 sm:w-8 text-red-400/70 hover:text-red-400 hover:bg-red-400/10"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {heroes.length === 0 && (
+                  <div className="text-center py-8 text-white/60">
+                    <p className="font-sans text-sm sm:text-base">Aucun hero configuré</p>
+                    <Button
+                      onClick={handleCreateHero}
+                      className="mt-4 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 sm:px-6"
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                      Créer le premier hero
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Formulaire de création/édition */}
+            {(isCreatingHero || editingHero) && (
+              <div className="bg-[#1a1a1a] border border-[#333333] rounded-xl p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base sm:text-lg md:text-xl font-display font-bold text-white uppercase">
+                    {editingHero ? 'Modifier le Hero' : 'Nouveau Hero'}
+                  </h2>
+                  <Button
+                    onClick={handleCancelHero}
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 sm:h-8 sm:w-8 text-white/70 hover:text-white hover:bg-white/10"
+                  >
+                    <X className="h-3 w-3 sm:h-4 sm:w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="title" className="text-white font-label text-xs sm:text-sm">
+                      Titre
+                    </Label>
+                    <Input
+                      id="title"
+                      value={heroConfig.title}
+                      onChange={(e) => setHeroConfig({ ...heroConfig, title: e.target.value })}
+                      className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                      placeholder="Titre du hero"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="subtitle" className="text-white font-label text-xs sm:text-sm">
+                      Sous-titre
+                    </Label>
+                    <Input
+                      id="subtitle"
+                      value={heroConfig.subtitle}
+                      onChange={(e) => setHeroConfig({ ...heroConfig, subtitle: e.target.value })}
+                      className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                      placeholder="Description"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                      <Label htmlFor="cta_text" className="text-white font-label text-xs sm:text-sm">
+                        Texte du bouton
+                      </Label>
+                      <Input
+                        id="cta_text"
+                        value={heroConfig.cta_text}
+                        onChange={(e) => setHeroConfig({ ...heroConfig, cta_text: e.target.value })}
+                        className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                        placeholder="Ex: Regarder"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="cta_url" className="text-white font-label text-xs sm:text-sm">
+                        Lien du bouton
+                      </Label>
+                      <Input
+                        id="cta_url"
+                        value={heroConfig.cta_url}
+                        onChange={(e) => setHeroConfig({ ...heroConfig, cta_url: e.target.value })}
+                        className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                        placeholder="/watch/1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ratio Mobile */}
+                  <div>
+                    <Label htmlFor="mobile-aspect-ratio" className="text-white font-label text-xs sm:text-sm mb-2 block">
+                      Ratio Mobile
+                    </Label>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full sm:w-auto min-w-[180px] sm:min-w-[200px] justify-between bg-[#333333] border-[#3498DB]/30 text-white hover:border-[#3498DB]/50 hover:bg-[#3498DB]/10 text-xs sm:text-sm h-9 sm:h-10"
+                        >
+                          <span className="font-label">
+                            {(() => {
+                            const ratio = heroConfig.mobile_aspect_ratio || 16 / 9;
+                            if (Math.abs(ratio - (16 / 9)) < 0.001) return '16:9 (Cinéma)';
+                            if (Math.abs(ratio - (21 / 9)) < 0.001) return '21:9 (Ultra large)';
+                            if (Math.abs(ratio - (4 / 3)) < 0.001) return '4:3 (Classique)';
+                            if (Math.abs(ratio - 1) < 0.001) return '1:1 (Carré)';
+                            if (Math.abs(ratio - (9 / 16)) < 0.001) return '9:16 (Portrait)';
+                            if (Math.abs(ratio - (3 / 4)) < 0.001) return '3:4 (Portrait classique)';
+                            if (Math.abs(ratio - (2 / 3)) < 0.001) return '2:3 (Portrait)';
+                            if (Math.abs(ratio - (4 / 5)) < 0.001) return '4:5 (Portrait Instagram)';
+                            return `${ratio.toFixed(2)}:1`;
+                            })()}
+                          </span>
+                          <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 ml-2 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent 
+                        className="w-[180px] sm:w-[200px] bg-[#1a1a1a] border-[#333333]"
+                        align="start"
+                      >
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 16 / 9 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (16 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          16:9 (Cinéma)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 21 / 9 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (21 / 9)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          21:9 (Ultra large)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 3 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          4:3 (Classique)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 1 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - 1) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          1:1 (Carré)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 9 / 16 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (9 / 16)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          9:16 (Portrait)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 3 / 4 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (3 / 4)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          3:4 (Portrait classique)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 2 / 3 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (2 / 3)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          2:3 (Portrait)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setHeroConfig({ ...heroConfig, mobile_aspect_ratio: 4 / 5 })}
+                          className={`cursor-pointer text-xs sm:text-sm ${
+                            Math.abs((heroConfig.mobile_aspect_ratio || 16 / 9) - (4 / 5)) < 0.001 ? 'bg-[#3498DB]/20 text-[#3498DB] font-semibold' : ''
+                          }`}
+                        >
+                          4:5 (Portrait Instagram)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <p className="text-[10px] sm:text-xs text-white/50 mt-1.5 sm:mt-2 font-sans">
+                      Sélectionnez le ratio souhaité pour le recadrage mobile
+                    </p>
+                  </div>
+
+                  {/* Image Upload with Crop */}
+                  <ImageCropUpload
+                    bucket="hero-images"
+                    currentImage={heroConfig.image_url}
+                    currentMobileImage={heroConfig.image_mobile_url}
+                    currentDesktopImage={heroConfig.image_desktop_url}
+                    label="Image Hero"
+                    onUploadComplete={(url) => {
+                      setHeroConfig(prev => ({ 
+                        ...prev, 
+                        image_url: url || '' 
+                      }));
+                      if (!url) {
+                        setTimeout(() => loadData(), 500);
+                      }
+                    }}
+                    onUploadCompleteMobile={(url) => {
+                      setHeroConfig(prev => ({ 
+                        ...prev, 
+                        image_mobile_url: url || undefined 
+                      }));
+                      if (!url) {
+                        setTimeout(() => loadData(), 500);
+                      }
+                    }}
+                    onUploadCompleteDesktop={(url) => {
+                      setHeroConfig(prev => ({ 
+                        ...prev, 
+                        image_desktop_url: url || undefined 
+                      }));
+                      if (!url) {
+                        setTimeout(() => loadData(), 500);
+                      }
+                    }}
+                    maxSizeMB={10}
+                    aspectRatio={21 / 9}
+                    mobileAspectRatio={heroConfig.mobile_aspect_ratio || 16 / 9}
+                    allowSeparateMobileDesktop={true}
+                  />
+
+                  <div>
+                    <Label htmlFor="image_url" className="text-white font-label text-[10px] sm:text-xs text-white/60">
+                      Ou entrez une URL manuellement
+                    </Label>
+                    <Input
+                      id="image_url"
+                      value={heroConfig.image_url}
+                      onChange={(e) => setHeroConfig({ ...heroConfig, image_url: e.target.value })}
+                      className="mt-1 bg-[#333333] border-[#3498DB]/30 text-white text-xs sm:text-sm h-9 sm:h-10"
+                      placeholder="https://... ou /images/hero/banner.jpg"
+                    />
+                  </div>
+
+                  {/* Preview */}
+                  {heroConfig.image_url && (
+                    <div className="mt-3 sm:mt-4">
+                      <Label className="text-white font-label text-xs sm:text-sm mb-2 block">
+                        Aperçu
+                      </Label>
+                      <div className="relative h-24 sm:h-32 rounded-lg overflow-hidden bg-gradient-to-br from-[#0F4C81]/10 to-[#3498DB]/10">
+                        <img
+                          src={heroConfig.image_url}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent flex items-center p-3 sm:p-4">
+                          <div>
+                            <p className="text-white font-display font-bold text-xs sm:text-sm line-clamp-1">
+                              {heroConfig.title || 'Titre'}
+                            </p>
+                            <p className="text-white/70 font-sans text-[10px] sm:text-xs line-clamp-1 mt-1">
+                              {heroConfig.subtitle || 'Sous-titre'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={handleSaveHero}
+                    disabled={isSaving}
+                    className="w-full bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-bold text-xs sm:text-sm h-10 sm:h-12"
+                  >
+                    {isSaving ? (
+                      <><Loader2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2 animate-spin" /> Enregistrement...</>
+                    ) : saveStatus === 'success' ? (
+                      <><CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Enregistré !</>
+                    ) : saveStatus === 'error' ? (
+                      <><AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Erreur</>
+                    ) : (
+                      <><Save className="h-4 w-4 sm:h-5 sm:w-5 mr-2" /> Enregistrer</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="space-y-4">
-            <TestNotificationAll />
+        )}
+
+        {/* Section Paramètres */}
+        {activeSection === 'settings' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Paramètres Iframe - Sandbox */}
+            <div className="bg-gradient-to-br from-[#0F4C81]/20 to-[#3498DB]/20 border border-[#3498DB]/30 rounded-xl p-4 sm:p-6 md:p-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-[#0F4C81] to-[#3498DB] flex-shrink-0">
+                  <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-display font-bold text-white">
+                    Paramètres Iframe
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/60 font-sans">
+                    Gérer l'attribut sandbox des iframes de lecture vidéo
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex-1">
+                    <Label htmlFor="sandbox-toggle" className="text-white font-label font-semibold text-sm sm:text-base mb-1 block">
+                      Activer le sandbox
+                    </Label>
+                    <p className="text-xs sm:text-sm text-white/60 font-sans">
+                      Active l'attribut sandbox sur les iframes pour plus de sécurité. 
+                      Désactivez si certains lecteurs vidéo ne fonctionnent pas correctement.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={iframeSandboxEnabled}
+                        onChange={(e) => setIframeSandboxEnabled(e.target.checked)}
+                        className="sr-only peer"
+                        id="sandbox-toggle"
+                      />
+                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#3498DB]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3498DB]"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <Button
+                    onClick={handleSaveSandbox}
+                    disabled={isSavingSandbox}
+                    className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 sm:px-6"
+                  >
+                    {isSavingSandbox ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        Enregistrer
+                      </>
+                    )}
+                  </Button>
+                  {saveStatus === 'success' && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-xs sm:text-sm font-label">Enregistré !</span>
+                    </div>
+                  )}
+                  {saveStatus === 'error' && (
+                    <div className="flex items-center gap-2 text-red-400">
+                      <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-xs sm:text-sm font-label">Erreur</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Paramètres Free Preview */}
+            <div className="bg-gradient-to-br from-[#0F4C81]/20 to-[#3498DB]/20 border border-[#3498DB]/30 rounded-xl p-4 sm:p-6 md:p-8">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-[#0F4C81] to-[#3498DB] flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg sm:text-xl font-display font-bold text-white">
+                    Visionnage Gratuit
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/60 font-sans">
+                    Gérer le visionnage gratuit de 15 minutes pour les chaînes premium
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div className="flex-1">
+                    <Label htmlFor="free-preview-toggle" className="text-white font-label font-semibold text-sm sm:text-base mb-1 block">
+                      Activer le visionnage gratuit de 15 minutes
+                    </Label>
+                    <p className="text-xs sm:text-sm text-white/60 font-sans">
+                      Permet aux utilisateurs non abonnés de regarder 15 minutes gratuites des chaînes premium avant de devoir s'abonner.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={freePreviewEnabled}
+                        onChange={(e) => setFreePreviewEnabled(e.target.checked)}
+                        className="sr-only peer"
+                        id="free-preview-toggle"
+                      />
+                      <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#3498DB]/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3498DB]"></div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3">
+                  <Button
+                    onClick={handleSaveFreePreview}
+                    disabled={isSavingFreePreview}
+                    className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 sm:px-6"
+                  >
+                    {isSavingFreePreview ? (
+                      <>
+                        <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                        Enregistrement...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        Enregistrer
+                      </>
+                    )}
+                  </Button>
+                  {saveStatus === 'success' && (
+                    <div className="flex items-center gap-2 text-green-400">
+                      <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-xs sm:text-sm font-label">Enregistré !</span>
+                    </div>
+                  )}
+                  {saveStatus === 'error' && (
+                    <div className="flex items-center gap-2 text-red-400">
+                      <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-xs sm:text-sm font-label">Erreur</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Debug détaillé */}
-        <div className="mt-8">
-          <NotificationDebugPanel />
-        </div>
+        {/* Section Notifications */}
+        {activeSection === 'notifications' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Contenu des notifications déjà présent */}
+          </div>
+        )}
 
-        {/* Notifications Stats */}
-        <div className="mt-8">
-          <NotificationStatsCard />
-        </div>
+        {/* Section Sports */}
+        {activeSection === 'sports' && (
+          <div className="space-y-6 sm:space-y-8">
+            {/* Planning Sportif */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-[#0F4C81] to-[#3498DB] flex-shrink-0">
+                    <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg md:text-xl font-display font-bold text-white">
+                      Planning Sportif
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/60 font-label">
+                      Collez le planning sportif pour mise à jour automatique
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setIsSportsScheduleOpen(!isSportsScheduleOpen)}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-white/70 hover:text-white hover:bg-white/10"
+                >
+                    {isSportsScheduleOpen ? (
+                      <ChevronDown className="h-4 w-4 sm:h-5 sm:w-5" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                    )}
+                </Button>
+              </div>
 
-        {/* Appareils inscrits */}
-        <div className="mt-8">
-          <PushDevicesList />
-        </div>
+              {isSportsScheduleOpen && (
+                <div className="space-y-4 mt-4 sm:mt-6">
+                  <div>
+                    <Label htmlFor="sports-schedule" className="text-white font-label text-xs sm:text-sm mb-2 block">
+                      Planning Sportif
+                    </Label>
+                    <textarea
+                      id="sports-schedule"
+                      value={sportsScheduleText}
+                      onChange={(e) => setSportsScheduleText(e.target.value)}
+                      className="w-full h-48 sm:h-64 md:h-80 p-3 sm:p-4 bg-[#1a1a1a] border border-[#333333] rounded-lg text-white text-xs sm:text-sm font-mono resize-y focus:outline-none focus:ring-2 focus:ring-[#3498DB] focus:border-transparent"
+                      placeholder={`Exemple:
+SATURDAY
 
-        {/* Notifications Management - Envoi immédiat uniquement */}
-        <div className="mt-8">
-          <NotificationManager />
-        </div>
+HD1 ENGLISH
+HD2 ENGLISH
+...
+
+04:00   Match 1 | https://...
+06:00   Match 2 | https://...
+...`}
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+                    <Button
+                      onClick={handleSaveSportsSchedule}
+                      disabled={isSavingSchedule || !sportsScheduleText.trim()}
+                      className="bg-gradient-to-r from-[#0F4C81] to-[#3498DB] hover:from-[#0F4C81]/90 hover:to-[#3498DB]/90 text-white font-label font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 sm:px-6"
+                    >
+                      {isSavingSchedule ? (
+                        <>
+                          <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 animate-spin" />
+                          Mise à jour...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+                          Mettre à jour le planning
+                        </>
+                      )}
+                    </Button>
+                    {scheduleSaveStatus === 'success' && (
+                      <div className="flex items-center gap-2 text-green-400 text-xs sm:text-sm">
+                        <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="font-label">{scheduleSaveMessage}</span>
+                      </div>
+                    )}
+                    {scheduleSaveStatus === 'error' && (
+                      <div className="flex items-center gap-2 text-red-400 text-xs sm:text-sm">
+                        <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="font-label">{scheduleSaveMessage}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modal Changement de Mot de Passe */}

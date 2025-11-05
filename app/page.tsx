@@ -5,6 +5,7 @@ import { HeroSlider } from "@/components/hero-slider";
 import { RecommendedChannels } from "@/components/recommended-channels";
 import { SiteStats } from "@/components/site-stats";
 import { LiveMatches } from "@/components/live-matches";
+import { SubscriptionCards } from "@/components/subscription-cards";
 import { getActiveHeroes } from "@/lib/admin-api";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
@@ -63,6 +64,9 @@ export default async function Home() {
           Regardez vos sports préférés en direct 24/7
         </p>
       </section>
+
+      {/* Subscription Cards Section */}
+      <SubscriptionCards />
 
       {/* Site Statistics */}
       <SiteStats />
