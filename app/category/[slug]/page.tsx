@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { MainLayout } from '@/components/main-layout';
 import { ContentCard } from '@/components/content-card';
@@ -52,14 +52,11 @@ export default function CategoryPage() {
   const slug = params?.slug as string;
   const config = categoryConfig[slug as keyof typeof categoryConfig];
 
-  const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
-
-  useEffect(() => {
-    if (config) {
-      const filtered = getContentByCategory(config.filter);
-      setFilteredContent(filtered);
-    }
-  }, [slug, config]);
+  // Calculer le contenu filtré immédiatement pour éviter le flash "aucun contenu"
+  const filteredContent = useMemo<ContentItem[]>(() => {
+    if (!config) return [];
+    return getContentByCategory(config.filter);
+  }, [config]);
 
   if (!config) {
     return (
