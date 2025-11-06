@@ -3,94 +3,29 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PLANS, Plan, getCurrentSubscription } from '@/lib/subscriptions';
+import { PLANS, Plan } from '@/lib/subscriptions';
 import { Crown, Check, ArrowRight, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 
 export function SubscriptionCards() {
   const router = useRouter();
-  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadSubscription = async () => {
-    try {
-      const sub = await getCurrentSubscription();
-      setCurrentSubscription(sub);
-    } catch (error) {
-      console.error('Error loading subscription:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadSubscription();
-  }, []);
-
-  useEffect(() => {
-    // Rafraîchir automatiquement lors du focus de la fenêtre
-    const handleFocus = () => {
-      loadSubscription();
-    };
-    window.addEventListener('focus', handleFocus);
-
-    // Rafraîchir toutes les 3 secondes si l'abonnement existe mais n'est pas encore actif
-    // (pour détecter les changements après paiement)
-    let interval: NodeJS.Timeout | null = null;
-    if (currentSubscription && 
-        (currentSubscription.status === 'incomplete' || 
-         (currentSubscription.status !== 'trial' && currentSubscription.status !== 'active'))) {
-      interval = setInterval(() => {
-        loadSubscription();
-      }, 3000);
-      
-      // Arrêter le rafraîchissement après 2 minutes
-      setTimeout(() => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      }, 120000); // 2 minutes
-    }
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [currentSubscription?.status]); // Re-exécuter si le statut change
+  // OPTIMISATION: Utiliser le contexte de subscription au lieu de refaire les requêtes
+  const { subscription: currentSubscription, status } = useSubscriptionContext();
+  const [loading, setLoading] = useState(false); // Commencer à false car le contexte charge déjà
 
   const handleCardClick = (plan: Plan) => {
     // Rediriger vers la page d'abonnement avec le plan sélectionné
     router.push(`/subscription#plan-${plan.id}`);
   };
 
-  // Fonction pour vérifier si l'utilisateur a un abonnement actif (même avec statut incomplete mais avec stripe_subscription_id)
+  // Fonction pour vérifier si l'utilisateur a un abonnement actif
+  // Utilise le status du contexte qui a DÉJÀ vérifié les dates d'expiration
   const hasActiveSubscription = (): boolean => {
-    if (!currentSubscription) return false;
-    
-    // Si le statut est 'active' ou 'trial', c'est actif
-    if (currentSubscription.status === 'active' || currentSubscription.status === 'trial') {
-      return true;
-    }
-    
-    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
-    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
-    // On considère l'abonnement comme actif si les dates sont valides ou si stripe_subscription_id existe
-    if (currentSubscription.status === 'incomplete' && currentSubscription.stripe_subscription_id) {
-      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
-      if (currentSubscription.trial_end && new Date(currentSubscription.trial_end) > new Date()) {
-        return true;
-      }
-      if (currentSubscription.current_period_end && new Date(currentSubscription.current_period_end) > new Date()) {
-        return true;
-      }
-      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
-      return true;
-    }
-    
-    return false;
+    // Le contexte a DÉJÀ vérifié les dates avant de définir le status
+    // Si status est premium, l'abonnement est actif
+    return status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin';
   };
 
   // Fonction pour vérifier si un plan est un upgrade
@@ -110,33 +45,18 @@ export function SubscriptionCards() {
   };
 
   // Fonction pour vérifier si c'est le plan actuel
+  // Utilise le status du contexte qui a DÉJÀ vérifié les dates d'expiration
   const isCurrentPlan = (planId: string): boolean => {
     if (!currentSubscription) return false;
     
     // Vérifier que c'est le bon plan
     if (currentSubscription.plan_type !== planId) return false;
     
-    // Si le statut est 'active' ou 'trial', c'est le plan actuel
-    if (currentSubscription.status === 'active' || currentSubscription.status === 'trial') {
-      return true;
-    }
-    
-    // Si le statut est 'incomplete' mais qu'il y a un stripe_subscription_id,
-    // cela signifie que le paiement a été effectué mais le webhook n'a pas encore mis à jour le statut
-    // On considère l'abonnement comme actif si les dates sont valides
-    if (currentSubscription.status === 'incomplete' && currentSubscription.stripe_subscription_id) {
-      // Vérifier si les dates sont valides (trial_end ou current_period_end dans le futur)
-      if (currentSubscription.trial_end) {
-        return new Date(currentSubscription.trial_end) > new Date();
-      }
-      if (currentSubscription.current_period_end) {
-        return new Date(currentSubscription.current_period_end) > new Date();
-      }
-      // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
-      return true;
-    }
-    
-    return false;
+    // Le contexte a DÉJÀ vérifié les dates avant de définir le status
+    // Si status correspond au plan_type, c'est le plan actuel
+    // Si status est 'trial' ET que le plan_type correspond, c'est aussi le plan actuel
+    // (cas rare où plan_type n'est pas kickoff/pro_league/vip mais status est trial)
+    return status === planId || (status === 'trial' && currentSubscription.plan_type === planId);
   };
 
   return (
@@ -146,7 +66,7 @@ export function SubscriptionCards() {
           Abonnements Premium
         </h2>
         <p className="text-white/70 text-sm sm:text-base md:text-lg max-w-2xl mx-auto">
-          Accédez à toutes les chaînes premium : beIN SPORT, DAZN, Canal+, RMC Sport et plus encore
+          Accédez à toutes les chaînes premium, matchs en direct, grandes compétitions de football (Champion's League, Ligue 1, Coupe du Monde...), films et séries
         </p>
       </div>
 
@@ -193,6 +113,15 @@ export function SubscriptionCards() {
 
               {/* Description */}
               <p className="text-white/70 text-xs sm:text-sm mb-4 sm:mb-6 flex-grow line-clamp-2">{plan.description}</p>
+
+              {/* Badge Plan actuel */}
+              {isCurrentPlan(plan.id) && (
+                <div className="mb-2 -mt-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-600/20 border border-green-600/30 text-green-400 text-[10px] sm:text-xs font-semibold">
+                    ✓ Plan actuel
+                  </span>
+                </div>
+              )}
 
               {/* Features principales */}
               <div className="space-y-1.5 sm:space-y-2 mb-4 sm:mb-6">

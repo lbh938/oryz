@@ -54,19 +54,28 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
 
   const loadProfile = async () => {
     setIsLoading(true);
-    const data = await getCurrentUserProfile();
-    if (data) {
-      setProfile(data);
-      setUsername(data.username);
-      setFirstName(data.first_name || '');
-      setLastName(data.last_name || '');
-      setBirthDate(data.birth_date || '');
-    }
     
-    // Vérifier si peut changer username
+    // OPTIMISATION: Charger le profil en premier
+    const profileData = await getCurrentUserProfile();
+    
+    if (profileData) {
+      setProfile(profileData);
+      setUsername(profileData.username);
+      setFirstName(profileData.first_name || '');
+      setLastName(profileData.last_name || '');
+      setBirthDate(profileData.birth_date || '');
+    
+      // OPTIMISATION: Utiliser l'ID du profil pour vérifier le changement de username
+      // Cela évite les appels getUser() multiples
+      const { canChange, nextChangeDate } = await canChangeUsername(profileData.id);
+      setCanChangeUsernameNow(canChange);
+      setNextUsernameChangeDate(nextChangeDate || null);
+    } else {
+      // Si pas de profil, vérifier quand même le changement de username
     const { canChange, nextChangeDate } = await canChangeUsername();
     setCanChangeUsernameNow(canChange);
     setNextUsernameChangeDate(nextChangeDate || null);
+    }
     
     setIsLoading(false);
   };

@@ -32,12 +32,19 @@ function SubscriptionPageContent() {
     }
   };
 
-  // Vérifier l'authentification au chargement (utiliser getSession() pour éviter les déconnexions)
+  // Vérifier l'authentification au chargement
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user ?? null;
-      setUser(user);
+      // SÉCURITÉ: Utiliser getUser() pour authentifier l'utilisateur auprès du serveur
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      setUser(user ?? null);
       setIsAuthenticated(!!user);
       
       // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
@@ -73,10 +80,18 @@ function SubscriptionPageContent() {
 
     checkAuth();
 
-    // Écouter les changements d'authentification
+    // Écouter les changements d'authentification et réauthentifier
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null;
-      setUser(user);
+      // SÉCURITÉ: Réauthentifier l'utilisateur à chaque changement d'état
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      setUser(user ?? null);
       setIsAuthenticated(!!user);
     });
 
@@ -201,7 +216,7 @@ function SubscriptionPageContent() {
             Abonnements Premium
           </h1>
           <p className="text-white/70 text-sm sm:text-base md:text-lg max-w-2xl mx-auto mb-4">
-            Accédez à toutes les chaînes premium : beIN SPORT, DAZN, Canal+, RMC Sport et plus encore
+            Accédez à toutes les chaînes premium, matchs en direct, grandes compétitions de football (Champion's League, Ligue 1, Coupe du Monde...), films et séries
           </p>
           {!isAuthenticated && (
             <Card className="bg-gradient-to-r from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
@@ -410,7 +425,7 @@ function SubscriptionPageContent() {
                       ))}
                     </tr>
 
-                    {/* Kick-off */}
+                    {/* Kick-off en direct */}
                     <tr className="bg-white/2.5">
                       <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm font-label font-semibold text-white">
                         Kick-off en direct
@@ -439,10 +454,52 @@ function SubscriptionPageContent() {
                             plan.isPopular ? 'bg-[#3498DB]/5' : ''
                           }`}
                         >
+                          <Check className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB] mx-auto" />
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Grandes compétitions */}
+                    <tr className="bg-white/2.5">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm font-label font-semibold text-white">
+                        Grandes compétitions
+                      </td>
+                      {PLANS.map((plan) => (
+                        <td
+                          key={plan.id}
+                          className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center ${
+                            plan.isPopular ? 'bg-[#3498DB]/5' : ''
+                          }`}
+                        >
                           {plan.id === 'kickoff' ? (
-                            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB] mx-auto" />
+                            <span className="text-white/60 text-[10px] sm:text-xs">Sélection</span>
+                          ) : plan.id === 'pro_league' ? (
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Toutes incluses</span>
                           ) : (
-                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Complète</span>
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Exclusives + Priorité</span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Matchs en direct */}
+                    <tr className="bg-white/2.5">
+                      <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm font-label font-semibold text-white">
+                        Matchs en direct
+                      </td>
+                      {PLANS.map((plan) => (
+                        <td
+                          key={plan.id}
+                          className={`px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-center ${
+                            plan.isPopular ? 'bg-[#3498DB]/5' : ''
+                          }`}
+                        >
+                          {plan.id === 'kickoff' ? (
+                            <span className="text-white/60 text-[10px] sm:text-xs">Kick-off uniquement</span>
+                          ) : plan.id === 'pro_league' ? (
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Tous championnats</span>
+                          ) : (
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Toutes compétitions mondiales</span>
                           )}
                         </td>
                       ))}
@@ -494,10 +551,10 @@ function SubscriptionPageContent() {
                       ))}
                     </tr>
 
-                    {/* Autres championnats */}
+                    {/* Accès prioritaire */}
                     <tr className="bg-white/2.5">
                       <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm font-label font-semibold text-white">
-                        Autres championnats
+                        Accès prioritaire
                       </td>
                       {PLANS.map((plan) => (
                         <td
@@ -506,12 +563,10 @@ function SubscriptionPageContent() {
                             plan.isPopular ? 'bg-[#3498DB]/5' : ''
                           }`}
                         >
-                          {plan.id === 'kickoff' ? (
-                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-white/30 mx-auto" />
-                          ) : plan.id === 'pro_league' ? (
+                          {plan.id === 'vip' ? (
                             <Check className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB] mx-auto" />
                           ) : (
-                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">Tous inclus</span>
+                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-white/30 mx-auto" />
                           )}
                         </td>
                       ))}
@@ -564,7 +619,7 @@ function SubscriptionPageContent() {
                     {/* Plusieurs écrans */}
                     <tr className="bg-white/2.5">
                       <td className="px-3 sm:px-4 md:px-6 py-3 sm:py-4 text-xs sm:text-sm font-label font-semibold text-white">
-                        Plusieurs écrans simultanés
+                        Écrans simultanés
                       </td>
                       {PLANS.map((plan) => (
                         <td
@@ -573,10 +628,12 @@ function SubscriptionPageContent() {
                             plan.isPopular ? 'bg-[#3498DB]/5' : ''
                           }`}
                         >
-                          {plan.id === 'vip' ? (
-                            <Check className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB] mx-auto" />
+                          {plan.id === 'kickoff' ? (
+                            <span className="text-white/80 text-xs sm:text-sm">1 écran</span>
+                          ) : plan.id === 'pro_league' ? (
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">2 écrans</span>
                           ) : (
-                            <X className="h-4 w-4 sm:h-5 sm:w-5 text-white/30 mx-auto" />
+                            <span className="text-[#3498DB] font-semibold text-xs sm:text-sm">3+ écrans</span>
                           )}
                         </td>
                       ))}
@@ -622,7 +679,7 @@ function SubscriptionPageContent() {
                                 <span className="hidden sm:inline">Upgrade vers {plan.name}</span>
                                 <span className="sm:hidden">Upgrade</span>
                               </>
-                            ) : hasActiveSubscription() && subscription.plan_type !== plan.id ? (
+                            ) : hasActiveSubscription() && subscription && subscription.plan_type !== plan.id ? (
                               'Déjà abonné'
                             ) : (
                               <>

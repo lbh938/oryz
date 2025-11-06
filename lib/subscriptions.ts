@@ -38,14 +38,15 @@ export const PLANS: Plan[] = [
   {
     id: 'kickoff',
     name: 'Kick-Off',
-    description: 'Accès au kick-off, Pro League, séries et films',
+    description: 'Essentiel : Chaînes premium, kick-off en direct et grandes compétitions',
     price: 9.99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF || '', // À configurer dans Stripe
     features: [
-      'Accès au kick-off',
-      'Pro League',
-      'Séries et films en supplément',
-      'Autres options disponibles',
+      'Chaînes premium (beIN SPORT, DAZN, Canal+, RMC Sport)',
+      'Kick-off en direct',
+      'Pro League (accès complet)',
+      'Grandes compétitions (sélection)',
+      'Films et séries (accès limité)',
       'PC, téléphone, tablette',
       'Qualité HD'
     ],
@@ -54,16 +55,19 @@ export const PLANS: Plan[] = [
   {
     id: 'pro_league',
     name: 'Pro League',
-    description: 'Accès complet : kick-off, Pro League, séries, films et autres championnats',
+    description: 'Complet : Tous les matchs en direct, grandes compétitions, films et séries',
     price: 14.99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_LEAGUE || '', // À configurer dans Stripe
     features: [
-      'Tout le kick-off',
+      'Toutes les chaînes premium',
+      'Kick-off en direct',
       'Pro League complète',
-      'Séries et films',
-      'Autres championnats',
+      'Grandes compétitions (Champion\'s League, Ligue 1, Coupe du Monde, etc.)',
+      'Matchs en direct tous championnats',
+      'Films et séries (accès complet)',
       'PC, téléphone, tablette',
-      'Qualité HD sans limite'
+      'Qualité HD sans limite',
+      '2 écrans simultanés'
     ],
     isPopular: true,
     trialDays: 7
@@ -71,16 +75,19 @@ export const PLANS: Plan[] = [
   {
     id: 'vip',
     name: 'VIP',
-    description: 'Accès premium complet avec plusieurs écrans',
+    description: 'Premium : Accès exclusif prioritaire, toutes compétitions, contenu illimité',
     price: 19.99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP || '', // À configurer dans Stripe
     features: [
-      'Tout le Pro League',
-      'Films et séries illimités',
-      'Autres championnats',
-      'Plusieurs écrans simultanés',
+      'Toutes les chaînes premium',
+      'Tous les matchs en direct',
+      'Grandes compétitions exclusives (priorité)',
+      'Toutes compétitions mondiales',
+      'Films et séries illimités + nouveautés',
       'PC, téléphone, tablette',
-      'Qualité HD/4K sans limite'
+      'Qualité HD/4K sans limite',
+      'Plusieurs écrans simultanés (3+)',
+      'Accès prioritaire aux nouveaux contenus'
     ],
     trialDays: 7
   }
@@ -92,24 +99,47 @@ export const PLANS: Plan[] = [
 export async function getCurrentSubscription(): Promise<Subscription | null> {
   const supabase = createClient();
   
-  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return null;
+  // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  if (sessionError || !session?.user) {
+    // Pas de session, vérifier avec getUser() pour être sûr
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return null;
+    
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .or('status.in.(trial,active),and(status.eq.incomplete,stripe_subscription_id.not.is.null)')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  const user = session.user;
-
-  // Utiliser maybeSingle() pour éviter l'erreur si aucune ligne n'est trouvée
-  // Filtrer les abonnements invalides (incomplete sans stripe_subscription_id)
+    if (error || !data) return null;
+    
+    return data as Subscription;
+  }
+  
+  // Si une session existe, charger l'abonnement immédiatement
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', session.user.id)
     .or('status.in.(trial,active),and(status.eq.incomplete,stripe_subscription_id.not.is.null)')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error || !data) return null;
+  
+  // SÉCURITÉ: Vérifier ensuite avec getUser() pour authentifier auprès du serveur
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user || user.id !== session.user.id) {
+    // Si getUser() échoue ou l'ID ne correspond pas, retourner null pour sécurité
+    return null;
+  }
   
   return data as Subscription;
 }
@@ -120,15 +150,15 @@ export async function getCurrentSubscription(): Promise<Subscription | null> {
 export async function isAdmin(): Promise<boolean> {
   const supabase = createClient();
   
-  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return false;
+  // SÉCURITÉ: Utiliser getUser() pour authentifier l'utilisateur auprès du serveur
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return false;
 
   // Vérifier dans admin_users
   const { data: adminData } = await supabase
     .from('admin_users')
     .select('is_super_admin')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .maybeSingle();
 
   return adminData?.is_super_admin === true;
@@ -142,27 +172,47 @@ export async function isAdmin(): Promise<boolean> {
 export async function hasPremiumAccess(): Promise<boolean> {
   const supabase = createClient();
   
-  // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return false;
-
-  const user = session.user;
-
+  // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  
+  let userId: string | null = null;
+  
+  if (sessionError || !session?.user) {
+    // Pas de session, vérifier avec getUser() pour être sûr
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return false;
+    userId = user.id;
+  } else {
+    userId = session.user.id;
+  }
+  
+  // Si une session existe, charger les données immédiatement
   // Vérifier si l'utilisateur est admin en parallèle avec la subscription
   const [adminData, subscriptionData] = await Promise.all([
     supabase
       .from('admin_users')
       .select('is_super_admin')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle(),
     supabase
       .from('subscriptions')
       .select('status, trial_end, current_period_end, stripe_subscription_id')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
   ]);
+
+  // SÉCURITÉ: Vérifier ensuite avec getUser() pour authentifier auprès du serveur
+  // (seulement si on a utilisé getSession() en premier)
+  if (session?.user) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user || user.id !== session.user.id) {
+      // Si getUser() échoue ou l'ID ne correspond pas, retourner false pour sécurité
+      return false;
+    }
+  }
 
   // Si admin, retourner true immédiatement
   if (adminData.data?.is_super_admin === true) return true;

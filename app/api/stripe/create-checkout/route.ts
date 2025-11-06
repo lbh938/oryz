@@ -14,23 +14,12 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Rafraîchir la session avant de vérifier l'utilisateur
-    const { data: { session: supabaseSession } } = await supabase.auth.getSession();
-    if (supabaseSession && supabaseSession.expires_at) {
-      const expiresAt = new Date(supabaseSession.expires_at * 1000);
-      const now = new Date();
-      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-      const fifteenMinutes = 15 * 60 * 1000;
-      
-      if (timeUntilExpiry < fifteenMinutes && timeUntilExpiry > 0) {
-        await supabase.auth.refreshSession();
-      }
-    }
+    // Pour les API routes, utiliser getUser() pour la sécurité (authentifie auprès du serveur)
+    // C'est plus sécurisé que getSession() qui vient directement du stockage
+    // getUser() contacte le serveur Supabase Auth pour authentifier l'utilisateur
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    // Utiliser supabaseSession.user au lieu de getUser()
-    const user = supabaseSession?.user ?? null;
-    
-    if (!user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
     
@@ -81,25 +70,6 @@ export async function POST(request: NextRequest) {
       });
       customerId = customer.id;
     }
-
-    // Créer ou mettre à jour l'abonnement dans la base de données
-    const trialStart = new Date();
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 7); // 7 jours d'essai
-
-    const subscriptionData = {
-      user_id: user.id,
-      stripe_customer_id: customerId,
-      status: 'trial' as const,
-      trial_start: trialStart.toISOString(),
-      trial_end: trialEnd.toISOString(),
-      plan_type: (planId === 'kickoff' ? 'kickoff' :
-                   planId === 'pro_league' ? 'pro_league' :
-                   planId === 'vip' ? 'vip' : 'premium') as any,
-      price_monthly: planId === 'kickoff' ? 9.99 :
-                       planId === 'pro_league' ? 14.99 :
-                       planId === 'vip' ? 19.99 : 19.99,
-    };
 
     // Vérifier si l'utilisateur a déjà un ou plusieurs abonnements actifs
     // Inclure aussi les abonnements 'incomplete' avec stripe_subscription_id (paiement effectué mais webhook pas encore traité)
@@ -238,10 +208,10 @@ export async function POST(request: NextRequest) {
         
         // Recréer les clients nécessaires
         const supabaseRecovery = await createClient();
-        const { data: { session: sessionRecovery } } = await supabaseRecovery.auth.getSession();
-        const userRecovery = sessionRecovery?.user ?? null;
+        // SÉCURITÉ: Utiliser getUser() pour authentifier l'utilisateur auprès du serveur
+        const { data: { user: userRecovery }, error: userRecoveryError } = await supabaseRecovery.auth.getUser();
         
-        if (!userRecovery) {
+        if (userRecoveryError || !userRecovery) {
           return NextResponse.json(
             { error: 'Utilisateur non authentifié' },
             { status: 401 }

@@ -26,9 +26,15 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
   // Utiliser le contexte de subscription pour un accès instantané
   const { subscription, status, isAdmin, isSyncing } = useSubscriptionContext();
   
-  // Utiliser le hook de prévisualisation gratuite uniquement pour les chaînes premium ET si l'utilisateur n'est pas admin
-  // Les admins n'ont pas besoin de vérification de prévisualisation
-  const shouldUsePreview = isPremium && !isAdmin && status !== 'admin';
+  // Utiliser le hook de prévisualisation gratuite uniquement pour les chaînes premium ET si l'utilisateur n'est pas admin/premium
+  // Les admins et les utilisateurs avec abonnement premium (trial, kickoff, pro_league, vip) n'ont pas besoin de vérification de prévisualisation
+  const shouldUsePreview = isPremium && 
+                           !isAdmin && 
+                           status !== 'admin' && 
+                           status !== 'trial' && 
+                           status !== 'kickoff' && 
+                           status !== 'pro_league' && 
+                           status !== 'vip';
   const { 
     timeRemaining, 
     hasExceededLimit, 
@@ -39,111 +45,63 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     minutesRemaining 
   } = useFreePreview(shouldUsePreview ? channelId : 'not-premium');
 
-  // Déterminer l'accès premium basé sur le contexte de subscription (rapide)
+  // Déterminer l'accès premium basé sur le contexte de subscription
+  // UNE SEULE SOURCE DE VÉRITÉ: Le contexte a DÉJÀ vérifié les dates d'expiration
+  // Si status === 'trial'/'kickoff'/'pro_league'/'vip'/'admin', l'accès est TOUJOURS accordé
   useEffect(() => {
-    // Si l'utilisateur est admin, accès complet sans restriction (priorité absolue)
+    // PRIORITÉ ABSOLUE: Admin → accès complet
     if (isAdmin || status === 'admin') {
       setHasAccess(true);
       setLoading(false);
       return;
     }
 
-    // Si le statut indique un abonnement actif, l'utilisateur a accès (priorité haute)
+    // PRIORITÉ HAUTE: Statut premium actif → accès complet
+    // Le contexte a DÉJÀ vérifié les dates avant de définir ce status
     if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial') {
       setHasAccess(true);
       setLoading(false);
       return;
     }
 
-    // Si on est encore en train de synchroniser mais qu'on a déjà un statut 'free', autoriser pour les chaînes non-premium
-    if (isSyncing && status === 'free' && !isPremium) {
-      setHasAccess(true);
-      setLoading(false);
-      return;
-    }
-
-    // Si on est encore en train de synchroniser sans statut, attendre uniquement pour les chaînes premium
-    if (isSyncing && status === 'anonymous' && !subscription && isPremium) {
-      // Attendre que la synchronisation soit terminée pour les chaînes premium
-      return;
-    }
-    
-    // Si l'abonnement est incomplete mais avec stripe_subscription_id, considérer comme actif
-    if (subscription && subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
-      // Vérifier les dates si disponibles
-      const now = new Date();
-      if (subscription.trial_end && new Date(subscription.trial_end) > now) {
-        setHasAccess(true);
-        setLoading(false);
-        return;
-      }
-      if (subscription.current_period_end && new Date(subscription.current_period_end) > now) {
-        setHasAccess(true);
-        setLoading(false);
-        return;
-      }
-      // Si pas de dates mais stripe_subscription_id existe, considérer actif
-      setHasAccess(true);
-      setLoading(false);
-      return;
-    }
-    
-    // Si l'abonnement est trial ou active, vérifier les dates
-    if (subscription && (subscription.status === 'trial' || subscription.status === 'active')) {
-      const now = new Date();
-      if (subscription.status === 'trial' && subscription.trial_end) {
-        setHasAccess(new Date(subscription.trial_end) > now);
-        setLoading(false);
-        return;
-      }
-      if (subscription.status === 'active' && subscription.current_period_end) {
-        setHasAccess(new Date(subscription.current_period_end) > now);
-        setLoading(false);
-        return;
-      }
-      // Si pas de dates mais statut actif, considérer comme actif
-      setHasAccess(true);
-      setLoading(false);
-      return;
-    }
-    
-    // Si ce n'est pas une chaîne premium, autoriser l'accès
+    // Chaîne non-premium → accès libre
     if (!isPremium) {
       setHasAccess(true);
       setLoading(false);
       return;
     }
-    
-    // Sinon, pas d'accès (pour chaîne premium sans abonnement)
+
+    // Attendre la synchronisation uniquement si on n'a pas encore de statut pour les chaînes premium
+    if (isSyncing && status === 'anonymous' && !subscription && isPremium) {
+      // Attendre que la synchronisation soit terminée
+      return;
+    }
+
+    // Statut 'free' ou 'anonymous' → pas d'accès pour les chaînes premium
+    if (status === 'free' || status === 'anonymous') {
+      setHasAccess(false);
+      setLoading(false);
+      return;
+    }
+
+    // Cas par défaut: pas d'accès (ne devrait jamais arriver si le contexte fonctionne)
     setHasAccess(false);
     setLoading(false);
   }, [subscription, status, isAdmin, isSyncing, isPremium]);
 
   const handleSubscribe = async () => {
-    // Rediriger vers la page d'abonnement
-    // L'utilisateur pourra sélectionner un plan et compléter le checkout
     router.push('/subscription');
   };
 
   // Afficher le loader seulement si :
-  // 1. On est en train de synchroniser ET qu'on n'a pas encore de statut ET que c'est une chaîne premium
-  // 2. Le preview charge pour les non-abonnés ET qu'on n'a pas d'accès ET que c'est premium
-  // Ne JAMAIS bloquer si :
-  // - On a déjà hasAccess = true (même si isSyncing est true)
-  // - On a un statut d'abonnement valide (kickoff, pro_league, vip, trial, admin)
-  // - Ce n'est pas une chaîne premium
+  // - On attend la synchronisation (status anonymous, isSyncing, pas de subscription)
+  // - OU le preview charge pour les non-abonnés
+  // JAMAIS si on a déjà un statut premium valide
   const shouldShowLoader = hasAccess === null && 
-                           isPremium && 
-                           ((isSyncing && status === 'anonymous' && !subscription) || 
-                            (previewLoading && !isAdmin && status !== 'admin' && !hasAccess && shouldUsePreview));
-  
-  // Si on a un statut d'abonnement valide, toujours autoriser l'accès (même si isSyncing est true)
-  if (status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin' || isAdmin) {
-    if (hasAccess !== true) {
-      setHasAccess(true);
-      setLoading(false);
-    }
-  }
+                          isPremium && 
+                          !(status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin' || isAdmin) &&
+                          ((isSyncing && status === 'anonymous' && !subscription) || 
+                           (previewLoading && !isAdmin && !hasAccess && shouldUsePreview));
   
   if (shouldShowLoader) {
     return (

@@ -6,20 +6,27 @@ import { MainLayout } from '@/components/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle, Crown } from 'lucide-react';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 
 function SubscriptionSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const { syncSubscription, status } = useSubscriptionContext();
 
   useEffect(() => {
-    // Attendre un peu pour que Stripe mette à jour la base de données
+    // Synchroniser immédiatement avec Stripe pour obtenir le statut à jour
+    syncSubscription();
+    
+    // Attendre un peu pour que le webhook Stripe ait le temps de traiter
+    // puis synchroniser à nouveau pour être sûr
     const timer = setTimeout(() => {
+      syncSubscription();
       setLoading(false);
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [syncSubscription]);
 
   return (
     <div className="container max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">

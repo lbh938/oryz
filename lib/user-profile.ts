@@ -18,17 +18,46 @@ export interface UserProfile {
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   
+  if (sessionError || !session?.user) {
+    // Pas de session, vérifier avec getUser() pour être sûr
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) return null;
+    
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+    
+    return data;
+  }
+  
+  // Si une session existe, charger le profil immédiatement
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', user.id)
+    .eq('id', session.user.id)
     .single();
   
   if (error) {
     console.error('Error fetching user profile:', error);
+    return null;
+  }
+  
+  // SÉCURITÉ: Vérifier ensuite avec getUser() pour authentifier auprès du serveur
+  // Cela garantit que les informations utilisateur sont authentiques
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !user || user.id !== session.user.id) {
+    // Si getUser() échoue ou l'ID ne correspond pas, retourner null pour sécurité
     return null;
   }
   
@@ -110,44 +139,59 @@ export async function updateUsername(newUsername: string): Promise<{
 
 /**
  * Vérifier si l'utilisateur peut changer son username
+ * @param userId - Optionnel : ID de l'utilisateur pour éviter les appels getUser() multiples
  */
-export async function canChangeUsername(): Promise<{
+export async function canChangeUsername(userId?: string): Promise<{
   canChange: boolean;
   nextChangeDate?: string;
 }> {
   const supabase = createClient();
   
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { canChange: false };
+  let userIdToUse = userId;
+  
+  // Si userId n'est pas fourni, le récupérer
+  if (!userIdToUse) {
+    // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session?.user) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return { canChange: false };
+      }
+      userIdToUse = user.id;
+    } else {
+      userIdToUse = session.user.id;
+    }
   }
   
-  const { data, error } = await supabase.rpc('can_change_username', {
-    user_id: user.id
-  });
+  // Faire les requêtes en parallèle pour optimiser
+  const [rpcResult, profileResult] = await Promise.all([
+    supabase.rpc('can_change_username', {
+      user_id: userIdToUse
+    }),
+    supabase
+      .from('user_profiles')
+      .select('username_last_changed')
+      .eq('id', userIdToUse)
+      .single()
+  ]);
   
-  if (error) {
-    console.error('Error checking username change:', error);
+  if (rpcResult.error) {
+    console.error('Error checking username change:', rpcResult.error);
     return { canChange: false };
   }
-  
-  // Récupérer la date du dernier changement
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('username_last_changed')
-    .eq('id', user.id)
-    .single();
   
   let nextChangeDate: string | undefined;
-  if (profile?.username_last_changed) {
-    const lastChanged = new Date(profile.username_last_changed);
+  if (profileResult.data?.username_last_changed) {
+    const lastChanged = new Date(profileResult.data.username_last_changed);
     const nextChange = new Date(lastChanged);
     nextChange.setFullYear(nextChange.getFullYear() + 1);
     nextChangeDate = nextChange.toISOString();
   }
   
   return {
-    canChange: data as boolean,
+    canChange: rpcResult.data as boolean,
     nextChangeDate
   };
 }

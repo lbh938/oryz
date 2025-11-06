@@ -20,9 +20,20 @@ export function useFreePreview(channelId: string) {
   const startTimeRef = useRef<number | null>(null);
 
   // Vérifier l'autorisation avant de permettre l'essai
+  // Utiliser un ref pour éviter les appels multiples
+  const authorizationCheckedRef = useRef<Set<string>>(new Set());
+  
   useEffect(() => {
+    // Éviter les appels multiples pour le même channelId
+    if (authorizationCheckedRef.current.has(channelId)) {
+      return;
+    }
+    
     const checkAuthorization = async () => {
       try {
+        // Marquer comme vérifié immédiatement pour éviter les appels multiples
+        authorizationCheckedRef.current.add(channelId);
+        
         // Générer le fingerprint du device
         const deviceFingerprint = generateDeviceFingerprintSync();
         
@@ -53,10 +64,19 @@ export function useFreePreview(channelId: string) {
         console.error('Error checking authorization:', error);
         // En cas d'erreur, autoriser quand même (pour ne pas bloquer les utilisateurs légitimes)
         setIsAuthorized(true);
+        // Retirer du cache en cas d'erreur pour permettre une nouvelle tentative
+        authorizationCheckedRef.current.delete(channelId);
       }
     };
 
-    checkAuthorization();
+    // Ne vérifier que si channelId n'est pas 'not-premium'
+    if (channelId && channelId !== 'not-premium') {
+      checkAuthorization();
+    } else {
+      // Si ce n'est pas une chaîne premium, autoriser immédiatement
+      setIsAuthorized(true);
+      setIsLoading(false);
+    }
   }, [channelId]);
 
   useEffect(() => {

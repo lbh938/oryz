@@ -129,17 +129,41 @@ export async function POST(request: NextRequest) {
             .not('stripe_subscription_id', 'is', null);
         }
         
-        // Trouver l'abonnement de l'utilisateur (peu importe le statut)
-        const { data: existingSub } = await supabase
-          .from('subscriptions')
-          .select('id, status, stripe_customer_id, stripe_subscription_id')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        // STRATÉGIE: Chercher d'abord par stripe_subscription_id (le plus fiable)
+        // Si pas trouvé, chercher par user_id et stripe_customer_id
+        let existingSub = null;
+        
+        // Chercher par stripe_subscription_id si disponible
+        if (subscription.id) {
+          const { data: subByStripeId } = await supabase
+            .from('subscriptions')
+            .select('id, status, stripe_customer_id, stripe_subscription_id')
+            .eq('stripe_subscription_id', subscription.id)
+            .maybeSingle();
+          
+          if (subByStripeId) {
+            existingSub = subByStripeId;
+          }
+        }
+        
+        // Si pas trouvé, chercher l'abonnement le plus récent de l'utilisateur
+        if (!existingSub) {
+          const { data: subByUserId } = await supabase
+            .from('subscriptions')
+            .select('id, status, stripe_customer_id, stripe_subscription_id')
+            .eq('user_id', userId)
+            .eq('stripe_customer_id', session.customer as string)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          
+          if (subByUserId) {
+            existingSub = subByUserId;
+          }
+        }
         
         if (existingSub) {
-          // Mettre à jour l'abonnement existant (peu importe le statut actuel)
+          // Mettre à jour l'abonnement existant
           const { error: updateError } = await supabase
             .from('subscriptions')
             .update({
@@ -150,16 +174,19 @@ export async function POST(request: NextRequest) {
           
           if (updateError) {
             console.error('Error updating subscription in webhook:', updateError);
-            // Essayer de mettre à jour par stripe_subscription_id si l'update par id échoue
-            if (existingSub.stripe_subscription_id && existingSub.stripe_subscription_id !== subscription.id) {
-              const { error: updateByIdError } = await supabase
-                .from('subscriptions')
-                .update(updateData)
-                .eq('stripe_subscription_id', subscription.id);
-              
-              if (updateByIdError) {
-                console.error('Error updating by stripe_subscription_id:', updateByIdError);
-              }
+            // Essayer de mettre à jour par stripe_subscription_id en fallback
+            const { error: updateByIdError } = await supabase
+              .from('subscriptions')
+              .update({
+                ...updateData,
+                stripe_customer_id: session.customer as string,
+              })
+              .eq('stripe_subscription_id', subscription.id);
+            
+            if (updateByIdError) {
+              console.error('Error updating by stripe_subscription_id:', updateByIdError);
+            } else {
+              console.log(`Subscription updated successfully (by stripe_subscription_id) for user ${userId}`);
             }
           } else {
             console.log(`Subscription updated successfully for user ${userId}:`, updateData);

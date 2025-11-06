@@ -76,21 +76,13 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Rafraîchir la session avant de vérifier l'utilisateur pour éviter les déconnexions
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session && session.expires_at) {
-      const expiresAt = new Date(session.expires_at * 1000);
-      const now = new Date();
-      const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-      const fifteenMinutes = 15 * 60 * 1000;
-      
-      if (timeUntilExpiry < fifteenMinutes && timeUntilExpiry > 0) {
-        await supabase.auth.refreshSession();
-      }
-    }
+    // Pour les API routes, utiliser getUser() pour la sécurité (authentifie auprès du serveur)
+    // C'est plus sécurisé que getSession() qui vient directement du stockage
+    // getUser() contacte le serveur Supabase Auth pour authentifier l'utilisateur
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    // Utiliser session.user au lieu de getUser() pour éviter les appels API supplémentaires
-    const user = session?.user ?? null;
+    // Si erreur d'authentification, user sera null (utilisateur non authentifié)
+    // Ce n'est pas une erreur fatale pour cette route car les utilisateurs anonymes peuvent aussi utiliser le preview
 
     // Si l'utilisateur est admin, autoriser l'accès sans restriction
     if (user) {

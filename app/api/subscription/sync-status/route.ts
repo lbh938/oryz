@@ -10,14 +10,13 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // Utiliser getSession() au lieu de getUser() pour éviter les déconnexions
-    const { data: { session } } = await supabase.auth.getSession();
+    // Pour les API routes, utiliser getUser() pour la sécurité (authentifie auprès du serveur)
+    // C'est plus sécurisé que getSession() qui vient directement du stockage
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!session?.user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
-
-    const user = session.user;
 
     // Récupérer l'abonnement de l'utilisateur le plus récent
     const { data: subscription, error: subError } = await supabase
@@ -148,27 +147,83 @@ export async function POST(request: NextRequest) {
     }
 
     // Déterminer le statut utilisateur basé sur l'abonnement
+    // CRITIQUE: Vérifier TOUJOURS les dates d'expiration avant de retourner un statut premium
     let userStatus: string = 'free';
+    const now = new Date();
     
-    if (subscription.status === 'trial' || subscription.status === 'active') {
-      if (subscription.plan_type === 'kickoff') {
-        userStatus = 'kickoff';
-      } else if (subscription.plan_type === 'pro_league') {
-        userStatus = 'pro_league';
-      } else if (subscription.plan_type === 'vip') {
-        userStatus = 'vip';
+    // Si le statut est 'trial', vérifier que trial_end est dans le futur
+    if (subscription.status === 'trial') {
+      if (subscription.trial_end && new Date(subscription.trial_end) > now) {
+        // Essai actif
+        if (subscription.plan_type === 'kickoff') {
+          userStatus = 'kickoff';
+        } else if (subscription.plan_type === 'pro_league') {
+          userStatus = 'pro_league';
+        } else if (subscription.plan_type === 'vip') {
+          userStatus = 'vip';
+        } else {
+          userStatus = 'trial';
+        }
       } else {
-        userStatus = 'trial';
+        // Essai expiré
+        userStatus = 'free';
       }
-    } else if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
-      if (subscription.plan_type === 'kickoff') {
-        userStatus = 'kickoff';
-      } else if (subscription.plan_type === 'pro_league') {
-        userStatus = 'pro_league';
-      } else if (subscription.plan_type === 'vip') {
-        userStatus = 'vip';
+    } 
+    // Si le statut est 'active', vérifier que current_period_end est dans le futur
+    else if (subscription.status === 'active') {
+      if (subscription.current_period_end && new Date(subscription.current_period_end) > now) {
+        // Abonnement actif
+        if (subscription.plan_type === 'kickoff') {
+          userStatus = 'kickoff';
+        } else if (subscription.plan_type === 'pro_league') {
+          userStatus = 'pro_league';
+        } else if (subscription.plan_type === 'vip') {
+          userStatus = 'vip';
+        } else {
+          userStatus = 'trial';
+        }
       } else {
-        userStatus = 'trial';
+        // Abonnement expiré
+        userStatus = 'free';
+      }
+    } 
+    // Si incomplete mais avec stripe_subscription_id, vérifier les dates si disponibles
+    else if (subscription.status === 'incomplete' && subscription.stripe_subscription_id) {
+      // Vérifier trial_end si disponible
+      if (subscription.trial_end && new Date(subscription.trial_end) > now) {
+        if (subscription.plan_type === 'kickoff') {
+          userStatus = 'kickoff';
+        } else if (subscription.plan_type === 'pro_league') {
+          userStatus = 'pro_league';
+        } else if (subscription.plan_type === 'vip') {
+          userStatus = 'vip';
+        } else {
+          userStatus = 'trial';
+        }
+      }
+      // Vérifier current_period_end si disponible
+      else if (subscription.current_period_end && new Date(subscription.current_period_end) > now) {
+        if (subscription.plan_type === 'kickoff') {
+          userStatus = 'kickoff';
+        } else if (subscription.plan_type === 'pro_league') {
+          userStatus = 'pro_league';
+        } else if (subscription.plan_type === 'vip') {
+          userStatus = 'vip';
+        } else {
+          userStatus = 'trial';
+        }
+      }
+      // Si pas de dates mais stripe_subscription_id existe, considérer actif (webhook va mettre à jour)
+      else {
+        if (subscription.plan_type === 'kickoff') {
+          userStatus = 'kickoff';
+        } else if (subscription.plan_type === 'pro_league') {
+          userStatus = 'pro_league';
+        } else if (subscription.plan_type === 'vip') {
+          userStatus = 'vip';
+        } else {
+          userStatus = 'trial';
+        }
       }
     }
 

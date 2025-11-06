@@ -6,26 +6,66 @@ import { Button } from './ui/button';
 import { Crown, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { getCurrentSubscription, hasPremiumAccess, Subscription, PLANS } from '@/lib/subscriptions';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 
 export function SubscriptionStatus() {
+  // OPTIMISATION: Utiliser le contexte de subscription au lieu de refaire les requêtes
+  const { subscription: contextSubscription, status } = useSubscriptionContext();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [hasAccess, setHasAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
 
   const loadSubscription = async () => {
-    const sub = await getCurrentSubscription();
-    const access = await hasPremiumAccess();
+    // OPTIMISATION: Utiliser le contexte si disponible, sinon charger
+    if (contextSubscription) {
+      setSubscription(contextSubscription);
+      // Déterminer hasAccess depuis le statut du contexte
+      setHasAccess(status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin');
+      setLoading(false);
+      return;
+    }
+    
+    // Si le contexte n'est pas encore chargé, charger directement
+    // OPTIMISATION: Faire les requêtes en parallèle
+    const [sub, access] = await Promise.all([
+      getCurrentSubscription(),
+      hasPremiumAccess()
+    ]);
+    
     setSubscription(sub);
     setHasAccess(access);
     setLoading(false);
   };
 
   useEffect(() => {
-    loadSubscription();
-  }, []);
+    // OPTIMISATION: Utiliser le contexte si disponible (plus rapide)
+    if (contextSubscription) {
+      setSubscription(contextSubscription);
+      setHasAccess(status === 'kickoff' || status === 'pro_league' || status === 'vip' || status === 'trial' || status === 'admin');
+      setLoading(false);
+    } else if (status !== 'anonymous') {
+      // Si le statut n'est pas anonymous, le contexte est en train de charger
+      // Attendre un peu avant de charger directement
+      const timeout = setTimeout(() => {
+        if (!contextSubscription) {
+          loadSubscription();
+        }
+      }, 500);
+      
+      return () => clearTimeout(timeout);
+    } else {
+      // Si anonymous, charger directement
+      loadSubscription();
+    }
+  }, [contextSubscription, status]);
 
   useEffect(() => {
+    // OPTIMISATION: Ne pas rafraîchir si on utilise le contexte
+    if (contextSubscription) {
+      return;
+    }
+    
     // Rafraîchir automatiquement lors du focus de la fenêtre
     const handleFocus = () => {
       loadSubscription();
@@ -54,7 +94,7 @@ export function SubscriptionStatus() {
         clearInterval(interval);
       }
     };
-  }, [subscription?.status, hasAccess]); // Re-exécuter si le statut change
+  }, [subscription?.status, hasAccess, contextSubscription]); // Re-exécuter si le statut change
 
   if (loading) {
     return (

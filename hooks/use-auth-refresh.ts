@@ -22,16 +22,18 @@ export function useAuthRefresh() {
       try {
         isRefreshingRef.current = true;
         
-        // Toujours récupérer la session actuelle
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        // SÉCURITÉ: Utiliser getUser() pour vérifier l'authentification avant de rafraîchir
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
         
-        if (sessionError) {
-          console.error('Error getting session:', sessionError);
+        if (userError || !user) {
           isRefreshingRef.current = false;
           return;
         }
         
-        if (!session) {
+        // Récupérer la session pour vérifier l'expiration (mais ne pas utiliser user de session)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
           isRefreshingRef.current = false;
           return;
         }
@@ -70,38 +72,29 @@ export function useAuthRefresh() {
       refreshSession(false);
     }, 3 * 60 * 1000);
 
-    // Rafraîchir lors du focus de la fenêtre
+    // Rafraîchir lors du focus de la fenêtre (mais pas de manière agressive)
     const handleFocus = () => {
-      refreshSession(true);
+      // Ne rafraîchir que si la session expire bientôt (éviter les rafraîchissements inutiles)
+      refreshSession(false);
     };
     window.addEventListener('focus', handleFocus);
 
-    // Rafraîchir lors de la visibilité de la page
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        refreshSession(true);
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // NE PAS rafraîchir lors de visibilitychange - cela peut causer des déconnexions lors de la navigation
+    // Le changement de visibilité se produit souvent lors de la navigation vers une nouvelle page
+    // et rafraîchir la session à ce moment peut causer des conflits avec le middleware
 
-    // Rafraîchir avant les navigations importantes
-    const handleBeforeUnload = () => {
-      // Ne pas faire de refresh async ici car beforeunload peut être interrompu
-      // Mais on peut essayer
-      refreshSession(true);
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // NE PAS rafraîchir lors de beforeunload - cela peut causer des déconnexions
+    // Le beforeunload se produit lors de la navigation et un refresh async peut être interrompu
+    // causant une session invalide
 
     // NE PAS rafraîchir sur tous les clics de liens - cela peut causer des déconnexions
-    // Le refresh se fait déjà automatiquement toutes les 3 minutes et sur focus/visibility
-    // Retirer cette interception pour éviter les déconnexions lors de la navigation
+    // Le refresh se fait déjà automatiquement toutes les 3 minutes et sur focus
+    // Retirer ces rafraîchissements pour éviter les déconnexions lors de la navigation
 
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Ne plus retirer handleClick car on ne l'ajoute plus
+      // Ne plus écouter visibilitychange et beforeunload pour éviter les déconnexions
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }
