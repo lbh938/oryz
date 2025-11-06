@@ -166,6 +166,7 @@ export async function POST(request: NextRequest) {
 
     const canUse = checkResult?.can_use || false;
     const previewCount = checkResult?.preview_count || 0;
+    const remainingMs = typeof checkResult?.remaining_ms === 'number' ? checkResult.remaining_ms : null;
 
     // Calculer le score de confiance
     const trustScore = calculateTrustScore(
@@ -185,6 +186,7 @@ export async function POST(request: NextRequest) {
         isVPN: vpnProxyInfo.isVPN,
         isProxy: vpnProxyInfo.isProxy,
         isTor: vpnProxyInfo.isTor,
+        remainingMs: remainingMs ?? 0,
       });
     }
 
@@ -231,6 +233,7 @@ export async function POST(request: NextRequest) {
         isVPN: vpnProxyInfo.isVPN,
         isProxy: vpnProxyInfo.isProxy,
         isTor: vpnProxyInfo.isTor,
+        remainingMs: remainingMs ?? 0,
       });
     }
 
@@ -243,6 +246,7 @@ export async function POST(request: NextRequest) {
         isVPN: vpnProxyInfo.isVPN,
         isProxy: vpnProxyInfo.isProxy,
         isTor: vpnProxyInfo.isTor,
+        remainingMs: remainingMs ?? 0,
       });
     }
 
@@ -275,6 +279,7 @@ export async function POST(request: NextRequest) {
       isVPN: vpnProxyInfo.isVPN,
       isProxy: vpnProxyInfo.isProxy,
       isTor: vpnProxyInfo.isTor,
+      remainingMs: remainingMs ?? (15 * 60 * 1000),
     });
   } catch (error: any) {
     console.error('Error in check-preview:', error);

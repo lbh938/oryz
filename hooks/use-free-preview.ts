@@ -55,11 +55,21 @@ export function useFreePreview(channelId: string) {
         if (!data.canUse) {
           setIsAuthorized(false);
           setAuthorizationError(data.reason || 'Accès non autorisé');
+          // Si le serveur renvoie remainingMs, synchroniser l'état du timer
+          if (typeof data.remainingMs === 'number') {
+            setTimeRemaining(Math.max(0, data.remainingMs));
+            setHasExceededLimit(data.remainingMs <= 0);
+          }
           setIsLoading(false);
           return;
         }
 
         setIsAuthorized(true);
+        // Si le serveur renvoie remainingMs, utiliser le timer serveur
+        if (typeof data.remainingMs === 'number') {
+          setTimeRemaining(Math.max(0, data.remainingMs));
+          setHasExceededLimit(data.remainingMs <= 0);
+        }
       } catch (error) {
         console.error('Error checking authorization:', error);
         // En cas d'erreur, autoriser quand même (pour ne pas bloquer les utilisateurs légitimes)
@@ -109,53 +119,46 @@ export function useFreePreview(channelId: string) {
       localStorage.setItem(storageKey, startTime.toString());
     };
 
-    // Vérifier l'état initial
-    const startTime = getStartTime();
-    
-    if (startTime) {
-      // Il y a déjà un temps enregistré
-      startTimeRef.current = startTime;
-      const elapsed = Date.now() - startTime;
-      
-      if (elapsed >= FREE_PREVIEW_DURATION) {
-        // Le temps est dépassé
-        setHasExceededLimit(true);
-        setTimeRemaining(0);
-        setIsLoading(false);
-        return;
+    // Si le serveur a déjà positionné timeRemaining via la phase d'auth, ne pas surcharger
+    if (timeRemaining === null) {
+      // Fallback local (si remainingMs non fourni par le serveur)
+      const startTime = getStartTime();
+      if (startTime) {
+        startTimeRef.current = startTime;
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= FREE_PREVIEW_DURATION) {
+          setHasExceededLimit(true);
+          setTimeRemaining(0);
+          setIsLoading(false);
+          return;
+        } else {
+          const remaining = FREE_PREVIEW_DURATION - elapsed;
+          setTimeRemaining(remaining);
+          setHasExceededLimit(false);
+        }
       } else {
-        // Calculer le temps restant
-        const remaining = FREE_PREVIEW_DURATION - elapsed;
-        setTimeRemaining(remaining);
+        const newStartTime = Date.now();
+        startTimeRef.current = newStartTime;
+        saveStartTime(newStartTime);
+        setTimeRemaining(FREE_PREVIEW_DURATION);
         setHasExceededLimit(false);
       }
-    } else {
-      // Nouveau visionnage, démarrer le timer
-      const newStartTime = Date.now();
-      startTimeRef.current = newStartTime;
-      saveStartTime(newStartTime);
-      setTimeRemaining(FREE_PREVIEW_DURATION);
-      setHasExceededLimit(false);
     }
 
     setIsLoading(false);
 
     // Mettre à jour le timer toutes les secondes
     intervalRef.current = setInterval(() => {
-      if (startTimeRef.current) {
-        const elapsed = Date.now() - startTimeRef.current;
-        const remaining = FREE_PREVIEW_DURATION - elapsed;
-
-        if (remaining <= 0) {
-          setTimeRemaining(0);
+      setTimeRemaining(prev => {
+        if (prev === null) return prev;
+        const next = prev - 1000;
+        if (next <= 0) {
           setHasExceededLimit(true);
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
-        } else {
-          setTimeRemaining(remaining);
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          return 0;
         }
-      }
+        return next;
+      });
     }, 1000);
 
     // Cleanup

@@ -28,12 +28,19 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const supabase = createClient();
 
   // Tracking analytics automatique
   useAnalytics();
 
   // Charger le compteur de favoris
+  useEffect(() => {
+    // Activer un léger fade-in au montage pour adoucir les transitions
+    const t = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     const updateCount = () => {
       setFavoritesCount(getFavoritesCount());
@@ -259,7 +266,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       </nav>
 
       {/* Contenu avec padding pour la nav - Réduit sur mobile pour voir le hero entièrement */}
-      <div className="pt-14 sm:pt-20 flex-1 flex flex-col">
+      <div className={`pt-14 sm:pt-20 flex-1 flex flex-col transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
         {children}
       </div>
 
