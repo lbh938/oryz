@@ -94,6 +94,9 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-[#333333] mt-8 pt-6 text-center">
+          <p className="text-white/50 text-xs sm:text-sm font-sans mb-3">
+            Avertissement: ORYZ STREAM ne stocke ni n'héberge aucun contenu vidéo. Les flux et liens intégrés sont fournis par des services tiers.
+          </p>
           <p className="text-white/40 text-sm font-sans">
             © {currentYear} ORYZ STREAM. Tous droits réservés.
           </p>
