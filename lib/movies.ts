@@ -316,5 +316,211 @@ export const movies: Movie[] = [
     ]
   },
 
+  {
+    id: 'interstellar-2014',
+    title: 'Interstellar',
+    description: 'Dans un futur proche, la Terre est devenue inhospitalière pour l\'humanité. Un groupe d\'explorateurs part dans l\'espace à travers un trou de ver pour trouver un nouveau foyer pour l\'humanité.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/1pnigkWWy8W032o9TKDneBa3eVK.jpg',
+    isFullUrl: true,
+    year: 2014,
+    duration: '2h 49min',
+    genre: ['Science-Fiction', 'Drame', 'Aventure'],
+    rating: 8.6,
+    category: 'Movies',
+    isNew: false,
+    isPopular: true,
+    viewCount: 125000,
+    sources: [
+      {
+        name: 'VOSTFR - Dood.Stream',
+        url: 'https://kakaflix.lol/d00d//newPlayer.php?id=206eb9ba-8d81-4fea-9efe-d7ee9012fb6c',
+        language: 'VOSTFR'
+      },
+      {
+        name: 'VOSTFR - Voe',
+        url: 'https://kakaflix.lol/sydney/newPlayer.php?id=7545eac5-408f-47b6-8a34-0808bc5e0d43',
+        language: 'VOSTFR'
+      },
+      {
+        name: 'VOSTFR - Uqload',
+        url: 'https://uqload.cx/embed-82tezkb63oqc.html',
+        language: 'VOSTFR'
+      },
+      {
+        name: 'VOSTFR - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=g5VzCrui0FG2&autoplay=no',
+        language: 'VOSTFR'
+      },
+      {
+        name: 'Default - ViDZY',
+        url: 'https://vidzy.org/embed-klmzta4kjysa.html',
+        language: 'VO'
+      },
+      {
+        name: 'Default - Dood.Stream',
+        url: 'https://dsvplay.com/e/cbzyds92yiqv',
+        language: 'VO'
+      },
+      {
+        name: 'Default - Voe',
+        url: 'https://sandratableother.com/e/1g9r6ellsil8',
+        language: 'VO'
+      },
+      {
+        name: 'Default - Uqload',
+        url: 'https://uqload.cx/embed-v8dv65a48f6x.html',
+        language: 'VO'
+      },
+      {
+        name: 'Default - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=&autoplay=no',
+        language: 'VO'
+      },
+      {
+        name: 'Default - Filmoon',
+        url: 'https://filemoon.sx/e/su5g8zqbs5wr',
+        language: 'VO'
+      }
+    ]
+  },
+
+  {
+    id: 'les-4-fantastiques-premiers-pas-2025',
+    title: 'Les 4 Fantastiques : Premiers pas',
+    description: 'L\'origine des Quatre Fantastiques, une équipe de super-héros dotés de pouvoirs extraordinaires après une exposition à des radiations cosmiques.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/rNc4KARs6fVa4axzvuv3NfUiNy1.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 5min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 6.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 89500,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/r0fk25ukvjye',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'superman-2025',
+    title: 'Superman',
+    description: 'Le retour du plus célèbre super-héros de tous les temps dans une nouvelle aventure épique.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/bL1U8TDb2ZiThIBFAdKHOfpv8lk.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 15min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.5,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 112000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/20t9hc2fuozm',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'mission-impossible-the-final-reckoning-2025',
+    title: 'Mission : Impossible - The Final Reckoning',
+    description: 'Ethan Hunt et son équipe de l\'IMF font face à leur mission la plus dangereuse et personnelle à ce jour.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/AozMgdALZuR1hDPZt2a1aXiWmL4.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 30min',
+    genre: ['Action', 'Thriller', 'Espionnage'],
+    rating: 8.2,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 156000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/tkgkxmohp9e5',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'f1-le-film-2025',
+    title: 'F1® Le Film',
+    description: 'Un film dramatique sur le monde de la Formule 1, suivant les défis et les triomphes des pilotes et des équipes.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/up0kyZZlLX24dE9SzDuTjXe6HFl.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 10min',
+    genre: ['Drame', 'Action', 'Sport'],
+    rating: 7.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 98000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/6eb7e5dfi8h1',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'jurassic-world-renaissance-2025',
+    title: 'Jurassic World : Renaissance',
+    description: 'Une nouvelle ère commence dans le parc Jurassic World avec de nouvelles créatures et de nouveaux défis.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/39BWHFc5J2Pp7gHcykwOkm3tWTA.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 5min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.3,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 134000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://uqload.cx/embed-l33f2dgn9x7o.html',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'night-carnage-2025',
+    title: 'Night Carnage',
+    description: 'Un thriller d\'horreur intense qui se déroule dans une nuit de terreur et de violence.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/w0wjPQKhlqisSbylf1sWZiNyc2h.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 42000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://uqload.cx/embed-1iwygjdfnsme.html',
+        language: 'VF'
+      }
+    ]
+  },
+
 ];
 

@@ -29,15 +29,29 @@ export function useSubscriptionSync() {
 
     // Si le statut est 'trial', vérifier IMPÉRATIVEMENT que trial_end est dans le futur
     if (sub.status === 'trial') {
-      // Si pas de trial_end ou si trial_end est passé, l'essai est expiré → retourner 'free'
-      if (!sub.trial_end || new Date(sub.trial_end) <= now) {
+      // Si pas de trial_end, vérifier si on peut le calculer ou utiliser une date par défaut
+      // Si trial_end est passé, l'essai est expiré → retourner 'free'
+      if (sub.trial_end) {
+        if (new Date(sub.trial_end) <= now) {
+          return 'free';
+        }
+        // Si trial_end est dans le futur, l'essai est actif → retourner le statut selon plan_type
+        if (sub.plan_type === 'kickoff') return 'kickoff';
+        if (sub.plan_type === 'pro_league') return 'pro_league';
+        if (sub.plan_type === 'vip') return 'vip';
+        return 'trial';
+      } else {
+        // Si pas de trial_end mais qu'il y a un stripe_subscription_id, considérer comme actif
+        // (le webhook va mettre à jour les dates prochainement)
+        if (sub.stripe_subscription_id) {
+          if (sub.plan_type === 'kickoff') return 'kickoff';
+          if (sub.plan_type === 'pro_league') return 'pro_league';
+          if (sub.plan_type === 'vip') return 'vip';
+          return 'trial';
+        }
+        // Si pas de trial_end et pas de stripe_subscription_id, l'essai n'est pas valide
         return 'free';
       }
-      // Si trial_end est dans le futur, l'essai est actif → retourner le statut selon plan_type
-      if (sub.plan_type === 'kickoff') return 'kickoff';
-      if (sub.plan_type === 'pro_league') return 'pro_league';
-      if (sub.plan_type === 'vip') return 'vip';
-      return 'trial';
     }
 
     // Si le statut est 'active', vérifier IMPÉRATIVEMENT que current_period_end est dans le futur
@@ -86,6 +100,9 @@ export function useSubscriptionSync() {
 
   const syncSubscription = useCallback(async (force = false) => {
     const supabase = createClient();
+    
+    // Marquer comme syncing au début
+    setIsSyncing(true);
     
     // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
     // Cela évite de montrer l'utilisateur comme "anonymous" pendant le chargement
