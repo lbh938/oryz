@@ -7,6 +7,7 @@ import { getFavoriteIds } from '@/lib/favorites';
 import { Heart, Tv } from 'lucide-react';
 import Link from 'next/link';
 import { FavoriteButton } from '@/components/favorite-button';
+import { SkeletonGrid } from '@/components/skeleton-grid';
 
 export default function FavoritesPage() {
   const [favoriteChannels, setFavoriteChannels] = useState<typeof channels>([]);
@@ -53,15 +54,7 @@ export default function FavoritesPage() {
       {/* Channels Grid */}
       <section className="container max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {isLoading ? (
-          // Loading State
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-[#333333] rounded-xl aspect-video mb-3"></div>
-                <div className="h-4 bg-[#333333] rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
+          <SkeletonGrid count={8} variant="card" />
         ) : favoriteChannels.length === 0 ? (
           // Empty State
           <div className="text-center py-20">

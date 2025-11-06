@@ -7,6 +7,7 @@ import { searchContent } from "@/lib/content";
 import { ContentCard } from "@/components/content-card";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Suspense } from "react";
+import { SkeletonGrid } from '@/components/skeleton-grid';
 
 const ITEMS_PER_PAGE = 24; // 4 lignes de 6 items
 
@@ -281,9 +282,7 @@ export default function SearchPage() {
     <MainLayout>
       <Suspense fallback={
         <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>
-          </div>
+          <SkeletonGrid count={24} variant="card" />
         </div>
       }>
         <SearchResults />
