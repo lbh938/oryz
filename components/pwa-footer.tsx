@@ -24,10 +24,15 @@ export function PWAFooter() {
     <footer className="border-t border-border bg-card mt-auto">
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="ORYZ STREAM" className="h-6 md:h-8 w-auto" />
-            <p className="text-xs sm:text-sm text-muted-foreground font-sans">
-              Tous droits réservés.
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="ORYZ STREAM" className="h-6 md:h-8 w-auto" />
+              <p className="text-xs sm:text-sm text-muted-foreground font-sans">
+                Tous droits réservés.
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground/70 font-sans">
+              Avertissement: ORYZ STREAM ne stocke ni n'héberge aucun contenu vidéo. Les flux et liens intégrés sont fournis par des services tiers.
             </p>
           </div>
           <div className="flex gap-4 sm:gap-6 md:gap-8 text-xs sm:text-sm font-label font-medium text-muted-foreground">
