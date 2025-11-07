@@ -1164,5 +1164,770 @@ export const movies: Movie[] = [
     ]
   },
 
+  {
+    id: 'the-ballad-of-wallis-island-2025',
+    title: 'The Ballad of Wallis Island',
+    description: 'Un film dramatique suivant les aventures et les défis sur l\'île de Wallis.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Drame', 'Aventure'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-d9fdvxfknpov.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-9hzuorrryram.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-eg7prygte9xi.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=c53d8739-be10-4b55-81ad-63b2dc450a60',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=8u1SaJEyL5mbb5IOuuu4w',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=7e051fbb-af2b-4971-9792-002ccb8d9e26',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=AEaFOBNespZZ&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'vhs-halloween-2025',
+    title: 'V/H/S/HALLOWEEN',
+    description: 'Une nouvelle collection d\'histoires d\'horreur dans la série V/H/S, centrée sur Halloween.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 6.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-m039vrfi0v51.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-6958duuyl2dw.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=a9e91776-eced-44c2-88fb-cead13594986',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=W4WgCSUSbaf5EbJNPm7Z3',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=592a108c-ecec-43d6-8eac-b8477598dcec',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=esxyDHizjqM3&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'sinners-2025',
+    title: 'Sinners',
+    description: 'Un thriller psychologique explorant les péchés et leurs conséquences.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Thriller', 'Drame'],
+    rating: 7.2,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-nvj8ybzr0ta4.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-b3rx1n6pwmyd.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-rfw2qpo1ony0.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/bigwar5/newPlayer.php?id=c8cbfe88-4b9d-4c24-a5a6-15a99bc3e768',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream 2',
+        url: 'https://kakaflix.lol/moon2/newPlayer.php?id=dd662716-d38f-43dd-862e-ebd4f64a3afe',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/voe4//newPlayer.php?id=efc7ecd9-1085-4dd7-9576-5fc56cafb13c',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'marius-et-les-gardiens-de-la-cite-phoceenne-2025',
+    title: 'Marius et les Gardiens de la Cité Phocéenne',
+    description: 'Une aventure épique suivant Marius et les gardiens de la cité phocéenne dans leurs missions.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 0min',
+    genre: ['Aventure', 'Action', 'Drame'],
+    rating: 7.5,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-5vswt7kr1qop.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-zfarr5pf13sw.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=7670ed30-ff46-4457-9617-ce3e6cb06478',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=vXSRXHQAW9QbDeh6ieknf',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=22670c88-9826-4bfe-b3dc-97093e9734d5',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=JLX4Q6lh0XEQ&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'ravage-2025',
+    title: 'Ravage',
+    description: 'Un thriller intense où une catastrophe naturelle met à l\'épreuve la survie humaine.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Thriller', 'Action', 'Drame'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-9el85zr1wxjp.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-gl3u761teun3.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-2grcgfac0gzv.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol//bigwar/newPlayer.php?id=c1a7761e-1800-46a7-a69e-d006566f5060',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=Ha2Wc5pIHVwa4AnIAH9Ab',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=ae483489-6fb2-40b3-b943-fe0b8d486638',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=2hFaJHEVPQzv&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'nobody-2-2025',
+    title: 'Nobody 2',
+    description: 'Suite des aventures de Hutch Mansell, un père de famille ordinaire qui révèle ses compétences de tueur à gages.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 52min',
+    genre: ['Action', 'Thriller'],
+    rating: 7.3,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-1ztq012omhch.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-f2t3tidz8pf4.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-nszzgej57k6x.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=c4be27e5-7551-405a-89f0-39301351ce83',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=mxEwup8KrW1HMhXr7lEPJ',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=578be651-294a-4704-8079-0f53fcfb2698',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=JjRWibuDvMOP&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'i-love-peru-2025',
+    title: 'I Love Peru',
+    description: 'Un film d\'aventure et de découverte suivant un voyage au Pérou.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Aventure', 'Drame'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-vctsjc92dlqu.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-2upmdgld2tz2.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=c98c66cf-4de1-4fb1-8593-e7ad2ba54b04',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=fRcwCm2htVNamUQmBKTjO',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=e89a3dfd-803c-476c-bee8-fb2f7dda0894',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=AT6kX8FxvpLV&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'last-stop-yuma-county-2024',
+    title: 'Last Stop : Yuma County',
+    description: 'Un thriller western moderne se déroulant dans le comté de Yuma.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2024,
+    duration: '1h 50min',
+    genre: ['Thriller', 'Western', 'Action'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-6cu88t66tojf.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-nabyv8xkuo34.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-3fgwe3wqme5e.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=2b38259a-62cc-4ce0-9766-079384bd9fab',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=8Y7jaqqOqKwv1ELNYrQLm',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=e815d151-300c-4e2c-99f5-d5a65489fe27',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=h3QmFTMxFAxm&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'l-intermediaire-2025',
+    title: 'L\'Intermédiaire',
+    description: 'Un thriller psychologique où un intermédiaire se retrouve pris dans un complot dangereux.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Thriller', 'Drame'],
+    rating: 7.2,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-mn03ou8tcbjo.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-8by6cynv6ukg.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-60rjyrit05kx.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/tokyo/newPlayer.php?id=3070b495-fa1e-4fd5-bdea-c5a5d7488711',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=7BJPjEjn2uyAQl6IFejBo',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe4/newPlayer.php?id=fa56f668-34a2-4972-8cd1-e6bc734dfd91',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=IwczEywJ4bWr&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'm3gan-2-0-2025',
+    title: 'M3GAN 2.0',
+    description: 'Suite du film d\'horreur M3GAN, où la poupée robotique tueuse revient avec de nouvelles capacités.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Horreur', 'Science-Fiction', 'Thriller'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-d0f9mw44e2yc.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-o64zezytkw2w.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-s6f17q6ntu2k.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=ccdf0d1c-f955-47a9-ae2a-b923b890323a',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=yGfARluAm87VLO0639Atf',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=70d4407b-82d0-47a1-88d1-c48f241f3be9',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=o4witcerWfqq&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'fight-or-flight-2025',
+    title: 'Fight or Flight',
+    description: 'Un thriller d\'action où un homme doit choisir entre se battre ou fuir face à une menace imminente.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Action', 'Thriller'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-6lnrlr8d7x4u.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-wvf5093ehzlw.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-5s0ba63ub4f8.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol//bigwar/newPlayer.php?id=d813c6e4-dd0a-44f8-8c03-0fcabca1908d',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=tMdiphQnVYjlZFidTXJxO',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=10c66e1b-5ef9-493e-8938-2035f9057ab9',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=whT9eCSJ9g0i&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'frankenstein-2025',
+    title: 'Frankenstein',
+    description: 'Une nouvelle adaptation du classique de Mary Shelley sur le monstre créé par le Dr. Frankenstein.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 10min',
+    genre: ['Horreur', 'Drame', 'Science-Fiction'],
+    rating: 7.4,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-mog88uuj15ho.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-9tcz5uhzy99j.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-drfanoecswif.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/tokyo/newPlayer.php?id=f9aa46fb-7c0f-4ead-a6b0-90262ad49824',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=FXFRzrA0nLSRPN7S5gkkP',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe4/newPlayer.php?id=3cc31277-fd64-490e-88e0-17f52f5d2633',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'angry-rescue-2025',
+    title: 'Angry Rescue',
+    description: 'Un film d\'action où une équipe de secours doit affronter des obstacles dangereux pour sauver des vies.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 48min',
+    genre: ['Action', 'Thriller'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-i8eaxnl97b9v.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-1jxz85cdmyb6.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-av7jdx4pjpfd.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo2/newPlayer.php?id=bde683ca-5d3f-4859-a85c-6b4ae5f2d404',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream 2',
+        url: 'https://kakaflix.lol/moon2/newPlayer.php?id=9066e2a1-20ef-4032-8814-321936cd2266',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/voe1/newPlayer.php?id=ef42a021-425c-4181-be96-80afd1211264',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'good-fortune-2025',
+    title: 'Good Fortune',
+    description: 'Un drame comique explorant les thèmes de la chance, du destin et des choix de vie.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Comédie', 'Drame'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-rggjbkz60d8m.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-awibtuhaon9n.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-or461l0srf4y.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo3/newPlayer.php?id=ce1c8c9b-9db2-40c0-b881-8da688c8104a',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://fr.kakaflix.lol/viper/newplayer.php?id=FCn3u0PCuqeMc9jiMxOBY',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=4eb4c1af-08e2-43e6-8e38-150b52874a27',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=m0HrrlRsDVVw&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'destination-finale-bloodlines-2025',
+    title: 'Destination finale : Bloodlines',
+    description: 'Nouveau volet de la série Destination finale, explorant les liens familiaux et les malédictions héréditaires.',
+    thumbnail: 'https://image.tmdb.org/t/p/w500/placeholder.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 0,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-1ii3cbpyskv6.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - ViDZY 2',
+        url: 'https://vidzy.org/embed-v7spw7r4atx6.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-rw7hql6cb7ll.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol//bigwar/newPlayer.php?id=9118d54b-d420-42fc-9a00-96c2c387c0c4',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://kakaflix.lol/viper/newplayer.php?id=FqWc7Rviys317jHg3w74q',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe 2',
+        url: 'https://kakaflix.lol/voe3/newPlayer.php?id=33687852-c4d8-4a45-9944-4e932a49e491',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Netu',
+        url: 'https://1.multiup.us/player/embed_player.php?vid=S4lHhLuf1EeF&autoplay=no',
+        language: 'VF'
+      }
+    ]
+  },
+
 ];
 
