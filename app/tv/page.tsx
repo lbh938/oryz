@@ -21,7 +21,7 @@ interface ContentItem {
 export default function TVPage() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [contentList, setContentList] = useState<ContentItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'channels' | 'movies'>('channels');
+  const [activeTab, setActiveTab] = useState<'channels' | 'movies' | 'series' | 'documentaries'>('channels');
 
   // Détecter le type de source
   const sourceDetection = useSourceDetection(selectedContent?.url || '');
@@ -42,9 +42,9 @@ export default function TVPage() {
       if (!selectedContent || selectedContent.type !== 'channel') {
         setSelectedContent(channelList[0]);
       }
-    } else {
+    } else if (activeTab === 'movies') {
       const movieList: ContentItem[] = movies
-        .filter(m => m.sources && m.sources.length > 0)
+        .filter(m => m.category === 'film' && m.sources && m.sources.length > 0)
         .slice(0, 50) // Limiter à 50 films pour performance
         .map(m => ({
           id: m.id,
@@ -58,6 +58,36 @@ export default function TVPage() {
       if (!selectedContent || selectedContent.type !== 'movie') {
         setSelectedContent(movieList[0]);
       }
+    } else if (activeTab === 'series') {
+      const seriesList: ContentItem[] = movies
+        .filter(m => m.category === 'series' && m.sources && m.sources.length > 0)
+        .slice(0, 50)
+        .map(m => ({
+          id: m.id,
+          name: m.title,
+          url: m.sources[0].url,
+          type: 'movie' as ContentType,
+          thumbnail: m.thumbnail
+        }));
+      setContentList(seriesList);
+      if (!selectedContent || selectedContent.type !== 'movie') {
+        setSelectedContent(seriesList[0]);
+      }
+    } else if (activeTab === 'documentaries') {
+      const docList: ContentItem[] = movies
+        .filter(m => m.category === 'documentary' && m.sources && m.sources.length > 0)
+        .slice(0, 50)
+        .map(m => ({
+          id: m.id,
+          name: m.title,
+          url: m.sources[0].url,
+          type: 'movie' as ContentType,
+          thumbnail: m.thumbnail
+        }));
+      setContentList(docList);
+      if (!selectedContent || selectedContent.type !== 'movie') {
+        setSelectedContent(docList[0]);
+      }
     }
   }, [activeTab]);
 
@@ -69,28 +99,55 @@ export default function TVPage() {
           <img src="/logo.png" alt="ORYZ" className="h-12" />
           <h1 className="text-white text-3xl font-display font-bold">MODE TV</h1>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <button
             onClick={() => setActiveTab('channels')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-xl font-label font-semibold transition-all ${
+            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
               activeTab === 'channels'
                 ? 'bg-white text-[#0F4C81]'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <Tv className="h-6 w-6" />
+            <Tv className="h-5 w-5" />
             Chaînes
           </button>
           <button
             onClick={() => setActiveTab('movies')}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-xl font-label font-semibold transition-all ${
+            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
               activeTab === 'movies'
                 ? 'bg-white text-[#0F4C81]'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <Film className="h-6 w-6" />
+            <Film className="h-5 w-5" />
             Films
+          </button>
+          <button
+            onClick={() => setActiveTab('series')}
+            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
+              activeTab === 'series'
+                ? 'bg-white text-[#0F4C81]'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="7" width="20" height="15" rx="2" ry="2" strokeWidth="2"/>
+              <polyline points="17 2 12 7 7 2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Séries
+          </button>
+          <button
+            onClick={() => setActiveTab('documentaries')}
+            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
+              activeTab === 'documentaries'
+                ? 'bg-white text-[#0F4C81]'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Docs
           </button>
         </div>
       </header>
@@ -101,7 +158,10 @@ export default function TVPage() {
         <aside className="w-96 bg-[#1a1a1a] border-r border-[#333333] overflow-y-auto">
           <div className="p-4">
             <h2 className="text-white text-xl font-label font-semibold mb-4">
-              {activeTab === 'channels' ? 'Toutes les chaînes' : 'Films disponibles'}
+              {activeTab === 'channels' && 'Toutes les chaînes'}
+              {activeTab === 'movies' && 'Films disponibles'}
+              {activeTab === 'series' && 'Séries disponibles'}
+              {activeTab === 'documentaries' && 'Documentaires disponibles'}
             </h2>
             <div className="space-y-2">
               {contentList.map((item) => (
@@ -136,7 +196,9 @@ export default function TVPage() {
                       {item.name}
                     </p>
                     <p className="text-sm text-white/60">
-                      {item.type === 'channel' ? 'Chaîne TV' : 'Film'}
+                      {item.type === 'channel' ? 'Chaîne TV' : 
+                       activeTab === 'series' ? 'Série' :
+                       activeTab === 'documentaries' ? 'Documentaire' : 'Film'}
                     </p>
                   </div>
                   {selectedContent?.id === item.id && (

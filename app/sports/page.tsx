@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { sportsSchedule, getMatchesByDay, groupMatchesByTimeAndName, GroupedSportMatch, getMatchMaxDuration, SportMatch, groupMatchesBySport, sortSportsByPriority } from '@/lib/sports-schedule';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, ExternalLink, Play, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, ExternalLink, Play, ChevronDown, Lock, Crown } from 'lucide-react';
 import Link from 'next/link';
 import { MainLayout } from '@/components/main-layout';
+import { useSubscriptionContext } from '@/contexts/subscription-context';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,15 @@ const DAY_NAMES_FR = {
 type DayType = typeof DAYS[number];
 
 export default function SportsPage() {
+  // Vérifier l'abonnement de l'utilisateur
+  const { status, isAdmin } = useSubscriptionContext();
+  const hasPremiumAccess = isAdmin || 
+                           status === 'admin' || 
+                           status === 'trial' || 
+                           status === 'kickoff' || 
+                           status === 'pro_league' || 
+                           status === 'vip';
+  
   const [selectedDay, setSelectedDay] = useState<DayType>(() => {
     const today = new Date();
     return DAYS[today.getDay()] as DayType;
