@@ -260,3 +260,113 @@ html, body {
     overflow: hidden;
   }
 }
+
+/* ===================================
+   OPTIMISATIONS POUR TÉLÉVISION
+   =================================== */
+
+/* Pour les grands écrans (TV, moniteurs 4K) */
+@media screen and (min-width: 1920px) {
+  /* Augmenter la taille des textes pour meilleure lisibilité */
+  body {
+    font-size: 18px;
+  }
+  
+  h1 {
+    font-size: 3.5rem !important;
+  }
+  
+  h2 {
+    font-size: 2.5rem !important;
+  }
+  
+  h3 {
+    font-size: 2rem !important;
+  }
+  
+  /* Augmenter la taille des boutons */
+  button, .button, a[role="button"] {
+    font-size: 1.125rem !important;
+    padding: 0.875rem 1.75rem !important;
+    min-height: 3.5rem;
+  }
+  
+  /* Augmenter la taille des cartes */
+  .content-card, [data-content-card] {
+    transform: scale(1.1);
+  }
+  
+  /* Meilleur espacement pour TV */
+  .container {
+    max-width: 90% !important;
+  }
+}
+
+/* Pour les très grands écrans (TV 4K et plus) */
+@media screen and (min-width: 2560px) {
+  body {
+    font-size: 20px;
+  }
+  
+  h1 {
+    font-size: 4.5rem !important;
+  }
+  
+  h2 {
+    font-size: 3rem !important;
+  }
+  
+  h3 {
+    font-size: 2.5rem !important;
+  }
+  
+  button, .button, a[role="button"] {
+    font-size: 1.25rem !important;
+    padding: 1rem 2rem !important;
+    min-height: 4rem;
+  }
+  
+  .content-card, [data-content-card] {
+    transform: scale(1.2);
+  }
+}
+
+/* Optimisations spécifiques pour mode TV (détection via user-agent ou display-mode) */
+@media (hover: none) and (pointer: coarse) {
+  /* Augmenter les zones de clic pour télécommandes */
+  button, a, [role="button"], [role="link"] {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  /* Désactiver les effets hover qui ne fonctionnent pas sur TV */
+  *:hover {
+    transform: none !important;
+  }
+  
+  /* Focus visible pour navigation au clavier/télécommande */
+  *:focus {
+    outline: 3px solid #3498DB !important;
+    outline-offset: 2px;
+  }
+}
+
+/* Améliorer le contraste pour TV (distance de visionnage plus grande) */
+@media screen and (min-width: 1920px) {
+  /* Augmenter le contraste des textes */
+  .text-muted-foreground, .text-white\/70, .text-white\/60 {
+    opacity: 1 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  /* Bordures plus visibles */
+  .border, [class*="border-"] {
+    border-width: 2px !important;
+  }
+  
+  /* Ombres plus prononcées */
+  .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  }
+}

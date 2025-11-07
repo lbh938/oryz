@@ -16,6 +16,17 @@ export default {
       label: ["var(--font-montserrat)", "sans-serif"], // Fonctionnels et labels
       hover: ["CS Holver", "sans-serif"], // Police CS Holver pour les catégories
     },
+    screens: {
+      'xs': '475px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+      '3xl': '1920px', // Pour TV Full HD
+      '4xl': '2560px', // Pour TV 4K
+      '5xl': '3840px', // Pour TV 8K
+    },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
