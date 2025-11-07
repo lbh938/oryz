@@ -48,6 +48,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
   }, [refreshProfile]);
 
   // Écouter les changements d'auth pour recharger le profil
+  // OPTIMISATION: Ne pas recharger pendant le visionnage pour éviter les déconnexions
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
     
@@ -56,11 +57,24 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
       const supabase = createClient();
       
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: string) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Invalider le cache et recharger
+        // Vérifier si on est sur une page de visionnage
+        const isWatchPage = window.location.pathname.includes('/watch/');
+        
+        if (event === 'SIGNED_IN') {
+          // TOUJOURS recharger lors de la connexion (même en visionnage)
           invalidateUserCache();
           await refreshProfile();
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Invalider le cache
+          invalidateUserCache();
+          
+          // Ne recharger le profil que si on n'est PAS en train de regarder du contenu
+          if (!isWatchPage) {
+            await refreshProfile();
+          }
+          // Si on est en visionnage, le profil sera rechargé à la prochaine navigation
         } else if (event === 'SIGNED_OUT') {
+          // TOUJOURS recharger lors de la déconnexion (même en visionnage)
           invalidateUserCache();
           setProfile(null);
           setIsLoading(false);
@@ -101,4 +115,5 @@ export function useUserProfile() {
   }
   return context;
 }
+
 

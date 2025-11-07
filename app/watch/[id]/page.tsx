@@ -74,44 +74,47 @@ export default function WatchPage({ params }: WatchPageProps) {
   if (!id) return null;
 
   // Si c'est un match sportif, utiliser l'URL fournie directement
+  // Les matchs sportifs sont considérés comme du contenu premium
   if (sportUrl) {
     return (
-      <MainLayout>
-        <div className="pb-8 sm:pb-12">
-          <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
-            {/* Bouton retour */}
-            <div className="mb-4 sm:mb-6">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
-                onClick={() => window.history.back()}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour
-              </Button>
-            </div>
-
-            {sportMatchName && (
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent mb-2">
-                  {sportMatchName}
-                </h1>
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold w-fit">
-                  <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                  EN DIRECT
-                </span>
+      <PremiumGate channelName={sportMatchName || "Match en direct"} channelId="live-sport">
+        <MainLayout>
+          <div className="pb-8 sm:pb-12">
+            <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
+              {/* Bouton retour */}
+              <div className="mb-4 sm:mb-6">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/70 hover:text-[#3498DB] hover:bg-[#3498DB]/10"
+                  onClick={() => window.history.back()}
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Retour
+                </Button>
               </div>
-            )}
 
-            <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10" style={{ 
-              aspectRatio: '16/9'
-            }}>
-              <IframePlayer src={sportUrl} />
+              {sportMatchName && (
+                <div className="mb-6">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent mb-2">
+                    {sportMatchName}
+                  </h1>
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-bold w-fit">
+                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                    EN DIRECT
+                  </span>
+                </div>
+              )}
+
+              <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10" style={{ 
+                aspectRatio: '16/9'
+              }}>
+                <IframePlayer src={sportUrl} />
+              </div>
             </div>
           </div>
-        </div>
-      </MainLayout>
+        </MainLayout>
+      </PremiumGate>
     );
   }
 

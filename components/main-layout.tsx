@@ -56,6 +56,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, []);
 
   // OPTIMISATION: Charger l'utilisateur avec cache (une seule fois au montage)
+  // Protection contre déconnexions pendant le visionnage
   useEffect(() => {
     const loadUser = async () => {
       const cachedUser = await getCachedUser();
@@ -65,12 +66,26 @@ export function MainLayout({ children }: MainLayoutProps) {
     loadUser();
     
     // Écouter les changements d'auth (le UserProfileContext gère déjà le profil)
+    // OPTIMISATION: Ne pas recharger pendant le visionnage SAUF pour SIGNED_IN et SIGNED_OUT
     const supabase = createClient();
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+      // Vérifier si on est sur une page de visionnage
+      const isWatchPage = window.location.pathname.includes('/watch/');
+      
+      if (event === 'SIGNED_IN') {
+        // TOUJOURS recharger lors de la connexion (même en visionnage)
+        // pour mettre à jour l'UI immédiatement
         const cachedUser = await getCachedUser();
         setUser(cachedUser);
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Ne recharger que si on n'est PAS en visionnage
+        if (!isWatchPage) {
+          const cachedUser = await getCachedUser();
+          setUser(cachedUser);
+        }
+        // Si on est en visionnage, l'utilisateur sera rechargé à la prochaine navigation
       } else if (event === 'SIGNED_OUT') {
+        // TOUJOURS recharger lors de la déconnexion (même en visionnage)
         setUser(null);
       }
     });
@@ -112,6 +127,17 @@ export function MainLayout({ children }: MainLayoutProps) {
             </Link>
 
             {/* Bouton Premium - Desktop only */}
+            <Link
+              href="/tv"
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white font-label font-semibold transition-all border border-[#3498DB]/30"
+              title="Mode TV - Interface simplifiée"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="2" y="7" width="20" height="13" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M17 2l-5 5-5-5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Mode TV</span>
+            </Link>
             <Link
               href="/subscription"
               className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-semibold transition-all shadow-lg shadow-[#3498DB]/30"

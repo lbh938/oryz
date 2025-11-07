@@ -209,8 +209,14 @@ export function useSubscriptionSync() {
   }, []); // [] = seulement au montage
 
   // Rafraîchir automatiquement lors du focus de la fenêtre (sans bloquer)
+  // MAIS PAS pendant le visionnage pour éviter les déconnexions
   useEffect(() => {
     const handleFocus = () => {
+      // NE PAS rafraîchir si l'utilisateur est sur une page de visionnage
+      const isWatchPage = window.location.pathname.includes('/watch/');
+      if (isWatchPage) {
+        return; // Skip refresh pendant le visionnage
+      }
       // Rafraîchir en arrière-plan sans bloquer l'UI
       syncSubscriptionRef.current(false);
     };

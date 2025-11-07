@@ -91,20 +91,24 @@ export function useAuthRefresh() {
     // lors de chargements longs. Le middleware gère déjà la vérification de session.
     // refreshSession(true); // DÉSACTIVÉ
 
-    // Rafraîchir toutes les 30 minutes (moins agressif pour éviter les déconnexions)
+    // Rafraîchir toutes les 45 minutes (encore moins agressif pour éviter les déconnexions pendant les matchs)
     const interval = setInterval(() => {
       refreshSession(false);
-    }, 30 * 60 * 1000); // 30 minutes au lieu de 3
+    }, 45 * 60 * 1000); // 45 minutes au lieu de 30
 
-    // Rafraîchir lors du focus de la fenêtre avec débounce pour éviter les déconnexions
+    // NE PAS rafraîchir lors du focus de la fenêtre si l'utilisateur est sur une page de visionnage
+    // Cela évite les déconnexions pendant les matchs en direct
     let focusTimeout: NodeJS.Timeout | null = null;
     const handleFocus = () => {
-      // Débouncer : attendre 5 secondes avant de rafraîchir
-      // Cela évite les refreshs multiples lors de changements d'onglets rapides
+      // Vérifier si on est sur une page de visionnage
+      const isWatchPage = window.location.pathname.includes('/watch/');
+      
+      // Si on est sur une page de visionnage, ne pas rafraîchir immédiatement
+      // Attendre 30 secondes au lieu de 5 pour éviter les interruptions
       if (focusTimeout) clearTimeout(focusTimeout);
       focusTimeout = setTimeout(() => {
         refreshSession(false);
-      }, 5000);
+      }, isWatchPage ? 30000 : 5000); // 30s pour /watch/, 5s pour les autres pages
     };
     window.addEventListener('focus', handleFocus);
 
