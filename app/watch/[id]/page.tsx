@@ -105,9 +105,7 @@ export default function WatchPage({ params }: WatchPageProps) {
             )}
 
             <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10" style={{ 
-              aspectRatio: '16/9',
-              minHeight: '400px',
-              height: 'auto'
+              aspectRatio: '16/9'
             }}>
               <IframePlayer src={sportUrl} />
             </div>
@@ -215,9 +213,7 @@ export default function WatchPage({ params }: WatchPageProps) {
           {/* Player */}
           <div className="mb-8">
             <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 relative" style={{ 
-              aspectRatio: '16/9',
-              minHeight: '400px',
-              height: 'auto'
+              aspectRatio: '16/9'
             }}>
               {/* Badge indicateur de qualité (HLS) */}
               {!sourceDetection.isLoading && useHLS && (

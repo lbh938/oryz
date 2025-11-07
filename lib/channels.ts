@@ -149,16 +149,11 @@ export const channels: Channel[] = [
       },
       {
         name: 'Source 2',
-        url: 'https://directfr.sbs/2495c3df-f1ab-49bc-b894-283a4866d9a4',
-        provider: 'DirectFR'
-      },
-      {
-        name: 'Source 3',
         url: 'https://tutvlive.ru/player/2/12',
         provider: 'TutVLive'
       },
       {
-        name: 'Source 4',
+        name: 'Source 3',
         url: 'https://match-live.lol/ty/2/12',
         provider: 'MatchLive'
       }
@@ -216,40 +211,6 @@ export const channels: Channel[] = [
       {
         name: 'Source 2',
         url: 'https://fstv.lol/player/fsplayer.php?id=150',
-        provider: 'FSTV'
-      }
-    ]
-  },
-  {
-    id: '9',
-    name: 'DAZN 2',
-    description: 'Sports en streaming - Compétitions et championnats',
-    thumbnail: '/images/channels/DAZN.jpg',
-    url: 'https://fstv.lol/player/fsplayer.php?id=151',
-    category: 'Sports',
-    isLive: true,
-    useIframe: true,
-    sources: [
-      {
-        name: 'Source 1',
-        url: 'https://fstv.lol/player/fsplayer.php?id=151',
-        provider: 'FSTV'
-      }
-    ]
-  },
-  {
-    id: '10',
-    name: 'DAZN 3',
-    description: 'Sports en streaming - Matchs et tournois internationaux',
-    thumbnail: '/images/channels/DAZN.jpg',
-    url: 'https://fstv.lol/player/fsplayer.php?id=160',
-    category: 'Sports',
-    isLive: true,
-    useIframe: true,
-    sources: [
-      {
-        name: 'Source 1',
-        url: 'https://fstv.lol/player/fsplayer.php?id=160',
         provider: 'FSTV'
       }
     ]

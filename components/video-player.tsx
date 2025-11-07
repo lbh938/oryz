@@ -179,7 +179,7 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full bg-black/20 min-h-[400px]">
+      <div className="flex items-center justify-center h-full bg-black/20">
         <div className="text-center space-y-4 p-8">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
           <p className="text-lg font-semibold">{error}</p>
@@ -196,7 +196,7 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full bg-black/20 min-h-[400px]">
+      <div className="flex items-center justify-center h-full bg-black/20">
         <div className="text-center space-y-4">
           <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary" />
           <p className="text-lg font-semibold">Chargement du flux...</p>
@@ -206,7 +206,7 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
   }
 
   return (
-    <div data-vjs-player className={className} style={{ width: '100%', height: '100%', minHeight: '400px' }}>
+    <div data-vjs-player className={className} style={{ width: '100%', height: '100%' }}>
       <div ref={videoRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );

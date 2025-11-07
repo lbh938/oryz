@@ -60,23 +60,17 @@ function LoginFormContent({
       invalidateUserCache();
       
       // Si "rester connecté" est activé, stocker la préférence dans localStorage
-      // et rafraîchir la session immédiatement pour s'assurer qu'elle est persistée
       if (rememberMe && data.session) {
         localStorage.setItem('rememberMe', 'true');
-        
-        // Rafraîchir la session immédiatement pour s'assurer qu'elle est bien persistée
-        // Cela garantit que la session sera maintenue même après fermeture du navigateur
-        try {
-          await supabase.auth.refreshSession();
-        } catch (refreshError) {
-          // Ignorer les erreurs de refresh, la session est déjà valide
-          console.log('Session refresh skipped:', refreshError);
-        }
       } else {
         localStorage.removeItem('rememberMe');
       }
       
-      // Rediriger vers la page d'accueil après connexion réussie
+      // NE PAS attendre refreshSession() - cela peut bloquer la connexion
+      // La session est déjà valide après signInWithPassword()
+      // Le refresh se fera automatiquement via useAuthRefresh si nécessaire
+      
+      // Rediriger immédiatement vers la page d'accueil après connexion réussie
       router.push("/");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
