@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+// Validation des variables d'environnement au chargement du module
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-10-29.clover',
 });
 
@@ -78,16 +84,27 @@ export async function POST(request: NextRequest) {
 
           if (!updateError) {
             // Recharger l'abonnement mis à jour
-            const { data: updatedSub } = await supabase
+            const { data: updatedSub, error: reloadError } = await supabase
               .from('subscriptions')
               .select('*')
               .eq('id', subscription.id)
-              .single();
+              .maybeSingle();
+
+            if (reloadError || !updatedSub) {
+              console.error('Error reloading subscription:', reloadError);
+              return NextResponse.json({
+                subscription: subscription,
+                status: subscription.status || 'free',
+                planType: subscription.plan_type || 'free',
+                synced: true,
+                warning: 'Subscription updated but could not reload'
+              });
+            }
 
             return NextResponse.json({
               subscription: updatedSub,
-              status: updatedSub?.status || 'free',
-              planType: updatedSub?.plan_type || 'free',
+              status: updatedSub.status || 'free',
+              planType: updatedSub.plan_type || 'free',
               synced: true
             });
           }
@@ -128,11 +145,22 @@ export async function POST(request: NextRequest) {
             .eq('id', subscription.id);
 
           // Recharger l'abonnement mis à jour
-          const { data: updatedSub } = await supabase
+          const { data: updatedSub, error: reloadError } = await supabase
             .from('subscriptions')
             .select('*')
             .eq('id', subscription.id)
-            .single();
+            .maybeSingle();
+
+          if (reloadError || !updatedSub) {
+            console.error('Error reloading subscription:', reloadError);
+            return NextResponse.json({
+              subscription: subscription,
+              status: subscription.status || 'free',
+              planType: subscription.plan_type || 'free',
+              synced: true,
+              warning: 'Subscription updated but could not reload'
+            });
+          }
 
           return NextResponse.json({
             subscription: updatedSub,
@@ -203,26 +231,26 @@ export async function POST(request: NextRequest) {
       }
       // Vérifier current_period_end si disponible
       else if (subscription.current_period_end && new Date(subscription.current_period_end) > now) {
-        if (subscription.plan_type === 'kickoff') {
-          userStatus = 'kickoff';
-        } else if (subscription.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (subscription.plan_type === 'vip') {
-          userStatus = 'vip';
-        } else {
-          userStatus = 'trial';
-        }
+      if (subscription.plan_type === 'kickoff') {
+        userStatus = 'kickoff';
+      } else if (subscription.plan_type === 'pro_league') {
+        userStatus = 'pro_league';
+      } else if (subscription.plan_type === 'vip') {
+        userStatus = 'vip';
+      } else {
+        userStatus = 'trial';
+      }
       }
       // Si pas de dates mais stripe_subscription_id existe, considérer actif (webhook va mettre à jour)
       else {
-        if (subscription.plan_type === 'kickoff') {
-          userStatus = 'kickoff';
-        } else if (subscription.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (subscription.plan_type === 'vip') {
-          userStatus = 'vip';
-        } else {
-          userStatus = 'trial';
+      if (subscription.plan_type === 'kickoff') {
+        userStatus = 'kickoff';
+      } else if (subscription.plan_type === 'pro_league') {
+        userStatus = 'pro_league';
+      } else if (subscription.plan_type === 'vip') {
+        userStatus = 'vip';
+      } else {
+        userStatus = 'trial';
         }
       }
     }

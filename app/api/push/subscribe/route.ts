@@ -1,28 +1,26 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 /**
  * API pour enregistrer un abonnement push dans Supabase
  * Appelé quand l'utilisateur active les notifications
- * IMPORTANT: Utilise anon key pour permettre les inscriptions anonymes
+ * IMPORTANT: Permet les inscriptions anonymes (user_id peut être NULL)
  */
 export async function POST(request: Request) {
   try {
-    // Utiliser le client anon pour permettre les utilisateurs non connectés
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Utiliser le client SSR qui gère correctement les cookies de session
+    const supabase = await createClient();
     
-    // Récupérer l'utilisateur actuel depuis le header Authorization (peut être null)
-    const authHeader = request.headers.get('authorization');
+    // Récupérer l'utilisateur actuel (peut être null pour les utilisateurs anonymes)
     let user = null;
-    
-    if (authHeader) {
-      const { data: { user: authUser } } = await supabase.auth.getUser(
-        authHeader.replace('Bearer ', '')
-      );
+    try {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (!authError && authUser) {
       user = authUser;
+      }
+    } catch (error) {
+      // Ignorer les erreurs d'authentification - les utilisateurs anonymes sont autorisés
+      console.log('User not authenticated, allowing anonymous subscription');
     }
     
     // Récupérer les données de l'abonnement
@@ -67,7 +65,7 @@ export async function POST(request: Request) {
         ignoreDuplicates: false
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('❌ Erreur sauvegarde abonnement:', error);

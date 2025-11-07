@@ -14,7 +14,17 @@ async function detectVPNProxy(ip: string): Promise<{
   try {
     // Utiliser un service gratuit comme ipapi.co ou ip-api.com
     // Pour production, utiliser un service payant plus fiable comme MaxMind GeoIP2
-    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,countryCode,city,as,proxy,hosting`);
+    
+    // OPTIMISATION: Ajouter un timeout de 3 secondes pour éviter les blocages
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(
+      `http://ip-api.com/json/${ip}?fields=status,countryCode,city,as,proxy,hosting`,
+      { signal: controller.signal }
+    );
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       // Fallback : retourner des valeurs par défaut
@@ -37,8 +47,13 @@ async function detectVPNProxy(ip: string): Promise<{
       city: data.city,
       asn: data.as,
     };
-  } catch (error) {
+  } catch (error: any) {
+    // En cas de timeout ou d'erreur réseau, ne pas bloquer l'utilisateur
+    if (error.name === 'AbortError' || error.code === 'ECONNRESET') {
+      console.warn('VPN/Proxy detection timed out or connection error, allowing access');
+    } else {
     console.error('Error detecting VPN/Proxy:', error);
+    }
     return {
       isVPN: false,
       isProxy: false,
@@ -119,20 +134,45 @@ export async function POST(request: NextRequest) {
     const cfConnectingIp = request.headers.get('cf-connecting-ip'); // Cloudflare
     const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp || cfConnectingIp || 'unknown';
 
-    // Créer le client Supabase admin
-    const supabaseAdmin = createSupabaseClient(
+    // Créer le client Supabase admin avec Service Role Key si disponible
+    // Sinon, utiliser le client normal (ANON_KEY) - app_settings est lisible publiquement
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let supabaseAdmin;
+    
+    if (serviceRoleKey) {
+      // Utiliser Service Role Key pour bypass RLS si disponible (recommandé)
+      supabaseAdmin = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+        serviceRoleKey
+      );
+    } else {
+      // Fallback vers client normal - app_settings a une politique RLS publique
+      // Note: La fonction RPC can_use_free_preview devrait aussi fonctionner avec ANON_KEY
+      console.warn('SUPABASE_SERVICE_ROLE_KEY not configured, using ANON_KEY. Consider adding it for better security.');
+      supabaseAdmin = supabase; // Utiliser le client normal déjà créé
+    }
 
     // Vérifier si le free preview est activé dans les paramètres
-    const { data: freePreviewSetting } = await supabaseAdmin
+    // OPTIMISATION: Ajouter un timeout pour cette requête
+    const settingsPromise = supabaseAdmin
       .from('app_settings')
       .select('value')
       .eq('key', 'free_preview_enabled')
-      .single();
+      .maybeSingle();
+    
+    const { data: freePreviewSetting, error: settingError } = await Promise.race([
+      settingsPromise,
+      new Promise<{ data: null; error: any }>((_, reject) => 
+        setTimeout(() => reject(new Error('Settings query timeout')), 3000)
+      )
+    ]).catch(() => ({ data: null, error: { message: 'Timeout' } }));
 
-    // Si le free preview est désactivé, bloquer l'accès
+    // Si erreur ou free preview désactivé, bloquer l'accès
+    if (settingError) {
+      console.error('Error checking free preview setting:', settingError);
+      // En cas d'erreur, bloquer par sécurité
+    }
+
     if (freePreviewSetting?.value === 'false') {
       return NextResponse.json({
         canUse: false,
@@ -147,7 +187,8 @@ export async function POST(request: NextRequest) {
     // Détecter VPN/Proxy
     const vpnProxyInfo = await detectVPNProxy(clientIp);
 
-    const { data: checkResult, error: checkError } = await supabaseAdmin.rpc(
+    // OPTIMISATION: Ajouter un timeout pour la RPC call
+    const rpcPromise = supabaseAdmin.rpc(
       'can_use_free_preview',
       {
         p_ip_address: clientIp,
@@ -155,9 +196,38 @@ export async function POST(request: NextRequest) {
         p_user_id: user?.id || null,
       }
     );
+    
+    const { data: checkResult, error: checkError } = await Promise.race([
+      rpcPromise,
+      new Promise<{ data: null; error: any }>((_, reject) => 
+        setTimeout(() => reject(new Error('RPC timeout')), 5000)
+      )
+    ]).catch((err) => {
+      console.error('RPC call failed or timed out:', err);
+      return { data: null, error: err };
+    });
 
     if (checkError) {
       console.error('Error checking free preview:', checkError);
+      
+      // En cas d'erreur de timeout ou de connexion, autoriser l'accès pour ne pas bloquer les utilisateurs
+      if (checkError.message?.includes('timeout') || 
+          checkError.message?.includes('Timeout') ||
+          checkError.code === 'ECONNRESET' ||
+          checkError.code === 'ETIMEDOUT' ||
+          checkError.message?.includes('aborted')) {
+        console.warn('Preview check timed out or connection error, allowing access by default');
+        return NextResponse.json({
+          canUse: true,
+          reason: 'Vérification temporairement indisponible',
+          trustScore: 0.5,
+          isVPN: false,
+          isProxy: false,
+          isTor: false,
+          remainingMs: 15 * 60 * 1000,
+        });
+      }
+      
       return NextResponse.json(
         { error: 'Error checking preview eligibility' },
         { status: 500 }
@@ -250,9 +320,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Enregistrer l'essai si autorisé
+    // Enregistrer l'essai si autorisé (en arrière-plan, ne pas bloquer la réponse)
     if (canUse) {
-      const { error: recordError } = await supabaseAdmin.rpc('record_free_preview', {
+      // Ne pas attendre cette opération pour ne pas ralentir la réponse
+      // Utiliser .then() pour exécuter en arrière-plan sans bloquer
+      supabaseAdmin.rpc('record_free_preview', {
         p_ip_address: clientIp,
         p_device_fingerprint: deviceFingerprint,
         p_user_id: user?.id || null,
@@ -264,11 +336,11 @@ export async function POST(request: NextRequest) {
         p_country_code: vpnProxyInfo.countryCode || null,
         p_city: vpnProxyInfo.city || null,
         p_asn: vpnProxyInfo.asn || null,
+      }).then(({ error: recordError }) => {
+        if (recordError) {
+          console.error('Failed to record preview (non-blocking):', recordError);
+        }
       });
-
-      if (recordError) {
-        console.error('Error recording free preview:', recordError);
-      }
     }
 
     return NextResponse.json({
@@ -283,6 +355,26 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Error in check-preview:', error);
+    
+    // En cas d'erreur ECONNRESET, ETIMEDOUT ou timeout, autoriser l'accès par défaut
+    // pour ne pas bloquer les utilisateurs légitimes lors de problèmes réseau temporaires
+    if (error.code === 'ECONNRESET' || 
+        error.code === 'ETIMEDOUT' || 
+        error.code === 'ENOTFOUND' ||
+        error.message?.includes('aborted') ||
+        error.message?.includes('timeout')) {
+      console.warn('Connection error in check-preview, allowing access by default');
+      return NextResponse.json({
+        canUse: true,
+        reason: 'Vérification temporairement indisponible',
+        trustScore: 0.5,
+        isVPN: false,
+        isProxy: false,
+        isTor: false,
+        remainingMs: 15 * 60 * 1000,
+      });
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

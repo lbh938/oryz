@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getCurrentSubscription } from '@/lib/subscriptions';
 
@@ -195,29 +195,38 @@ export function useSubscriptionSync() {
     }
   }, [determineStatusFromSubscription]);
 
+  // OPTIMISATION: Utiliser une ref pour éviter que syncSubscription dans les dépendances cause des re-renders
+  const syncSubscriptionRef = useRef(syncSubscription);
+  
+  // Mettre à jour la ref quand syncSubscription change
+  useEffect(() => {
+    syncSubscriptionRef.current = syncSubscription;
+  }, [syncSubscription]);
+
   // Charger l'abonnement au montage - IMMÉDIATEMENT et de manière optimisée
   useEffect(() => {
-    syncSubscription(false); // false = ne pas forcer la synchronisation Stripe
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // [] = seulement au montage, syncSubscription est stable grâce à useCallback
+    syncSubscriptionRef.current(false); // false = ne pas forcer la synchronisation Stripe
+  }, []); // [] = seulement au montage
 
   // Rafraîchir automatiquement lors du focus de la fenêtre (sans bloquer)
   useEffect(() => {
     const handleFocus = () => {
       // Rafraîchir en arrière-plan sans bloquer l'UI
-      syncSubscription(false);
+      syncSubscriptionRef.current(false);
     };
     window.addEventListener('focus', handleFocus);
 
     // Rafraîchir toutes les 60 secondes si l'abonnement est incomplete (moins agressif)
     let interval: NodeJS.Timeout | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     if (subscription?.status === 'incomplete' && subscription.stripe_customer_id && !subscription.stripe_subscription_id) {
       interval = setInterval(() => {
-        syncSubscription(true); // Forcer la synchronisation seulement pour incomplete
+        syncSubscriptionRef.current(true); // Forcer la synchronisation seulement pour incomplete
       }, 60000); // 60 secondes (moins agressif)
       
       // Arrêter après 10 minutes
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (interval) {
           clearInterval(interval);
         }
@@ -229,8 +238,12 @@ export function useSubscriptionSync() {
       if (interval) {
         clearInterval(interval);
       }
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
-  }, [subscription?.status, subscription?.stripe_customer_id, subscription?.stripe_subscription_id, syncSubscription]);
+  }, [subscription?.status, subscription?.stripe_customer_id, subscription?.stripe_subscription_id]);
+  // Retirer syncSubscription des dépendances - utiliser la ref à la place
 
   return {
     subscription,

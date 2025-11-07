@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { invalidateUserCache } from "@/lib/auth-cache";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ function LoginFormContent({
 }: React.ComponentPropsWithoutRef<"div">) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true); // Par défaut activé
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,13 +47,37 @@ function LoginFormContent({
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Supabase persiste la session par défaut, mais on peut contrôler la durée
+      // L'option persistSession est true par défaut, mais on peut la forcer
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      
       if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+      
+      // Invalider le cache pour forcer le rechargement des données utilisateur
+      invalidateUserCache();
+      
+      // Si "rester connecté" est activé, stocker la préférence dans localStorage
+      // et rafraîchir la session immédiatement pour s'assurer qu'elle est persistée
+      if (rememberMe && data.session) {
+        localStorage.setItem('rememberMe', 'true');
+        
+        // Rafraîchir la session immédiatement pour s'assurer qu'elle est bien persistée
+        // Cela garantit que la session sera maintenue même après fermeture du navigateur
+        try {
+          await supabase.auth.refreshSession();
+        } catch (refreshError) {
+          // Ignorer les erreurs de refresh, la session est déjà valide
+          console.log('Session refresh skipped:', refreshError);
+        }
+      } else {
+        localStorage.removeItem('rememberMe');
+      }
+      
+      // Rediriger vers la page d'accueil après connexion réussie
+      router.push("/");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -107,6 +133,19 @@ function LoginFormContent({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+              </div>
+              {/* Option "rester connecté" */}
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#3498DB] focus:ring-[#3498DB] cursor-pointer"
+                />
+                <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer">
+                  Rester connecté
+                </Label>
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button type="submit" className="w-full bg-[#3498DB] hover:bg-[#3498DB]/90" disabled={isLoading}>

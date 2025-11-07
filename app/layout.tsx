@@ -8,6 +8,7 @@ import { SilenceConsole } from "@/components/silence-console";
 import { AdBlocker } from "@/components/ad-blocker";
 import { AuthRefreshProvider } from "@/components/auth-refresh-provider";
 import { SubscriptionProvider } from "@/contexts/subscription-context";
+import { UserProfileProvider } from "@/contexts/user-profile-context";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -109,6 +110,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthRefreshProvider>
+            <UserProfileProvider>
             <SubscriptionProvider>
               <SilenceConsole />
               <PopupBlocker />
@@ -117,6 +119,7 @@ export default function RootLayout({
               {children}
               <PWAInstall />
             </SubscriptionProvider>
+            </UserProfileProvider>
           </AuthRefreshProvider>
         </ThemeProvider>
       </body>

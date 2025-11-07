@@ -3,13 +3,15 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { LogIn, Heart, User, Crown } from "lucide-react";
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Footer } from "@/components/footer";
 import { SearchDropdown } from "@/components/search-dropdown";
 import { getFavoritesCount } from "@/lib/favorites";
 import { useAnalytics } from "@/hooks/use-analytics";
 import { createClient } from "@/lib/supabase/client";
+import { useUserProfile } from "@/contexts/user-profile-context";
+import { getCachedUser } from "@/lib/auth-cache";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 
@@ -26,11 +28,11 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
-  const supabase = createClient();
-
+  
+  // OPTIMISATION: Utiliser le context pour le profil au lieu de charger manuellement
+  const { profile: userProfile, isLoading: profileLoading } = useUserProfile();
+  
   // Tracking analytics automatique
   useAnalytics();
 
@@ -53,120 +55,28 @@ export function MainLayout({ children }: MainLayoutProps) {
     return () => window.removeEventListener('favoritesChanged', updateCount);
   }, []);
 
-  // Vérifier l'état de connexion et charger le profil
-  const authCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+  // OPTIMISATION: Charger l'utilisateur avec cache (une seule fois au montage)
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-        // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
-        // Cela évite de montrer l'utilisateur comme déconnecté pendant le chargement
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        // Si une session existe, mettre à jour immédiatement l'état pour éviter le flash "déconnecté"
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Charger le profil en parallèle
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('username, avatar_url')
-            .eq('id', session.user.id)
-            .single();
-          
-          setUserProfile(profile);
-          setIsLoading(false);
-        } else if (sessionError) {
-          // Pas de session, utilisateur déconnecté
-          setUser(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          return;
-        } else {
-          // Pas de session
-          setUser(null);
-          setUserProfile(null);
-          setIsLoading(false);
-          return;
-        }
-        
-        // SÉCURITÉ: Vérifier ensuite avec getUser() pour authentifier auprès du serveur
-        // Cela garantit que les informations utilisateur sont authentiques et non manipulables
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        
-        if (userError || !user) {
-          // Si getUser() échoue, l'utilisateur n'est pas vraiment authentifié
-          setUser(null);
-          setUserProfile(null);
-          return;
-        }
-        
-        // Utiliser user authentifié pour l'affichage (mise à jour si nécessaire)
-        if (user.id !== session.user.id) {
-          setUser(user);
-          
-          // Recharger le profil si l'utilisateur a changé
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('username, avatar_url')
-            .eq('id', user.id)
-            .single();
-          
-          setUserProfile(profile);
-        }
-      } catch (error) {
-        console.error('Error checking user:', error);
-        setIsLoading(false);
-      }
+    const loadUser = async () => {
+      const cachedUser = await getCachedUser();
+      setUser(cachedUser);
     };
-
-    checkUser();
-
-    // Écouter les changements d'auth et réauthentifier à chaque fois
-    // Utiliser un debounce pour éviter les appels multiples lors de la navigation
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Debounce les vérifications d'authentification pour éviter les appels multiples
-      if (authCheckTimeoutRef.current) {
-        clearTimeout(authCheckTimeoutRef.current);
+    
+    loadUser();
+    
+    // Écouter les changements d'auth (le UserProfileContext gère déjà le profil)
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        const cachedUser = await getCachedUser();
+        setUser(cachedUser);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
       }
-      
-      authCheckTimeoutRef.current = setTimeout(async () => {
-        // SÉCURITÉ: Réauthentifier l'utilisateur à chaque changement d'état
-        // Ne pas utiliser session.user directement car il vient du stockage local
-        try {
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError) {
-            setUser(null);
-            setUserProfile(null);
-            return;
-          }
-          
-          setUser(user ?? null);
-      
-          // Recharger le profil seulement si l'utilisateur a changé
-          if (user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('username, avatar_url')
-              .eq('id', user.id)
-          .single();
-        
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
-      }
-        } catch (error) {
-          console.error('Error in auth state change:', error);
-        }
-      }, 100); // Debounce de 100ms pour éviter les appels multiples
     });
 
     return () => {
       subscription.unsubscribe();
-      if (authCheckTimeoutRef.current) {
-        clearTimeout(authCheckTimeoutRef.current);
-      }
     };
   }, []);
 

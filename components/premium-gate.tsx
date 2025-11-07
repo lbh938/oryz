@@ -73,8 +73,8 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     }
   }, [status, isPremium, isAdmin, syncSubscription]);
 
-  // Timeout global de sécurité : après 8 secondes max, forcer la résolution
-  // 8 secondes pour laisser le temps à l'API (5s) + marge de sécurité
+  // Timeout global de sécurité : après 10 secondes max, forcer la résolution
+  // 10 secondes pour laisser le temps à l'API (5s) + marge de sécurité
   useEffect(() => {
     if (!isPremium) return;
     
@@ -96,15 +96,16 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
       return;
     }
     
-    // Timeout global de 8 secondes pour forcer la résolution
+    // Timeout global de 10 secondes pour forcer la résolution
     if (!loadingTimeoutRef.current) {
       loadingTimeoutRef.current = setTimeout(() => {
-        // Après 8 secondes, forcer la résolution
+        console.warn('PremiumGate: Forcing resolution after 10s timeout');
+        // Après 10 secondes, forcer la résolution
         // Si on est encore en train de charger, on bloque l'accès
         setHasAccess(false);
         setLoading(false);
         loadingTimeoutRef.current = null;
-      }, 8000);
+      }, 10000); // Augmenté à 10 secondes
     }
     
     return () => {
@@ -172,7 +173,7 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
       // Ne pas modifier hasAccess ici pour éviter les flashs
       return;
     }
-
+    
     // Statut 'free' ou 'anonymous' → pas d'accès pour les chaînes premium
     // MAIS seulement si on a fini de charger (pas pendant le chargement initial)
     if ((status === 'free' || status === 'anonymous') && !isSyncing) {
@@ -200,11 +201,11 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
     if (isSyncing && hasAccess === null) {
       return;
     }
-
+    
     // Si le preview charge, attendre (timeout global s'en chargera)
     if (previewLoading && shouldUsePreview && isAuthorized === null && hasAccess === null) {
-      return;
-    }
+        return;
+      }
 
     // Cas par défaut: pas d'accès si tout est chargé et pas de preview disponible
     if (!isSyncing && (isAuthorized !== null || !shouldUsePreview)) {
@@ -281,73 +282,73 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
       );
     }
 
-    return (
-      <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
-        <Card className="bg-gradient-to-br from-[#3498DB]/20 via-[#0F4C81]/20 to-[#3498DB]/20 border-[#3498DB]/30 p-6 sm:p-8 md:p-12 text-center">
-          <div className="flex justify-center mb-4 sm:mb-6">
-            <div className="rounded-full bg-gradient-to-br from-[#3498DB]/30 to-[#0F4C81]/30 p-3 sm:p-4">
-              <Crown className="h-8 w-8 sm:h-12 sm:w-12 text-[#3498DB]" />
+      return (
+        <div className="container max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12">
+          <Card className="bg-gradient-to-br from-[#3498DB]/20 via-[#0F4C81]/20 to-[#3498DB]/20 border-[#3498DB]/30 p-6 sm:p-8 md:p-12 text-center">
+            <div className="flex justify-center mb-4 sm:mb-6">
+              <div className="rounded-full bg-gradient-to-br from-[#3498DB]/30 to-[#0F4C81]/30 p-3 sm:p-4">
+                <Crown className="h-8 w-8 sm:h-12 sm:w-12 text-[#3498DB]" />
+              </div>
             </div>
-          </div>
 
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white mb-3 sm:mb-4">
-            🎁 Débloquez l'accès complet
-          </h1>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white mb-3 sm:mb-4">
+              🎁 Débloquez l'accès complet
+            </h1>
 
-          <p className="text-white/90 text-base sm:text-lg md:text-xl mb-3 sm:mb-4 font-sans">
-            Profitez de toutes les chaînes premium sans limite
-          </p>
+            <p className="text-white/90 text-base sm:text-lg md:text-xl mb-3 sm:mb-4 font-sans">
+              Profitez de toutes les chaînes premium sans limite
+            </p>
 
-          <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 px-2">
-            Accédez à beIN SPORT, DAZN, Canal+, RMC Sport et plus encore avec un abonnement premium
-          </p>
+            <p className="text-white/70 text-sm sm:text-base mb-6 sm:mb-8 px-2">
+              Accédez à beIN SPORT, DAZN, Canal+, RMC Sport et plus encore avec un abonnement premium
+            </p>
 
-          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-            <div className="flex items-center gap-2 sm:gap-3 justify-center mb-3 sm:mb-4">
-              <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-[#3498DB]" />
-              <h2 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white">
-                Avantages Premium
-              </h2>
+            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
+              <div className="flex items-center gap-2 sm:gap-3 justify-center mb-3 sm:mb-4">
+                <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-[#3498DB]" />
+                <h2 className="text-lg sm:text-xl md:text-2xl font-display font-bold text-white">
+                  Avantages Premium
+                </h2>
+              </div>
+              <ul className="text-left space-y-2 sm:space-y-3 text-white/90 max-w-md mx-auto text-sm sm:text-base">
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Accès illimité à toutes les chaînes premium</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>7 jours d'essai gratuit (0€) - Carte requise, aucun débit pendant l'essai</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Qualité HD/4K sans limite</span>
+                </li>
+                <li className="flex items-start gap-2 sm:gap-3">
+                  <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
+                  <span>Sans engagement - Résiliez à tout moment</span>
+                </li>
+              </ul>
             </div>
-            <ul className="text-left space-y-2 sm:space-y-3 text-white/90 max-w-md mx-auto text-sm sm:text-base">
-              <li className="flex items-start gap-2 sm:gap-3">
-                <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                <span>Accès illimité à toutes les chaînes premium</span>
-              </li>
-              <li className="flex items-start gap-2 sm:gap-3">
-                <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                <span>7 jours d'essai gratuit (0€) - Carte requise, aucun débit pendant l'essai</span>
-              </li>
-              <li className="flex items-start gap-2 sm:gap-3">
-                <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                <span>Qualité HD/4K sans limite</span>
-              </li>
-              <li className="flex items-start gap-2 sm:gap-3">
-                <span className="text-[#3498DB] text-lg sm:text-xl font-bold">✓</span>
-                <span>Sans engagement - Résiliez à tout moment</span>
-              </li>
-            </ul>
-          </div>
 
-          <div className="flex flex-col gap-3 sm:gap-4">
-            <Button
-              onClick={handleSubscribe}
-              className="w-full sm:w-auto mx-auto bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-bold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-10 shadow-lg shadow-[#3498DB]/30"
-            >
-              <Crown className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-              <span className="hidden sm:inline">Commencer l'essai gratuit (0€)</span>
-              <span className="sm:hidden">Essai gratuit 0€</span>
-            </Button>
-            <Button
-              onClick={() => router.push('/')}
-              variant="outline"
-              className="w-full sm:w-auto mx-auto border-white/20 text-white/80 hover:bg-white/10 hover:text-white font-label text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8"
-            >
-              Découvrir plus de contenu
-            </Button>
-          </div>
-        </Card>
-      </div>
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <Button
+                onClick={handleSubscribe}
+                className="w-full sm:w-auto mx-auto bg-gradient-to-r from-[#3498DB] to-[#0F4C81] hover:from-[#3498DB]/90 hover:to-[#0F4C81]/90 text-white font-label font-bold text-sm sm:text-base h-12 sm:h-14 px-6 sm:px-10 shadow-lg shadow-[#3498DB]/30"
+              >
+                <Crown className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                <span className="hidden sm:inline">Commencer l'essai gratuit (0€)</span>
+                <span className="sm:hidden">Essai gratuit 0€</span>
+              </Button>
+              <Button
+                onClick={() => router.push('/')}
+                variant="outline"
+                className="w-full sm:w-auto mx-auto border-white/20 text-white/80 hover:bg-white/10 hover:text-white font-label text-sm sm:text-base h-10 sm:h-12 px-6 sm:px-8"
+              >
+                Découvrir plus de contenu
+              </Button>
+            </div>
+          </Card>
+        </div>
     );
   }
 

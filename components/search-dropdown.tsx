@@ -90,13 +90,28 @@ export function SearchDropdown({ className }: SearchDropdownProps) {
               >
                 {/* Image */}
                 <div className="relative w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 rounded-md overflow-hidden bg-[#1a1a1a] border border-[#333333]">
-                  {item.thumbnail ? (
+                  {item.thumbnail && !item.thumbnail.includes('placeholder.jpg') && item.thumbnail.startsWith('http') ? (
                     <Image
                       src={item.thumbnail}
                       alt={item.name}
                       fill
                       className="object-cover"
                       sizes="(max-width: 640px) 48px, 64px"
+                      unoptimized={false}
+                    />
+                  ) : item.thumbnail ? (
+                    <img
+                      src={item.thumbnail}
+                      alt={item.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.src && !target.src.includes('placeholder')) {
+                          target.src = '/images/placeholder-movie.jpg';
+                        } else {
+                          target.style.display = 'none';
+                        }
+                      }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/40">

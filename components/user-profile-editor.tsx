@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  getCurrentUserProfile,
   updateUserProfile,
   updateUsername,
   canChangeUsername,
   type UserProfile
 } from '@/lib/user-profile';
+import { useUserProfile } from '@/contexts/user-profile-context';
 import {
   User, Mail, Calendar, Edit2, Save, X, AlertCircle,
   CheckCircle2, Loader2, LogOut, Trash2, Lock
@@ -19,11 +19,16 @@ import {
 import { AvatarCropUpload } from '@/components/avatar-crop-upload';
 import { createClient } from '@/lib/supabase/client';
 import { deleteUserAccount } from '@/lib/delete-account';
+import { invalidateUserCache } from '@/lib/auth-cache';
 
 export function UserProfileEditor({ userEmail }: { userEmail: string }) {
   const router = useRouter();
+  
+  // OPTIMISATION: Utiliser le context pour le profil au lieu de charger manuellement
+  const { profile: contextProfile, isLoading: profileLoading, refreshProfile } = useUserProfile();
+  
+  // États locaux pour l'édition
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   
   // États d'édition
@@ -48,37 +53,22 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
+  // OPTIMISATION: Synchroniser le profil du context avec l'état local
   useEffect(() => {
-    loadProfile();
-  }, []);
-
-  const loadProfile = async () => {
-    setIsLoading(true);
-    
-    // OPTIMISATION: Charger le profil en premier
-    const profileData = await getCurrentUserProfile();
-    
-    if (profileData) {
-      setProfile(profileData);
-      setUsername(profileData.username);
-      setFirstName(profileData.first_name || '');
-      setLastName(profileData.last_name || '');
-      setBirthDate(profileData.birth_date || '');
-    
-      // OPTIMISATION: Utiliser l'ID du profil pour vérifier le changement de username
-      // Cela évite les appels getUser() multiples
-      const { canChange, nextChangeDate } = await canChangeUsername(profileData.id);
-      setCanChangeUsernameNow(canChange);
-      setNextUsernameChangeDate(nextChangeDate || null);
-    } else {
-      // Si pas de profil, vérifier quand même le changement de username
-    const { canChange, nextChangeDate } = await canChangeUsername();
-    setCanChangeUsernameNow(canChange);
-    setNextUsernameChangeDate(nextChangeDate || null);
+    if (contextProfile) {
+      setProfile(contextProfile);
+      setUsername(contextProfile.username);
+      setFirstName(contextProfile.first_name || '');
+      setLastName(contextProfile.last_name || '');
+      setBirthDate(contextProfile.birth_date || '');
+      
+      // OPTIMISATION: Charger canChangeUsername en parallèle (déjà optimisé dans la fonction)
+      canChangeUsername(contextProfile.id).then(({ canChange, nextChangeDate }) => {
+        setCanChangeUsernameNow(canChange);
+        setNextUsernameChangeDate(nextChangeDate || null);
+      });
     }
-    
-    setIsLoading(false);
-  };
+  }, [contextProfile]);
 
   const handleSaveUsername = async () => {
     if (!canChangeUsernameNow) {
@@ -95,7 +85,7 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
     if (result.success) {
       setStatus('success');
       setIsEditingUsername(false);
-      await loadProfile(); // Recharger pour mettre à jour la date
+      await refreshProfile(); // Recharger via le context
       setTimeout(() => setStatus('idle'), 3000);
     } else {
       setStatus('error');
@@ -119,7 +109,7 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
     if (result.success) {
       setStatus('success');
       setIsEditingProfile(false);
-      await loadProfile();
+      await refreshProfile(); // Recharger via le context
       setTimeout(() => setStatus('idle'), 3000);
     } else {
       setStatus('error');
@@ -133,8 +123,8 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
   const handleAvatarUploadSuccess = async (url: string) => {
     // Mettre à jour immédiatement avec la nouvelle URL
     setProfile(prev => prev ? { ...prev, avatar_url: url } : null);
-    // Recharger aussi pour être sûr
-    await loadProfile();
+    // Recharger via le context
+    await refreshProfile();
     setStatus('success');
     setTimeout(() => setStatus('idle'), 3000);
   };
@@ -148,14 +138,16 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
   const handleAvatarDeleteSuccess = async () => {
     // Mettre à jour immédiatement pour retirer l'avatar
     setProfile(prev => prev ? { ...prev, avatar_url: undefined } : null);
-    // Recharger le profil
-    await loadProfile();
+    // Recharger via le context
+    await refreshProfile();
     setStatus('success');
     setTimeout(() => setStatus('idle'), 3000);
   };
 
   const handleLogout = async () => {
     const supabase = createClient();
+    // Invalider le cache avant de se déconnecter
+    invalidateUserCache();
     await supabase.auth.signOut();
     window.location.href = '/auth/login';
   };
@@ -248,7 +240,7 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
     }
   };
 
-  if (isLoading) {
+  if (profileLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-[#3498DB]" />

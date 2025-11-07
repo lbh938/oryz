@@ -14,13 +14,28 @@ export function ContentCard({ content }: ContentCardProps) {
     <Link href={`/watch/${content.id}`} className="block group" data-content-card>
       <Card className="content-card overflow-hidden hover:shadow-2xl hover:shadow-[#3498DB]/30 hover:border-white/20 transition-all duration-300 cursor-pointer border-white/10 bg-white/5 backdrop-blur-xl h-full flex flex-col">
         <div className="relative aspect-[3/4] bg-gradient-to-br from-black/20 to-black/40 overflow-hidden rounded-t-2xl flex-shrink-0">
+          {content.thumbnail && !content.thumbnail.includes('placeholder.jpg') && content.thumbnail.startsWith('http') ? (
           <Image
             src={content.thumbnail}
             alt={content.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16vw"
             className="object-cover group-hover:scale-110 transition-transform duration-500"
+              unoptimized={false}
+            />
+          ) : (
+            <img
+              src={content.thumbnail || '/images/placeholder-movie.jpg'}
+              alt={content.name}
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src && !target.src.includes('placeholder')) {
+                  target.src = '/images/placeholder-movie.jpg';
+                }
+              }}
           />
+          )}
           
           {/* Overlay avec icône play */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

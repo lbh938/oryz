@@ -32,12 +32,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Vérifier si l'utilisateur est admin
-    const { data: adminData } = await supabase
+    // Vérifier si l'utilisateur est admin (utiliser maybeSingle pour éviter les erreurs)
+    const { data: adminData, error: adminError } = await supabase
       .from('admin_users')
       .select('is_super_admin')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (adminError) {
+      console.error('Error checking admin status:', adminError);
+      return NextResponse.json(
+        { error: 'Erreur lors de la vérification des permissions' },
+        { status: 500 }
+      );
+    }
 
     if (!adminData?.is_super_admin) {
       return NextResponse.json(
@@ -46,12 +54,49 @@ export async function POST(request: Request) {
       );
     }
 
-    // Récupérer les données de la notification
+    // Récupérer et valider les données de la notification
     const { title, body, icon, badge, tag } = await request.json();
 
-    if (!title || !body) {
+    // Validation des entrées utilisateur
+    if (!title || typeof title !== 'string') {
       return NextResponse.json(
-        { error: 'Titre et message requis' },
+        { error: 'Le titre est requis et doit être une chaîne de caractères' },
+        { status: 400 }
+      );
+    }
+
+    if (title.length > 200) {
+      return NextResponse.json(
+        { error: 'Le titre ne peut pas dépasser 200 caractères' },
+        { status: 400 }
+      );
+    }
+
+    if (!body || typeof body !== 'string') {
+      return NextResponse.json(
+        { error: 'Le message est requis et doit être une chaîne de caractères' },
+        { status: 400 }
+      );
+    }
+
+    if (body.length > 1000) {
+      return NextResponse.json(
+        { error: 'Le message ne peut pas dépasser 1000 caractères' },
+        { status: 400 }
+      );
+    }
+
+    // Validation optionnelle des URLs
+    if (icon && typeof icon === 'string' && icon.length > 500) {
+      return NextResponse.json(
+        { error: 'L\'URL de l\'icône est trop longue' },
+        { status: 400 }
+      );
+    }
+
+    if (badge && typeof badge === 'string' && badge.length > 500) {
+      return NextResponse.json(
+        { error: 'L\'URL du badge est trop longue' },
         { status: 400 }
       );
     }

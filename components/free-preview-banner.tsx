@@ -16,7 +16,7 @@ export function FreePreviewBanner({ onSubscribe }: FreePreviewBannerProps) {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
               <div className="p-1.5 sm:p-2 rounded-full flex-shrink-0 bg-[#3498DB]/20">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB]" />
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-[#3498DB]" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-white font-label font-bold text-xs sm:text-sm md:text-base truncate">

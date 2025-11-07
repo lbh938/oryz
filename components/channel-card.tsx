@@ -16,6 +16,13 @@ export function ChannelCard({ channel }: ChannelCardProps) {
             src={channel.thumbnail}
             alt={channel.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              // Fallback vers une image par défaut si l'image ne charge pas
+              const target = e.target as HTMLImageElement;
+              if (target.src && !target.src.includes('placeholder')) {
+                target.src = '/images/placeholder-channel.jpg';
+              }
+            }}
           />
           {channel.isLive && (
             <div className="absolute top-2 right-2 flex items-center gap-2 bg-red-600 text-white px-2 py-1 rounded-md text-xs font-semibold">

@@ -54,13 +54,29 @@ export async function updateSession(request: NextRequest) {
   // Le rafraîchissement est géré côté client via useAuthRefresh de manière optimisée
 
   // Protéger /protected
-  if (
-    request.nextUrl.pathname.startsWith("/protected") &&
-    !user
-  ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
+  if (request.nextUrl.pathname.startsWith("/protected")) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/login";
+      return NextResponse.redirect(url);
+    }
+    
+    // SÉCURITÉ: Protéger /protected/panel avec vérification admin
+    if (request.nextUrl.pathname.startsWith("/protected/panel")) {
+      // Vérifier si l'utilisateur est admin
+      const { data: adminData } = await supabase
+        .from('admin_users')
+        .select('is_super_admin')
+        .eq('id', user.sub) // user.sub contient l'ID dans getClaims()
+        .maybeSingle();
+      
+      if (!adminData?.is_super_admin) {
+        // Rediriger vers la page d'accueil si pas admin
+        const url = request.nextUrl.clone();
+        url.pathname = "/";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
 

@@ -159,6 +159,13 @@ export function ChannelsSlider({ channels, title = "Chaînes disponibles", showT
                       alt={channel.name}
                       className={`w-full h-full ${channel.name.includes('RMC') ? 'object-contain' : 'object-cover'} group-hover/card:scale-110 transition-transform duration-500 ease-out`}
                       loading="lazy"
+                      onError={(e) => {
+                        // Fallback vers une image par défaut si l'image ne charge pas
+                        const target = e.target as HTMLImageElement;
+                        if (target.src && !target.src.includes('placeholder')) {
+                          target.src = '/images/placeholder-channel.jpg';
+                        }
+                      }}
                     />
                     
                     {/* Bouton Favori */}

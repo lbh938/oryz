@@ -32,6 +32,16 @@ export interface ContentItem {
 
 // Convertir un Movie en ContentItem
 function movieToContentItem(movie: Movie): ContentItem {
+  // S'assurer que les sources sont toujours définies comme un tableau
+  const sources = movie.sources && Array.isArray(movie.sources) && movie.sources.length > 0
+    ? movie.sources.map(source => ({
+        name: `${source.name} (${source.language})`,
+        url: source.url,
+        provider: source.name,
+        language: source.language
+      }))
+    : [];
+  
   return {
     id: movie.id,
     name: movie.title,
@@ -41,12 +51,7 @@ function movieToContentItem(movie: Movie): ContentItem {
     category: movie.category,
     isLive: false, // Les films ne sont pas en direct
     useIframe: true, // Les films utilisent iframe
-    sources: movie.sources.map(source => ({
-      name: `${source.name} (${source.language})`,
-      url: source.url,
-      provider: source.name,
-      language: source.language
-    })),
+    sources: sources, // Toujours un tableau, même s'il est vide
     isNew: movie.isNew,
     isPopular: movie.isPopular,
     viewCount: movie.viewCount,
@@ -60,6 +65,11 @@ function movieToContentItem(movie: Movie): ContentItem {
 
 // Convertir un Channel en ContentItem
 function channelToContentItem(channel: Channel): ContentItem {
+  // S'assurer que les sources sont toujours définies comme un tableau
+  const sources = channel.sources && Array.isArray(channel.sources) && channel.sources.length > 0
+    ? channel.sources
+    : [];
+  
   return {
     id: channel.id,
     name: channel.name,
@@ -69,7 +79,7 @@ function channelToContentItem(channel: Channel): ContentItem {
     category: channel.category,
     isLive: channel.isLive,
     useIframe: channel.useIframe,
-    sources: channel.sources,
+    sources: sources, // Toujours un tableau, même s'il est vide
     isNew: channel.isNew,
     isPopular: channel.isPopular,
     quality: channel.quality,

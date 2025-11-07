@@ -206,8 +206,8 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
   }
 
   return (
-    <div data-vjs-player className={className}>
-      <div ref={videoRef} />
+    <div data-vjs-player className={className} style={{ width: '100%', height: '100%', minHeight: '400px' }}>
+      <div ref={videoRef} style={{ width: '100%', height: '100%' }} />
     </div>
   );
 }

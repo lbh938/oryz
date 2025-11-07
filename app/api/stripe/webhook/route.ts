@@ -2,18 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+// Validation des variables d'environnement au chargement du module
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+if (!webhookSecret) {
+  throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required');
+}
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-10-29.clover',
 });
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
-    return NextResponse.json({ error: 'No signature' }, { status: 400 });
+    console.error('Webhook request missing signature');
+    return NextResponse.json({ error: 'No signature provided' }, { status: 400 });
+  }
+
+  if (!webhookSecret) {
+    console.error('STRIPE_WEBHOOK_SECRET not configured');
+    return NextResponse.json(
+      { error: 'Webhook secret not configured' },
+      { status: 500 }
+    );
   }
 
   let event: Stripe.Event;
@@ -21,8 +40,18 @@ export async function POST(request: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    console.error('Webhook signature verification failed:', {
+      message: err.message,
+      type: err.type,
+      timestamp: new Date().toISOString(),
+    });
+    return NextResponse.json(
+      { 
+        error: 'Invalid signature',
+        message: err.message 
+      },
+      { status: 400 }
+    );
   }
 
   const supabase = await createClient();

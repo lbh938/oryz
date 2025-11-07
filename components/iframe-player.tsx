@@ -135,14 +135,14 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
   }
 
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div className={`relative w-full h-full ${className}`} style={{ minHeight: '400px' }}>
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-black z-10" style={{ minHeight: '400px' }}>
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB]"></div>
         </div>
       )}
       {error ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-black">
+        <div className="absolute inset-0 flex items-center justify-center bg-black" style={{ minHeight: '400px' }}>
           <div className="text-center p-4">
             <p className="text-white mb-2">Erreur de chargement</p>
             <p className="text-white/60 text-sm mb-4 break-all">{src}</p>
@@ -163,13 +163,12 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             scrolling="no"
             frameBorder="0"
             allowFullScreen
-            style={{ border: 'none' }}
+            style={{ border: 'none', minHeight: '400px' }}
             referrerPolicy="no-referrer-when-downgrade"
             {...(sandboxEnabled ? {
               sandbox: "allow-scripts allow-same-origin allow-presentation allow-forms"
             } : {})}
-            // Ajouter des attributs de sécurité supplémentaires même sans sandbox
-            loading="lazy"
+            // Retirer loading="lazy" pour les TV - charger immédiatement
             onLoad={() => {
               setLoading(false);
             }}

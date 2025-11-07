@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+// Validation des variables d'environnement au chargement du module
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-10-29.clover',
 });
 
@@ -15,12 +21,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
 
-    // Vérifier si l'utilisateur est admin
-    const { data: adminData } = await supabase
+    // Vérifier si l'utilisateur est admin (utiliser maybeSingle pour éviter les erreurs)
+    const { data: adminData, error: adminError } = await supabase
       .from('admin_users')
       .select('is_super_admin')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
+
+    if (adminError) {
+      console.error('Error checking admin status:', adminError);
+      return NextResponse.json(
+        { error: 'Erreur lors de la vérification des permissions' },
+        { status: 500 }
+      );
+    }
 
     if (!adminData || !adminData.is_super_admin) {
       return NextResponse.json({ error: 'Accès non autorisé' }, { status: 403 });

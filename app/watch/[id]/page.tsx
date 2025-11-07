@@ -104,7 +104,11 @@ export default function WatchPage({ params }: WatchPageProps) {
               </div>
             )}
 
-            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10" style={{ 
+              aspectRatio: '16/9',
+              minHeight: '400px',
+              height: 'auto'
+            }}>
               <IframePlayer src={sportUrl} />
             </div>
           </div>
@@ -117,7 +121,11 @@ export default function WatchPage({ params }: WatchPageProps) {
     notFound();
   }
 
-  const hasMultipleSources = content.sources && content.sources.length > 1;
+  // Vérifier si le contenu a plusieurs sources (au moins 2)
+  // Certains contenus peuvent avoir sources comme tableau vide ou undefined
+  const hasMultipleSources = content.sources && Array.isArray(content.sources) && content.sources.length > 1;
+  // Afficher le dropdown même s'il n'y a qu'une seule source si elle est définie dans le tableau
+  const hasSources = content.sources && Array.isArray(content.sources) && content.sources.length > 0;
   const isPremium = isPremiumChannel(content.name);
 
   return (
@@ -139,6 +147,7 @@ export default function WatchPage({ params }: WatchPageProps) {
 
           <div className="container max-w-6xl mx-auto px-3 sm:px-4 md:px-6">
           {/* Source Selector - Dropdown pour les séries avec beaucoup d'épisodes */}
+          {/* Afficher le dropdown si le contenu a plusieurs sources (au moins 2) */}
           {hasMultipleSources && (
             <div className="mb-3 sm:mb-4 flex items-center gap-2 justify-center flex-wrap">
               {/* Si plus de 5 sources, utiliser un dropdown scrollable, sinon utiliser les boutons */}
@@ -205,7 +214,11 @@ export default function WatchPage({ params }: WatchPageProps) {
 
           {/* Player */}
           <div className="mb-8">
-            <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 relative">
+            <div className="w-full bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 relative" style={{ 
+              aspectRatio: '16/9',
+              minHeight: '400px',
+              height: 'auto'
+            }}>
               {/* Badge indicateur de qualité (HLS) */}
               {!sourceDetection.isLoading && useHLS && (
                 <div className="absolute top-3 right-3 z-10">
@@ -217,7 +230,7 @@ export default function WatchPage({ params }: WatchPageProps) {
               
               {/* Détection automatique : HLS prioritaire, iframe en fallback */}
               {sourceDetection.isLoading ? (
-                <div className="flex items-center justify-center h-full bg-black">
+                <div className="flex items-center justify-center h-full bg-black" style={{ minHeight: '400px' }}>
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3498DB] mx-auto mb-4"></div>
                     <p className="text-white/70 text-sm">Détection du type de source...</p>

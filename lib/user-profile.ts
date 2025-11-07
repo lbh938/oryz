@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import { getCachedUser } from '@/lib/auth-cache';
 
 export interface UserProfile {
   id: string;
@@ -14,50 +15,24 @@ export interface UserProfile {
 
 /**
  * Récupérer le profil de l'utilisateur actuel
+ * OPTIMISATION: Utilise le cache d'authentification pour éviter les appels multiples
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const supabase = createClient();
   
-  // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
-  const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+  // OPTIMISATION: Utiliser getCachedUser() qui gère déjà getUser() avec cache
+  const user = await getCachedUser();
+  if (!user) return null;
   
-  if (sessionError || !session?.user) {
-    // Pas de session, vérifier avec getUser() pour être sûr
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) return null;
-    
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return null;
-    }
-    
-    return data;
-  }
-  
-  // Si une session existe, charger le profil immédiatement
+  // Charger le profil directement avec l'ID utilisateur authentifié
   const { data, error } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single();
   
   if (error) {
     console.error('Error fetching user profile:', error);
-    return null;
-  }
-  
-  // SÉCURITÉ: Vérifier ensuite avec getUser() pour authentifier auprès du serveur
-  // Cela garantit que les informations utilisateur sont authentiques
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
-  if (userError || !user || user.id !== session.user.id) {
-    // Si getUser() échoue ou l'ID ne correspond pas, retourner null pour sécurité
     return null;
   }
   
@@ -149,20 +124,13 @@ export async function canChangeUsername(userId?: string): Promise<{
   
   let userIdToUse = userId;
   
-  // Si userId n'est pas fourni, le récupérer
+  // Si userId n'est pas fourni, le récupérer avec cache
   if (!userIdToUse) {
-    // OPTIMISATION: Utiliser getSession() en premier pour un état initial rapide
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !session?.user) {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        return { canChange: false };
-      }
-      userIdToUse = user.id;
-    } else {
-      userIdToUse = session.user.id;
+    const user = await getCachedUser();
+    if (!user) {
+      return { canChange: false };
     }
+    userIdToUse = user.id;
   }
   
   // Faire les requêtes en parallèle pour optimiser

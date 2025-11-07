@@ -22,8 +22,27 @@ export function useAuthRefresh() {
       try {
         isRefreshingRef.current = true;
         
-        // SÉCURITÉ: Utiliser getUser() pour vérifier l'authentification avant de rafraîchir
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        // SÉCURITÉ: Utiliser getUser() avec timeout pour éviter les blocages lors de chargements longs
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondes max
+        
+        let user, userError;
+        try {
+          const result = await supabase.auth.getUser();
+          clearTimeout(timeoutId);
+          user = result.data.user;
+          userError = result.error;
+        } catch (error: any) {
+          clearTimeout(timeoutId);
+          // En cas de timeout ou erreur réseau, ne pas déconnecter l'utilisateur
+          // Garder la session existante et réessayer plus tard
+          if (error.name === 'AbortError' || error.code === 'ECONNRESET') {
+            console.warn('getUser() timed out or connection error, keeping existing session');
+            isRefreshingRef.current = false;
+            return;
+          }
+          throw error;
+        }
         
         if (userError || !user) {
           isRefreshingRef.current = false;
@@ -38,14 +57,18 @@ export function useAuthRefresh() {
           return;
         }
         
-        // Si la session expire dans moins de 15 minutes, la rafraîchir
+        // Vérifier si l'utilisateur a activé "rester connecté"
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+        
+        // Si la session expire dans moins de 15 minutes (ou 30 minutes si "rester connecté"), la rafraîchir
         if (session.expires_at) {
           const expiresAt = new Date(session.expires_at * 1000);
           const now = new Date();
           const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-          const fifteenMinutes = 15 * 60 * 1000;
+          // Si "rester connecté" est activé, rafraîchir plus tôt (30 minutes au lieu de 15)
+          const refreshThreshold = rememberMe ? 30 * 60 * 1000 : 15 * 60 * 1000;
           
-          if (force || timeUntilExpiry < fifteenMinutes) {
+          if (force || timeUntilExpiry < refreshThreshold) {
             // Rafraîchir la session
             const { error: refreshError } = await supabase.auth.refreshSession();
             
@@ -64,18 +87,24 @@ export function useAuthRefresh() {
       }
     };
 
-    // Rafraîchir immédiatement au montage
-    refreshSession(true);
+    // NE PAS rafraîchir immédiatement au montage pour éviter les déconnexions
+    // lors de chargements longs. Le middleware gère déjà la vérification de session.
+    // refreshSession(true); // DÉSACTIVÉ
 
-    // Rafraîchir toutes les 3 minutes (plus agressif)
+    // Rafraîchir toutes les 30 minutes (moins agressif pour éviter les déconnexions)
     const interval = setInterval(() => {
       refreshSession(false);
-    }, 3 * 60 * 1000);
+    }, 30 * 60 * 1000); // 30 minutes au lieu de 3
 
-    // Rafraîchir lors du focus de la fenêtre (mais pas de manière agressive)
+    // Rafraîchir lors du focus de la fenêtre avec débounce pour éviter les déconnexions
+    let focusTimeout: NodeJS.Timeout | null = null;
     const handleFocus = () => {
-      // Ne rafraîchir que si la session expire bientôt (éviter les rafraîchissements inutiles)
-      refreshSession(false);
+      // Débouncer : attendre 5 secondes avant de rafraîchir
+      // Cela évite les refreshs multiples lors de changements d'onglets rapides
+      if (focusTimeout) clearTimeout(focusTimeout);
+      focusTimeout = setTimeout(() => {
+        refreshSession(false);
+      }, 5000);
     };
     window.addEventListener('focus', handleFocus);
 
@@ -94,6 +123,10 @@ export function useAuthRefresh() {
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', handleFocus);
+      // Nettoyer le timeout de focus
+      if (focusTimeout) {
+        clearTimeout(focusTimeout);
+      }
       // Ne plus écouter visibilitychange et beforeunload pour éviter les déconnexions
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
