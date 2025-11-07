@@ -522,5 +522,631 @@ export const movies: Movie[] = [
     ]
   },
 
+  {
+    id: 'a-contre-sens-3-2025',
+    title: 'À contre-sens 3',
+    description: 'Troisième opus de la série À contre-sens, poursuivant les aventures et les défis des personnages principaux.',
+    thumbnail: '/images/movies/a-contre-sens-3.jpg',
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Action', 'Thriller'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 56000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/uvvw94aar6z4',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'les-sneetches-2025',
+    title: 'Les Sneetches',
+    description: 'Adaptation animée de la célèbre histoire du Dr. Seuss sur l\'acceptation et la diversité.',
+    thumbnail: '/images/movies/les-sneetches.jpg',
+    year: 2025,
+    duration: '1h 25min',
+    genre: ['Animation', 'Famille'],
+    rating: 7.5,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 48000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/3b0jdu79pi41',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'yoroi-2025',
+    title: 'Yoroï',
+    description: 'Un film d\'action épique mettant en scène des samouraïs et leurs armures légendaires.',
+    thumbnail: '/images/movies/yoroi.jpg',
+    year: 2025,
+    duration: '2h 10min',
+    genre: ['Action', 'Aventure', 'Historique'],
+    rating: 7.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 72000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://player.videasy.net/movie/1358491',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'man-of-steel-2013',
+    title: 'Man of Steel',
+    description: 'L\'origine de Superman, de son enfance sur Krypton à son arrivée sur Terre où il devient le plus puissant héros de la planète.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/7rIPjn5TUK04O25Z3mMf3ZXXP1X.jpg',
+    isFullUrl: true,
+    year: 2013,
+    duration: '2h 23min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: false,
+    isPopular: true,
+    viewCount: 189000,
+    sources: [
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/owqxqvpmazmkv7',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Streamtape',
+        url: 'https://streamtape.com/e/0RpVg9p229hbOD7',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/p3k93xchaw6c',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Voe',
+        url: 'https://voe.sx/e/uigarreh8onu',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'avengers-l-ere-d-ultron-2015',
+    title: 'Avengers : L\'Ère d\'Ultron',
+    description: 'Les Avengers doivent faire équipe pour arrêter Ultron, une intelligence artificielle terrifiante créée par Tony Stark.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/4ssDuvEDkSArWEdyBl2X5Hv78NX.jpg',
+    isFullUrl: true,
+    year: 2015,
+    duration: '2h 21min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.3,
+    category: 'Movies',
+    isNew: false,
+    isPopular: true,
+    viewCount: 245000,
+    sources: [
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/0mh33fyc3dhe',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Streamtape',
+        url: 'https://streamtape.com/e/D2g4kWvL9BskzzJ',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/ele0q63da7eq1p',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'xeno-2025',
+    title: 'Xeno',
+    description: 'Un thriller de science-fiction suivant une rencontre avec une forme de vie extraterrestre mystérieuse.',
+    thumbnail: '/images/movies/xeno.jpg',
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Science-Fiction', 'Thriller', 'Horreur'],
+    rating: 7.2,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 64000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/71b22wnvzhwk',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'batman-azteca-choque-de-imperios-2025',
+    title: 'Batman Azteca: Choque de imperios',
+    description: 'Une version alternative de Batman dans un univers inspiré de la culture aztèque, où le héros doit affronter de puissants empires.',
+    thumbnail: '/images/movies/batman-azteca.jpg',
+    year: 2025,
+    duration: '1h 40min',
+    genre: ['Animation', 'Action', 'Aventure'],
+    rating: 7.6,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 58000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/73jwhqfybz0l',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'mcwalter-2025',
+    title: 'McWalter',
+    description: 'Un film dramatique suivant les défis et les triomphes d\'un personnage dans un monde moderne complexe.',
+    thumbnail: '/images/movies/mcwalter.jpg',
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Drame'],
+    rating: 6.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 32000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/sczrbnx20rtv',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'thunderbolts-2025',
+    title: 'Thunderbolts*',
+    description: 'Une équipe de super-vilains réformés qui travaillent pour le gouvernement dans des missions secrètes et dangereuses.',
+    thumbnail: '/images/movies/thunderbolts.jpg',
+    year: 2025,
+    duration: '2h 15min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.4,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 156000,
+    sources: [
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/r6n7o74dtvpddz',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/u30ovgkszrap',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'karate-kid-legends-2025',
+    title: 'Karate Kid: Legends',
+    description: 'Une nouvelle génération de héros du karaté émerge, suivant les traces des légendes qui les ont précédés.',
+    thumbnail: '/images/movies/karate-kid-legends.jpg',
+    year: 2025,
+    duration: '2h 5min',
+    genre: ['Action', 'Drame', 'Sport'],
+    rating: 7.7,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 98000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/v7cvb8oy84um',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'lilo-stitch-2025',
+    title: 'Lilo & Stitch',
+    description: 'Une jeune fille hawaïenne adopte un chien qui s\'avère être un expériment génétique extraterrestre en fuite.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/56I6d8IZaNeXo8Yqcyvj7qPf3vZ.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '1h 25min',
+    genre: ['Animation', 'Famille', 'Comédie'],
+    rating: 7.5,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 178000,
+    sources: [
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/03rjvqwmcenjlm',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/l3tqjj7b7tnu',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'happy-gilmore-2-2025',
+    title: 'Happy Gilmore 2',
+    description: 'Suite des aventures du golfeur excentrique Happy Gilmore qui retourne sur les greens pour de nouvelles compétitions.',
+    thumbnail: '/images/movies/happy-gilmore-2.jpg',
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Comédie', 'Sport'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 112000,
+    sources: [
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/elz1w9xwh771q',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/mv18ypy8rd1m',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'the-pickup-2025',
+    title: 'The Pickup',
+    description: 'Un thriller moderne suivant les conséquences d\'une rencontre apparemment innocente qui tourne mal.',
+    thumbnail: '/images/movies/the-pickup.jpg',
+    year: 2025,
+    duration: '1h 40min',
+    genre: ['Thriller', 'Drame'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 45000,
+    sources: [
+      {
+        name: 'VF - Mixdrop',
+        url: 'https://mixdrop.ag/e/360n0410av7147',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://dsvplay.com/e/vkvjr54zy97n',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'the-occupant-2025',
+    title: 'The Occupant',
+    description: 'Un thriller psychologique où un nouveau résident découvre que sa maison cache des secrets terrifiants.',
+    thumbnail: '/images/movies/the-occupant.jpg',
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Thriller', 'Horreur'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 67000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://uqload.cx/embed-u412j09xolbj.html',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'together-2025',
+    title: 'Together',
+    description: 'Un drame émotionnel explorant les liens familiaux et les défis de rester unis face à l\'adversité.',
+    thumbnail: '/images/movies/together.jpg',
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Drame', 'Famille'],
+    rating: 7.3,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 38000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/mri79gvan4xt',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'souviens-toi-l-ete-dernier-2025',
+    title: 'Souviens-toi… l\'été dernier',
+    description: 'Un thriller d\'horreur où un groupe d\'amis est hanté par les secrets d\'un été passé qui refont surface.',
+    thumbnail: '/images/movies/souviens-toi-l-ete-dernier.jpg',
+    year: 2025,
+    duration: '1h 50min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 7.2,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 89000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://supervideo.cc/e/yg1530hdx7pj',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'captain-america-brave-new-world-2025',
+    title: 'Captain America : Brave New World',
+    description: 'Sam Wilson endosse le rôle de Captain America dans un nouveau monde où il doit faire face à de nouveaux défis et ennemis.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/7gKI9hpEMcZUQpNgKrkmzQ5b90u.jpg',
+    isFullUrl: true,
+    year: 2025,
+    duration: '2h 10min',
+    genre: ['Action', 'Science-Fiction', 'Aventure'],
+    rating: 7.6,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 198000,
+    sources: [
+      {
+        name: 'VF',
+        url: 'https://kakaflix.lol/doo2/newPlayer.php?id=24e2d15c-9791-42d3-9cc7-57051eec07aa',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'borderlands-2024',
+    title: 'Borderlands',
+    description: 'Adaptation du célèbre jeu vidéo, suivant un groupe de chasseurs de trésors sur la planète Pandora.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/8x9z7FpZ8K7q3K5L2M1N9O0P1Q2R.jpg',
+    isFullUrl: true,
+    year: 2024,
+    duration: '2h 5min',
+    genre: ['Action', 'Science-Fiction', 'Comédie'],
+    rating: 6.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 142000,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-9234br9fd081.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-wkuw3v39wrkq.html',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'the-crow-2024',
+    title: 'The Crow',
+    description: 'Remake du classique de 1994, suivant un musicien ressuscité qui cherche à venger sa mort et celle de sa fiancée.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/9x8y7zFpZ8K7q3K5L2M1N9O0P1Q2R.jpg',
+    isFullUrl: true,
+    year: 2024,
+    duration: '2h 0min',
+    genre: ['Action', 'Thriller', 'Horreur'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 156000,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-0almbrj7q4na.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-yqoqhsyoyrpq.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/bigwar5//newPlayer.php?id=e0412b9a-0c41-45a2-955a-d54eee5d2225',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'back-in-action-2025',
+    title: 'Back in Action',
+    description: 'Un film d\'action palpitant où des héros doivent revenir sur le terrain pour affronter une nouvelle menace.',
+    thumbnail: '/images/movies/back-in-action.jpg',
+    year: 2025,
+    duration: '1h 55min',
+    genre: ['Action', 'Thriller'],
+    rating: 7.1,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 98000,
+    sources: [
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-17rr42egsvgf.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol//bigwar/newPlayer.php?id=92b703b0-3155-4e18-bd70-6868d015e367',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'the-substance-2024',
+    title: 'The Substance',
+    description: 'Un thriller psychologique intense explorant les limites de la science et de l\'humanité.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/8x9y7zFpZ8K7q3K5L2M1N9O0P1Q2R.jpg',
+    isFullUrl: true,
+    year: 2024,
+    duration: '2h 15min',
+    genre: ['Thriller', 'Horreur', 'Science-Fiction'],
+    rating: 7.8,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 134000,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-xlgv16pt5ipd.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-b1q2azkgnn0b.html',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'heretic-2024',
+    title: 'Heretic',
+    description: 'Un thriller d\'horreur où un groupe de personnes est confronté à des forces maléfiques et des secrets terrifiants.',
+    thumbnail: '/images/movies/heretic.jpg',
+    year: 2024,
+    duration: '1h 50min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 7.0,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 87000,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-fabsqbr4fnnc.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-5m77mjqxmbe6.html',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'novocaine-2025',
+    title: 'Novocaïne',
+    description: 'Un thriller médical où un dentiste se retrouve impliqué dans une conspiration mortelle.',
+    thumbnail: '/images/movies/novocaine.jpg',
+    year: 2025,
+    duration: '1h 45min',
+    genre: ['Thriller', 'Drame'],
+    rating: 6.9,
+    category: 'Movies',
+    isNew: true,
+    isPopular: false,
+    viewCount: 54000,
+    sources: [
+      {
+        name: 'VF - ViDZY',
+        url: 'https://vidzy.org/embed-rcfrj13z2ibs.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-nzouxlt2zdhl.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol/doo2/newPlayer.php?id=3605af59-ca34-4c0b-bc6b-3a5c65e86dc6',
+        language: 'VF'
+      }
+    ]
+  },
+
+  {
+    id: 'smile-2-2024',
+    title: 'Smile 2',
+    description: 'Suite du film d\'horreur Smile, où le maléfique sourire continue de se propager et de terroriser de nouvelles victimes.',
+    thumbnail: 'https://image.tmdb.org/t/p/original/7x8y9zFpZ8K7q3K5L2M1N9O0P1Q2R.jpg',
+    isFullUrl: true,
+    year: 2024,
+    duration: '1h 55min',
+    genre: ['Horreur', 'Thriller'],
+    rating: 7.3,
+    category: 'Movies',
+    isNew: true,
+    isPopular: true,
+    viewCount: 167000,
+    sources: [
+      {
+        name: 'VF - Uqload',
+        url: 'https://uqload.cx/embed-6ftyubpclf1r.html',
+        language: 'VF'
+      },
+      {
+        name: 'VF - Dood.Stream',
+        url: 'https://kakaflix.lol//bigwar/newPlayer.php?id=f6ccacf1-035b-4d4f-8e14-fe67a147e636',
+        language: 'VF'
+      }
+    ]
+  },
+
 ];
 
