@@ -59,6 +59,7 @@ export default function TVPage() {
           allSources: allSources.length > 0 ? allSources : undefined
         };
       });
+      console.log('📺 Mode TV - Chaînes chargées:', channelList.length);
       setContentList(channelList);
       // Sélectionner la première chaîne par défaut
       if (!selectedContent || selectedContent.type !== 'channel') {
@@ -80,6 +81,7 @@ export default function TVPage() {
             language: s.language
           }))
         }));
+      console.log('🎬 Mode TV - Films chargés:', movieList.length);
       setContentList(movieList);
       // Sélectionner le premier film par défaut
       if (!selectedContent || selectedContent.type !== 'movie') {
@@ -87,6 +89,7 @@ export default function TVPage() {
       }
     } else if (activeTab === 'series') {
       // Les séries n'existent pas dans le système actuel, on affiche un message
+      console.log('📺 Mode TV - Séries: Aucune série disponible');
       setContentList([]);
       setSelectedContent(null);
     } else if (activeTab === 'documentaries') {
@@ -105,6 +108,7 @@ export default function TVPage() {
             language: s.language
           }))
         }));
+      console.log('📚 Mode TV - Documentaires chargés:', docList.length);
       setContentList(docList);
       if (!selectedContent || selectedContent.type !== 'movie') {
         setSelectedContent(docList[0]);
@@ -120,55 +124,43 @@ export default function TVPage() {
           <img src="/logo.png" alt="ORYZ" className="h-12" />
           <h1 className="text-white text-3xl font-display font-bold">MODE TV</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => setActiveTab('channels')}
-            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-3 rounded-lg text-base sm:text-lg font-label font-semibold transition-all ${
               activeTab === 'channels'
                 ? 'bg-white text-[#0F4C81]'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <Tv className="h-5 w-5" />
-            Chaînes
+            <Tv className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden sm:inline">Chaînes</span>
+            <span className="sm:hidden">TV</span>
           </button>
           <button
             onClick={() => setActiveTab('movies')}
-            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-3 rounded-lg text-base sm:text-lg font-label font-semibold transition-all ${
               activeTab === 'movies'
                 ? 'bg-white text-[#0F4C81]'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <Film className="h-5 w-5" />
+            <Film className="h-4 w-4 sm:h-5 sm:w-5" />
             Films
           </button>
           <button
-            onClick={() => setActiveTab('series')}
-            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
-              activeTab === 'series'
-                ? 'bg-white text-[#0F4C81]'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <rect x="2" y="7" width="20" height="15" rx="2" ry="2" strokeWidth="2"/>
-              <polyline points="17 2 12 7 7 2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Séries
-          </button>
-          <button
             onClick={() => setActiveTab('documentaries')}
-            className={`flex items-center gap-2 px-5 py-3 rounded-lg text-lg font-label font-semibold transition-all ${
+            className={`flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-3 rounded-lg text-base sm:text-lg font-label font-semibold transition-all ${
               activeTab === 'documentaries'
                 ? 'bg-white text-[#0F4C81]'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Docs
+            <span className="hidden sm:inline">Documentaires</span>
+            <span className="sm:hidden">Docs</span>
           </button>
         </div>
       </header>
@@ -178,10 +170,9 @@ export default function TVPage() {
         {/* Liste de contenu à gauche */}
         <aside className="w-96 bg-[#1a1a1a] border-r border-[#333333] overflow-y-auto">
           <div className="p-4">
-            <h2 className="text-white text-xl font-label font-semibold mb-4">
+            <h2 className="text-white text-lg sm:text-xl font-label font-semibold mb-4">
               {activeTab === 'channels' && 'Toutes les chaînes'}
               {activeTab === 'movies' && 'Films disponibles'}
-              {activeTab === 'series' && 'Séries disponibles'}
               {activeTab === 'documentaries' && 'Documentaires disponibles'}
             </h2>
             <div className="space-y-2">
@@ -216,9 +207,8 @@ export default function TVPage() {
                     <p className="text-lg font-label font-semibold truncate">
                       {item.name}
                     </p>
-                    <p className="text-sm text-white/60">
+                    <p className="text-xs sm:text-sm text-white/60">
                       {item.type === 'channel' ? 'Chaîne TV' : 
-                       activeTab === 'series' ? 'Série' :
                        activeTab === 'documentaries' ? 'Documentaire' : 'Film'}
                     </p>
                   </div>
