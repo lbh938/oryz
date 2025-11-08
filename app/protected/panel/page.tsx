@@ -226,15 +226,21 @@ export default function AdminPage() {
 
   // Sauvegarder le paramètre sandbox
   const handleSaveSandbox = async () => {
+    console.log('🔧 handleSaveSandbox called, current value:', iframeSandboxEnabled);
     setIsSavingSandbox(true);
     setSaveStatus('idle');
 
     try {
+      const newValue = iframeSandboxEnabled ? 'true' : 'false';
+      console.log('📤 Sending update for iframe_sandbox_enabled:', newValue);
+      
       const success = await updateAppSetting(
         'iframe_sandbox_enabled',
-        iframeSandboxEnabled ? 'true' : 'false',
+        newValue,
         'Active ou désactive l\'attribut sandbox sur les iframes de lecture vidéo'
       );
+
+      console.log('📥 Update result:', success);
 
       if (success) {
         setSaveStatus('success');
@@ -243,7 +249,7 @@ export default function AdminPage() {
         setSaveStatus('error');
       }
     } catch (error) {
-      console.error('Error saving sandbox setting:', error);
+      console.error('❌ Error saving sandbox setting:', error);
       setSaveStatus('error');
     } finally {
       setIsSavingSandbox(false);
@@ -252,15 +258,21 @@ export default function AdminPage() {
 
   // Sauvegarder le paramètre free preview
   const handleSaveFreePreview = async () => {
+    console.log('🔧 handleSaveFreePreview called, current value:', freePreviewEnabled);
     setIsSavingFreePreview(true);
     setSaveStatus('idle');
 
     try {
+      const newValue = freePreviewEnabled ? 'true' : 'false';
+      console.log('📤 Sending update for free_preview_enabled:', newValue);
+      
       const success = await updateAppSetting(
         'free_preview_enabled',
-        freePreviewEnabled ? 'true' : 'false',
+        newValue,
         'Active ou désactive le visionnage gratuit de 15 minutes pour les chaînes premium'
       );
+
+      console.log('📥 Update result:', success);
 
       if (success) {
         setSaveStatus('success');
@@ -269,7 +281,7 @@ export default function AdminPage() {
         setSaveStatus('error');
       }
     } catch (error) {
-      console.error('Error saving free preview setting:', error);
+      console.error('❌ Error saving free preview setting:', error);
       setSaveStatus('error');
     } finally {
       setIsSavingFreePreview(false);

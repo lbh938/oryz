@@ -522,9 +522,15 @@ export async function getAppSetting(key: string): Promise<string | null> {
     .from('app_settings')
     .select('value')
     .eq('key', key)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
+    console.error(`Error fetching app setting '${key}':`, error);
+    return null;
+  }
+
+  if (!data) {
+    console.log(`App setting '${key}' not found, returning null`);
     return null;
   }
 
@@ -536,21 +542,30 @@ export async function getAppSetting(key: string): Promise<string | null> {
  */
 export async function updateAppSetting(key: string, value: string, description?: string): Promise<boolean> {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) {
+  if (authError || !user) {
+    console.error('User not authenticated for updateAppSetting:', authError);
     return false;
   }
 
+  console.log(`Updating app setting '${key}' to '${value}'`);
+
   // Vérifier si le paramètre existe
-  const { data: existing } = await supabase
+  const { data: existing, error: fetchError } = await supabase
     .from('app_settings')
     .select('id')
     .eq('key', key)
-    .single();
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error(`Error checking existing setting '${key}':`, fetchError);
+    return false;
+  }
 
   if (existing) {
     // Mettre à jour
+    console.log(`Updating existing setting '${key}' (id: ${existing.id})`);
     const { error } = await supabase
       .from('app_settings')
       .update({
@@ -561,9 +576,15 @@ export async function updateAppSetting(key: string, value: string, description?:
       })
       .eq('key', key);
 
-    return !error;
+    if (error) {
+      console.error(`Error updating setting '${key}':`, error);
+      return false;
+    }
+    console.log(`Successfully updated setting '${key}'`);
+    return true;
   } else {
     // Créer
+    console.log(`Creating new setting '${key}'`);
     const { error } = await supabase
       .from('app_settings')
       .insert({
@@ -573,7 +594,12 @@ export async function updateAppSetting(key: string, value: string, description?:
         updated_by: user.id
       });
 
-    return !error;
+    if (error) {
+      console.error(`Error creating setting '${key}':`, error);
+      return false;
+    }
+    console.log(`Successfully created setting '${key}'`);
+    return true;
   }
 }
 
