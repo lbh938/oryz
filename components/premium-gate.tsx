@@ -81,8 +81,8 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
 
       {/* Overlay de message après 15 minutes (sans bloquer la vidéo) */}
       {showOverlayMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <Card className="max-w-md w-full p-6 sm:p-8 bg-gradient-to-br from-[#0F4C81]/95 to-[#3498DB]/95 border-[#3498DB]/50 shadow-2xl animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md" style={{ pointerEvents: 'auto' }}>
+          <Card className="max-w-md w-full p-6 sm:p-8 bg-gradient-to-br from-[#0F4C81]/98 to-[#3498DB]/98 border-[#3498DB]/50 shadow-2xl animate-in fade-in zoom-in duration-300 relative z-[10000]">
             <div className="flex flex-col items-center text-center gap-4 sm:gap-6">
               {/* Icône */}
               <div className="relative">
@@ -97,20 +97,20 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
                 <h3 className="text-xl sm:text-2xl font-display font-bold text-white">
                   Temps de visionnage écoulé
                 </h3>
-                <p className="text-white/90 text-sm">
+                <p className="text-white/90 text-sm sm:text-base">
                   Vous avez atteint la limite de 15 minutes de visionnage gratuit.
                 </p>
-                <p className="text-white/70 text-xs">
+                <p className="text-white/70 text-xs sm:text-sm">
                   La vidéo continue, mais passez Premium pour une expérience sans interruption !
                 </p>
               </div>
 
               {/* Avantages Premium */}
               <div className="w-full space-y-2 bg-white/10 rounded-lg p-3 sm:p-4 border border-white/20">
-                <p className="text-white/80 text-xs font-semibold uppercase tracking-wide">
+                <p className="text-white/80 text-xs font-semibold uppercase tracking-wide mb-2">
                   Avec Premium :
                 </p>
-                <ul className="space-y-1.5 text-xs sm:text-sm text-white/90">
+                <ul className="space-y-1.5 text-xs sm:text-sm text-white/90 text-left">
                   <li className="flex items-center gap-2">
                     <Crown className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-300 flex-shrink-0" />
                     <span>Visionnage illimité</span>
@@ -126,16 +126,23 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
                 </ul>
               </div>
 
-              {/* Boutons */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
-                <Link href="/subscription" className="flex-1">
-                  <Button className="w-full bg-white text-[#0F4C81] hover:bg-white/90 font-semibold text-sm">
+              {/* Boutons - S'assurer qu'ils sont bien visibles et cliquables */}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full mt-2">
+                <Link href="/subscription" className="flex-1" style={{ pointerEvents: 'auto', zIndex: 10001 }}>
+                  <Button 
+                    className="w-full bg-white text-[#0F4C81] hover:bg-white/90 font-semibold text-sm h-10 sm:h-11 shadow-lg hover:shadow-xl transition-all"
+                    style={{ pointerEvents: 'auto' }}
+                  >
                     <Crown className="h-4 w-4 mr-2" />
                     Voir les offres
                   </Button>
                 </Link>
-                <Link href="/" className="flex-1">
-                  <Button variant="outline" className="w-full border-white/40 text-white hover:bg-white/10 text-sm">
+                <Link href="/" className="flex-1" style={{ pointerEvents: 'auto', zIndex: 10001 }}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-white/40 text-white hover:bg-white/10 text-sm h-10 sm:h-11 shadow-lg hover:shadow-xl transition-all"
+                    style={{ pointerEvents: 'auto' }}
+                  >
                     Retour
                   </Button>
                 </Link>
