@@ -48,29 +48,24 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
   }, []);
 
   // Charger le paramètre sandbox depuis la base de données
-  // En mode PWA, désactiver le sandbox pour améliorer la compatibilité vidéo
+  // Le sandbox reste activé pour bloquer les pubs, mais avec plus de permissions en PWA
   useEffect(() => {
     const loadSandboxSetting = async () => {
       try {
-        // En mode PWA, toujours désactiver le sandbox pour la fluidité vidéo
-        if (isPWA) {
-          setSandboxEnabled(false);
-          return;
-        }
-        
         const setting = await getAppSetting('iframe_sandbox_enabled');
         // Si le paramètre existe et est explicitement désactivé, respecter le choix
-        // Sinon, activer par défaut pour la sécurité
+        // Sinon, activer par défaut pour la sécurité et bloquer les pubs
         setSandboxEnabled(setting !== 'false'); // Actif par défaut, désactivé seulement si 'false'
       } catch (error) {
-        // En cas d'erreur, désactiver en PWA, activer sinon
-        setSandboxEnabled(!isPWA);
+        // En cas d'erreur, activer par défaut pour bloquer les pubs
+        setSandboxEnabled(true);
       }
     };
     loadSandboxSetting();
   }, [isPWA]);
 
-  // Bloqueur renforcé pour les iframes sans sandbox - intercepte tous les messages
+  // Bloqueur renforcé pour les iframes - intercepte tous les messages
+  // Plus strict en PWA pour compenser les permissions sandbox étendues
   useEffect(() => {
     if (!iframeRef.current) return;
 
@@ -83,12 +78,16 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
           typeof event.data === 'object' && (
             event.data.type === 'openWindow' ||
             event.data.action === 'open' ||
-            event.data.method === 'open'
+            event.data.method === 'open' ||
+            event.data.type === 'popup' ||
+            event.data.action === 'popup'
           ) ||
           typeof event.data === 'string' && (
             event.data.includes('window.open') ||
             event.data.includes('openWindow') ||
-            event.data.includes('popup')
+            event.data.includes('popup') ||
+            event.data.includes('advertisement') ||
+            event.data.includes('ad-')
           )
         )) {
           console.warn('[Iframe Blocker] Tentative d\'ouverture bloquée:', event.data);
@@ -120,7 +119,14 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
       // Si appelé depuis un contexte suspect, bloquer
       const stack = new Error().stack || '';
       const urlString = args[0] ? String(args[0]) : '';
-      if (stack.includes('iframe') || urlString.includes('ad') || urlString.includes('popup')) {
+      
+      // Liste de mots-clés suspects pour les pubs
+      const adKeywords = ['ad', 'popup', 'banner', 'promo', 'sponsor', 'click', 'track', 'analytics'];
+      const isSuspicious = adKeywords.some(keyword => 
+        urlString.toLowerCase().includes(keyword) || stack.includes('iframe')
+      );
+      
+      if (isSuspicious) {
         console.warn('[Iframe Blocker] window.open bloqué:', args[0]);
         return null;
       }
@@ -131,7 +137,7 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
       window.removeEventListener('message', handleMessage, true);
       window.open = originalOpen;
     };
-  }, [src]); // Utiliser src au lieu de proxyUrl pour éviter l'erreur d'initialisation
+  }, [src, isPWA]); // Ajouter isPWA pour réinitialiser le bloqueur
 
   useEffect(() => {
     setError(false);
@@ -186,7 +192,10 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             style={{ border: 'none' }}
             referrerPolicy="no-referrer-when-downgrade"
             {...(sandboxEnabled ? {
-              sandbox: "allow-scripts allow-same-origin allow-presentation allow-forms"
+              // Sandbox avec permissions étendues en PWA pour la vidéo tout en bloquant les pubs
+              sandbox: isPWA 
+                ? "allow-scripts allow-same-origin allow-presentation allow-forms allow-modals allow-popups-to-escape-sandbox"
+                : "allow-scripts allow-same-origin allow-presentation allow-forms"
             } : {})}
             // Retirer loading="lazy" pour les TV - charger immédiatement
             onLoad={() => {
