@@ -167,15 +167,15 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
             {user ? (
               /* Utilisateur connecté */
               <div className="space-y-2">
-                <Button 
-                  asChild
-                  className="w-full bg-[#3498DB] hover:bg-[#3498DB]/90 text-white font-label font-semibold text-sm sm:text-base h-10 sm:h-11"
-                >
-                  <Link href="/protected" onClick={() => setIsOpen(false)}>
+                <Link href="/protected">
+                  <Button 
+                    onClick={() => setIsOpen(false)}
+                    className="w-full bg-[#3498DB] hover:bg-[#3498DB]/90 text-white font-label font-semibold text-sm sm:text-base h-10 sm:h-11"
+                  >
                     <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
                     Mon Compte
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
                 <Button 
                   onClick={handleLogout}
                   variant="outline"
