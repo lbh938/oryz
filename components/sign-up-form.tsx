@@ -115,7 +115,7 @@ function SignUpFormContent({
       
       if (redirect === '/subscription' && planId) {
         // Si l'utilisateur vient de la page d'abonnement, le connecter automatiquement
-        // et le rediriger vers Stripe checkout
+        // et le rediriger directement vers Stripe checkout
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -124,8 +124,13 @@ function SignUpFormContent({
         if (!signInError) {
           // Nettoyer localStorage
           localStorage.removeItem('selectedPlanId');
+          // Invalider le cache utilisateur pour forcer le rechargement
+          if (typeof window !== 'undefined' && (window as any).invalidateUserCache) {
+            (window as any).invalidateUserCache();
+          }
           // Rediriger vers la page d'abonnement avec le plan sélectionné
-          router.push(`/subscription?auto-subscribe=${planId}`);
+          // Utiliser window.location.href pour forcer un rechargement complet
+          window.location.href = `/subscription?auto-subscribe=${planId}`;
         } else {
           // Si la connexion automatique échoue, rediriger vers la page de connexion
           router.push("/auth/login?redirect=/subscription&plan=" + planId + "&message=" + encodeURIComponent("✅ Compte créé avec succès ! Connectez-vous pour continuer."));

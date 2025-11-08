@@ -19,7 +19,7 @@ function SubscriptionPageContent() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [promoCode, setPromoCode] = useState<string>('');
+  // Le code promo est géré directement dans Stripe checkout, pas besoin de le stocker ici
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -51,27 +51,36 @@ function SubscriptionPageContent() {
       setIsAuthenticated(!!user);
       
       // Vérifier si l'utilisateur vient de s'inscrire et doit être redirigé vers Stripe
-      if (user) {
+      if (user && isAuthenticated) {
         const autoSubscribePlanId = searchParams.get('auto-subscribe');
         const planFromStorage = localStorage.getItem('selectedPlanId');
         const planId = autoSubscribePlanId || planFromStorage;
         
-        if (planId && (status === 'free' || status === 'anonymous')) {
+        if (planId && (status === 'free' || status === 'anonymous' || !status)) {
+          // Nettoyer le localStorage immédiatement pour éviter les boucles
+          if (autoSubscribePlanId) {
+            localStorage.removeItem('selectedPlanId');
+            // Nettoyer aussi l'URL pour éviter les rechargements
+            if (typeof window !== 'undefined') {
+              const newUrl = new URL(window.location.href);
+              newUrl.searchParams.delete('auto-subscribe');
+              window.history.replaceState({}, '', newUrl.toString());
+            }
+          }
+          
           // Scroller vers le plan sélectionné
           scrollToPlan(planId);
           
           // Trouver le plan correspondant
           const plan = PLANS.find(p => p.id === planId);
-          if (plan) {
+          if (plan && plan.priceId) {
             // Attendre un peu que l'état soit mis à jour puis lancer l'abonnement
             setTimeout(() => {
               handleSubscribe(plan);
-              // Nettoyer le localStorage après utilisation
-              localStorage.removeItem('selectedPlanId');
-            }, 1500);
+            }, 2000);
           }
         }
-      } else {
+      } else if (!user && !isAuthenticated) {
         // Vérifier si un plan est enregistré dans localStorage (pour redirection après inscription)
         const planFromStorage = localStorage.getItem('selectedPlanId');
         if (planFromStorage) {
@@ -83,24 +92,8 @@ function SubscriptionPageContent() {
 
     checkAuth();
 
-    // Écouter les changements d'authentification et réauthentifier
-    const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // SÉCURITÉ: Réauthentifier l'utilisateur à chaque changement d'état
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        setUser(null);
-        setIsAuthenticated(false);
-        return;
-      }
-      
-      setUser(user ?? null);
-      setIsAuthenticated(!!user);
-    });
-
-    return () => {
-      authSubscription.unsubscribe();
-    };
+    // Ne pas écouter onAuthStateChange pour éviter les déconnexions intempestives
+    // Le contexte global gère déjà l'état d'authentification
   }, [status, searchParams]); // Dépendances stables
 
   // Fonction pour vérifier si l'utilisateur a un abonnement actif (utilise le contexte global)
@@ -168,7 +161,7 @@ function SubscriptionPageContent() {
         body: JSON.stringify({
           priceId: plan.priceId,
           planId: plan.id,
-          promoCode: promoCode.trim() || undefined,
+          // Le code promo est géré directement dans Stripe checkout
         }),
       });
 
@@ -703,32 +696,6 @@ function SubscriptionPageContent() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Code promo */}
-        <div className="mt-8 sm:mt-12">
-          <Card className="bg-gradient-to-r from-[#3498DB]/10 to-[#0F4C81]/10 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
-              <div className="flex-1 w-full sm:w-auto">
-                <Label htmlFor="promoCode" className="text-white/80 text-sm mb-2 block">
-                  Code promo
-                </Label>
-                <Input
-                  id="promoCode"
-                  type="text"
-                  placeholder="Entrez votre code promo (ex: LAUNCH50)"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  className="bg-[#1a1a1a] border-[#3498DB]/30 text-white placeholder:text-white/40"
-                />
-              </div>
-              <div className="w-full sm:w-auto pt-6 sm:pt-0">
-                <p className="text-white/60 text-xs text-center sm:text-left mb-2">
-                  💰 Réduction appliquée lors du paiement
-                </p>
-              </div>
-            </div>
-          </Card>
         </div>
 
         {/* Info */}

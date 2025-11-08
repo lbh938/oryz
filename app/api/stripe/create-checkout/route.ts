@@ -15,7 +15,8 @@ const stripe = new Stripe(stripeSecretKey, {
 export async function POST(request: NextRequest) {
   // Récupérer les paramètres de la requête en premier pour les utiliser dans le catch si nécessaire
   const body = await request.json();
-  const { priceId, planId, promoCode } = body;
+  const { priceId, planId } = body;
+  // Le code promo est géré directement dans Stripe checkout (allow_promotion_codes: true)
   
   try {
     const supabase = await createClient();
@@ -195,35 +196,10 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         plan_id: planId,
       },
-      // Permettre les codes promo dans le checkout
+      // Permettre les codes promo dans le checkout Stripe
+      // L'utilisateur peut entrer son code directement dans Stripe checkout
       allow_promotion_codes: true,
     };
-
-    // Si un code promo est fourni, l'appliquer directement
-    if (promoCode && promoCode.trim()) {
-      try {
-        // Vérifier que le code promo existe dans Stripe
-        const promotionCode = await stripe.promotionCodes.list({
-          code: promoCode.trim(),
-          active: true,
-          limit: 1,
-        });
-
-        if (promotionCode.data.length > 0) {
-          // Appliquer le code promo directement
-          sessionConfig.discounts = [{
-            promotion_code: promotionCode.data[0].id,
-          }];
-        } else {
-          // Code promo invalide, mais on continue quand même
-          // L'utilisateur pourra entrer un autre code dans Stripe
-          console.warn(`Code promo invalide: ${promoCode}`);
-        }
-      } catch (error) {
-        // Erreur lors de la vérification du code promo, continuer sans
-        console.warn('Erreur lors de la vérification du code promo:', error);
-      }
-    }
 
     const checkoutSession = await stripe.checkout.sessions.create(sessionConfig);
 
@@ -296,25 +272,6 @@ export async function POST(request: NextRequest) {
           },
           allow_promotion_codes: true,
         };
-
-        // Appliquer le code promo si fourni
-        if (promoCode && promoCode.trim()) {
-          try {
-            const promotionCode = await stripe.promotionCodes.list({
-              code: promoCode.trim(),
-              active: true,
-              limit: 1,
-            });
-
-            if (promotionCode.data.length > 0) {
-              retrySessionConfig.discounts = [{
-                promotion_code: promotionCode.data[0].id,
-              }];
-            }
-          } catch (error) {
-            console.warn('Erreur lors de la vérification du code promo (retry):', error);
-          }
-        }
 
         const retrySession = await stripe.checkout.sessions.create(retrySessionConfig);
         
