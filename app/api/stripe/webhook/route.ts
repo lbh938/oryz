@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
               stripe_customer_id: session.customer as string,
               ...updateData,
               plan_type: 'kickoff',
-              price_monthly: 4.99,
+              price_monthly: 9.99,
             });
           
           if (insertError) {

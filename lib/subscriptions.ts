@@ -39,7 +39,7 @@ export const PLANS: Plan[] = [
     id: 'kickoff',
     name: 'Kick-Off',
     description: 'Accès complet : Toutes les chaînes, films, séries et matchs en direct',
-    price: 4.99,
+    price: 9.99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF || '', // À configurer dans Stripe
     features: [
       'Toutes les chaînes TV en direct (beIN SPORT, DAZN, Canal+, RMC Sport)',

@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: customerId,
         status: 'incomplete' as const, // Statut temporaire jusqu'à ce que le checkout soit complété
         plan_type: 'kickoff' as any,
-        price_monthly: 4.99,
+        price_monthly: 9.99,
       };
 
       if (existingSub) {
