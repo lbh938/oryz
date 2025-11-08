@@ -35,6 +35,13 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
                           (window.navigator as any).standalone === true ||
                           document.referrer.includes('android-app://');
       setIsPWA(isStandalone);
+      
+      // Log pour debug
+      if (isStandalone) {
+        console.log('🎬 VideoPlayer: Mode PWA détecté');
+        console.log('🔊 Audio:', !isStandalone ? 'Muté au départ' : 'Activé');
+        console.log('▶️ Autoplay:', isStandalone ? 'Direct' : 'Muté');
+      }
     };
     checkPWA();
   }, []);

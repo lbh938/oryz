@@ -43,6 +43,12 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
                           (window.navigator as any).standalone === true ||
                           document.referrer.includes('android-app://');
       setIsPWA(isStandalone);
+      
+      // Log pour debug
+      if (isStandalone) {
+        console.log('🎬 IframePlayer: Mode PWA détecté');
+        console.log('📦 Sandbox:', sandboxEnabled ? 'Activé' : 'Désactivé');
+      }
     };
     checkPWA();
   }, []);

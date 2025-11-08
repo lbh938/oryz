@@ -6,6 +6,7 @@ import { User, Shield, Home, ArrowRight } from "lucide-react";
 import { NotificationSettings } from "@/components/notification-settings";
 import { UserProfileEditor } from "@/components/user-profile-editor";
 import { SubscriptionStatus } from "@/components/subscription-status";
+import { ClearCacheButton } from "@/components/clear-cache-button";
 
 export default async function ProtectedPage() {
   const supabase = await createClient();
@@ -63,6 +64,9 @@ export default async function ProtectedPage() {
 
         {/* Statut d'abonnement - Affiché seulement si l'utilisateur n'est pas admin */}
         {!isAdmin && <SubscriptionStatus />}
+
+        {/* Clear Cache Button */}
+        <ClearCacheButton />
 
         {/* Statut Admin */}
         {isAdmin && (
