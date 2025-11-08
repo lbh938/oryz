@@ -94,9 +94,7 @@ export async function POST(request: NextRequest) {
       );
       
       if (activeSub) {
-        const planName = activeSub.plan_type === 'kickoff' ? 'Kick-Off' : 
-                        activeSub.plan_type === 'pro_league' ? 'Pro League' : 
-                        activeSub.plan_type === 'vip' ? 'VIP' : 'Premium';
+        const planName = activeSub.plan_type === 'kickoff' ? 'Kick-Off' : 'Premium';
         
         return NextResponse.json(
           { 
@@ -124,12 +122,8 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         stripe_customer_id: customerId,
         status: 'incomplete' as const, // Statut temporaire jusqu'à ce que le checkout soit complété
-        plan_type: (planId === 'kickoff' ? 'kickoff' :
-                     planId === 'pro_league' ? 'pro_league' :
-                     planId === 'vip' ? 'vip' : 'premium') as any,
-        price_monthly: planId === 'kickoff' ? 9.99 :
-                       planId === 'pro_league' ? 14.99 :
-                       planId === 'vip' ? 19.99 : 19.99,
+        plan_type: 'kickoff' as any,
+        price_monthly: 4.99,
       };
 
       if (existingSub) {

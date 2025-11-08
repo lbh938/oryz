@@ -185,10 +185,6 @@ export async function POST(request: NextRequest) {
         // Essai actif
         if (subscription.plan_type === 'kickoff') {
           userStatus = 'kickoff';
-        } else if (subscription.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (subscription.plan_type === 'vip') {
-          userStatus = 'vip';
         } else {
           userStatus = 'trial';
         }
@@ -203,10 +199,6 @@ export async function POST(request: NextRequest) {
         // Abonnement actif
         if (subscription.plan_type === 'kickoff') {
           userStatus = 'kickoff';
-        } else if (subscription.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (subscription.plan_type === 'vip') {
-          userStatus = 'vip';
         } else {
           userStatus = 'trial';
         }
@@ -221,10 +213,6 @@ export async function POST(request: NextRequest) {
       if (subscription.trial_end && new Date(subscription.trial_end) > now) {
         if (subscription.plan_type === 'kickoff') {
           userStatus = 'kickoff';
-        } else if (subscription.plan_type === 'pro_league') {
-          userStatus = 'pro_league';
-        } else if (subscription.plan_type === 'vip') {
-          userStatus = 'vip';
         } else {
           userStatus = 'trial';
         }

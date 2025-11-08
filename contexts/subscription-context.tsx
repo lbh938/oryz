@@ -22,7 +22,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Ne recréer l'objet que si les valeurs critiques changent
   const value = useMemo(() => {
     // Calculer hasPremiumAccess: admin OU statut premium
-    const hasPremiumAccess = isAdmin || ['trial', 'kickoff', 'pro_league', 'vip', 'admin'].includes(status);
+    const hasPremiumAccess = isAdmin || ['trial', 'kickoff', 'admin'].includes(status);
     
     return {
       subscription,

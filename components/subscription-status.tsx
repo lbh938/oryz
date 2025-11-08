@@ -280,10 +280,7 @@ export function SubscriptionStatus() {
           <div className="space-y-2 mb-4">
               <p className="text-white/80 text-sm font-sans">
                 <span className="font-semibold">Plan:</span>{' '}
-                {subscription.plan_type === 'kickoff' ? 'Kick-Off' :
-                 subscription.plan_type === 'pro_league' ? 'Pro League' :
-                 subscription.plan_type === 'vip' ? 'VIP' :
-                 'Premium'}
+                {subscription.plan_type === 'kickoff' ? 'Kick-Off' : 'Premium'}
               </p>
             <p className="text-white/70 text-sm font-sans">
               {statusInfo.description}
@@ -322,11 +319,7 @@ export function SubscriptionStatus() {
                   setCompleting(true);
                   try {
                     // Trouver le plan correspondant au plan_type de l'abonnement
-                    const plan = PLANS.find(p => 
-                      (p.id === 'kickoff' && subscription.plan_type === 'kickoff') ||
-                      (p.id === 'pro_league' && subscription.plan_type === 'pro_league') ||
-                      (p.id === 'vip' && subscription.plan_type === 'vip')
-                    );
+                    const plan = PLANS.find(p => p.id === 'kickoff');
 
                     if (!plan || !plan.priceId) {
                       alert('Erreur : Plan non trouvé. Veuillez contacter le support.');

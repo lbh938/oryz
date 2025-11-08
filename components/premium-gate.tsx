@@ -23,7 +23,7 @@ export function PremiumGate({ channelName, channelId, children }: PremiumGatePro
   const [isWatching, setIsWatching] = useState(false);
 
   // Déterminer si l'utilisateur a un statut premium
-  const hasPremiumStatus = ['trial', 'kickoff', 'pro_league', 'vip', 'admin'].includes(status);
+  const hasPremiumStatus = ['trial', 'kickoff', 'admin'].includes(status);
   
   // Déterminer si l'utilisateur est free (avec ou sans compte)
   const isFreeUser = status === 'free' || status === 'anonymous';

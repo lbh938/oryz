@@ -229,12 +229,8 @@ export async function POST(request: NextRequest) {
               user_id: userId,
               stripe_customer_id: session.customer as string,
               ...updateData,
-              plan_type: planId === 'kickoff' ? 'kickoff' :
-                         planId === 'pro_league' ? 'pro_league' :
-                         planId === 'vip' ? 'vip' : 'kickoff',
-              price_monthly: planId === 'kickoff' ? 9.99 :
-                             planId === 'pro_league' ? 14.99 :
-                             planId === 'vip' ? 19.99 : 9.99,
+              plan_type: 'kickoff',
+              price_monthly: 4.99,
             });
           
           if (insertError) {
@@ -296,23 +292,11 @@ export async function POST(request: NextRequest) {
 
         // Déterminer plan_type à partir du price_id
         const priceId = subscription.items.data[0]?.price.id;
-        let planType = 'kickoff';
-        if (priceId) {
-          if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_LEAGUE) {
-            planType = 'pro_league';
-          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP) {
-            planType = 'vip';
-          } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF) {
-            planType = 'kickoff';
-          }
-        }
 
         const updateData: any = {
           status,
           stripe_price_id: priceId,
-          plan_type: planType === 'kickoff' ? 'kickoff' :
-                     planType === 'pro_league' ? 'pro_league' :
-                     planType === 'vip' ? 'vip' : 'kickoff',
+          plan_type: 'kickoff',
         };
 
         if (subscription.trial_start) {

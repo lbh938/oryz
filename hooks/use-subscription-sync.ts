@@ -62,8 +62,6 @@ export function useSubscriptionSync() {
       }
       // Si current_period_end est dans le futur, l'abonnement est actif → retourner le statut selon plan_type
       if (sub.plan_type === 'kickoff') return 'kickoff';
-      if (sub.plan_type === 'pro_league') return 'pro_league';
-      if (sub.plan_type === 'vip') return 'vip';
       return 'trial';
     }
 
@@ -89,8 +87,6 @@ export function useSubscriptionSync() {
       // Si pas de dates mais qu'il y a un stripe_subscription_id, on considère que c'est actif
       // (le webhook va mettre à jour les dates prochainement)
       if (sub.plan_type === 'kickoff') return 'kickoff';
-      if (sub.plan_type === 'pro_league') return 'pro_league';
-      if (sub.plan_type === 'vip') return 'vip';
       return 'trial';
     }
 

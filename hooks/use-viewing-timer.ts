@@ -16,7 +16,7 @@ export function useViewingTimer(isActive: boolean, userStatus: string) {
 
   useEffect(() => {
     // Si l'utilisateur est premium, pas de timer
-    const isPremium = ['trial', 'kickoff', 'pro_league', 'vip', 'admin'].includes(userStatus);
+    const isPremium = ['trial', 'kickoff', 'admin'].includes(userStatus);
     if (isPremium || !isActive) {
       setTimeRemaining(null);
       setHasExceeded(false);

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 
 export type SubscriptionStatus = 'free' | 'trial' | 'active' | 'canceled' | 'past_due' | 'incomplete';
-export type PlanType = 'free' | 'kickoff' | 'pro_league' | 'vip';
+export type PlanType = 'free' | 'kickoff';
 
 export interface Subscription {
   id: string;
@@ -38,57 +38,21 @@ export const PLANS: Plan[] = [
   {
     id: 'kickoff',
     name: 'Kick-Off',
-    description: 'Essentiel : Chaînes premium, kick-off en direct et grandes compétitions',
-    price: 9.99,
+    description: 'Accès complet : Toutes les chaînes, films, séries et matchs en direct',
+    price: 4.99,
     priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_KICKOFF || '', // À configurer dans Stripe
     features: [
-      'Chaînes premium (beIN SPORT, DAZN, Canal+, RMC Sport)',
-      'Kick-off en direct',
-      'Pro League (accès complet)',
-      'Grandes compétitions (sélection)',
-      'Films et séries (accès limité)',
-      'PC, téléphone, tablette',
-      'Qualité HD'
-    ],
-    trialDays: 7
-  },
-  {
-    id: 'pro_league',
-    name: 'Pro League',
-    description: 'Complet : Tous les matchs en direct, grandes compétitions, films et séries',
-    price: 14.99,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_LEAGUE || '', // À configurer dans Stripe
-    features: [
-      'Toutes les chaînes premium',
-      'Kick-off en direct',
-      'Pro League complète',
+      'Toutes les chaînes TV en direct (beIN SPORT, DAZN, Canal+, RMC Sport)',
+      'Tous les films et séries',
+      'Tous les matchs sportifs en direct',
       'Grandes compétitions (Champion\'s League, Ligue 1, Coupe du Monde, etc.)',
-      'Matchs en direct tous championnats',
-      'Films et séries (accès complet)',
-      'PC, téléphone, tablette',
-      'Qualité HD sans limite',
-      '2 écrans simultanés'
+      'Qualité HD/4K',
+      'Streaming illimité',
+      'Multi-écrans (2 appareils)',
+      'Support 24/7',
+      'Sans engagement'
     ],
     isPopular: true,
-    trialDays: 7
-  },
-  {
-    id: 'vip',
-    name: 'VIP',
-    description: 'Premium : Accès exclusif prioritaire, toutes compétitions, contenu illimité',
-    price: 19.99,
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_VIP || '', // À configurer dans Stripe
-    features: [
-      'Toutes les chaînes premium',
-      'Tous les matchs en direct',
-      'Grandes compétitions exclusives (priorité)',
-      'Toutes compétitions mondiales',
-      'Films et séries illimités + nouveautés',
-      'PC, téléphone, tablette',
-      'Qualité HD/4K sans limite',
-      'Plusieurs écrans simultanés (3+)',
-      'Accès prioritaire aux nouveaux contenus'
-    ],
     trialDays: 7
   }
 ];
