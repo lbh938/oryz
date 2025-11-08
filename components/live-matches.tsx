@@ -56,10 +56,10 @@ export function LiveMatches() {
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent">
-              En Direct Maintenant
+              🔴 Matchs en Direct Maintenant
             </h2>
             <p className="text-xs sm:text-sm text-white/60 font-sans mt-0.5">
-              {currentTime} • {liveMatches.length} match{liveMatches.length > 1 ? 'es' : ''} en cours
+              {currentTime} • {liveMatches.length} match{liveMatches.length > 1 ? 'es' : ''} en cours de diffusion
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export function LiveMatches() {
             size="sm"
             className="border-[#3498DB] text-[#3498DB] hover:bg-[#3498DB]/10"
           >
-            Voir tous
+            📅 Programme
           </Button>
         </Link>
       </div>
