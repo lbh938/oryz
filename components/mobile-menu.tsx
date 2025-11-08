@@ -9,9 +9,10 @@ import { createClient } from '@/lib/supabase/client';
 interface MobileMenuProps {
   user: any;
   userProfile?: any;
+  isLoading?: boolean;
 }
 
-export function MobileMenu({ user, userProfile }: MobileMenuProps) {
+export function MobileMenu({ user, userProfile, isLoading = false }: MobileMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const supabase = createClient();
 
@@ -170,10 +171,11 @@ export function MobileMenu({ user, userProfile }: MobileMenuProps) {
                 <Link href="/protected">
                   <Button 
                     onClick={() => setIsOpen(false)}
-                    className="w-full bg-[#3498DB] hover:bg-[#3498DB]/90 text-white font-label font-semibold text-sm sm:text-base h-10 sm:h-11"
+                    disabled={isLoading}
+                    className="w-full bg-[#3498DB] hover:bg-[#3498DB]/90 text-white font-label font-semibold text-sm sm:text-base h-10 sm:h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-2" />
-                    Mon Compte
+                    {isLoading ? 'Chargement...' : 'Mon Compte'}
                   </Button>
                 </Link>
                 <Button 

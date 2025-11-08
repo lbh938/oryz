@@ -30,6 +30,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [mounted, setMounted] = useState(false);
+  const [isUserLoading, setIsUserLoading] = useState(true);
   
   // OPTIMISATION: Utiliser le context pour le profil au lieu de charger manuellement
   const { profile: userProfile, isLoading: profileLoading } = useUserProfile();
@@ -60,8 +61,10 @@ export function MainLayout({ children }: MainLayoutProps) {
   // Protection contre déconnexions pendant le visionnage
   useEffect(() => {
     const loadUser = async () => {
+      setIsUserLoading(true);
       const cachedUser = await getCachedUser();
       setUser(cachedUser);
+      setIsUserLoading(false);
     };
     
     loadUser();
@@ -149,7 +152,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                   /* Utilisateur connecté - avec avatar */
                   <Button 
                     variant="outline" 
-                    className="border-[#3498DB]/50 bg-[#1a1a1a] text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-4 transition-all" 
+                    disabled={isUserLoading || profileLoading}
+                    className="border-[#3498DB]/50 bg-[#1a1a1a] text-[#3498DB] hover:bg-[#3498DB] hover:border-[#3498DB] hover:text-white font-label font-semibold rounded-lg h-11 px-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
                     asChild
                   >
                     <Link href="/protected" className="flex items-center gap-2">
@@ -190,7 +194,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
 
               {/* Menu mobile - Toujours visible sur mobile */}
-              <MobileMenu user={user} userProfile={userProfile} />
+              <MobileMenu user={user} userProfile={userProfile} isLoading={isUserLoading || profileLoading} />
             </div>
           </div>
         </div>
