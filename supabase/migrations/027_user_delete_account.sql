@@ -19,14 +19,59 @@ BEGIN
     RAISE EXCEPTION 'Non authentifié';
   END IF;
   
-  -- Supprimer les abonnements push
-  DELETE FROM public.push_subscriptions WHERE push_subscriptions.user_id = v_user_id;
+  -- Supprimer les abonnements push (si table existe)
+  BEGIN
+    DELETE FROM public.push_subscriptions WHERE push_subscriptions.user_id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
   
-  -- Supprimer les préférences de notifications
-  DELETE FROM public.notification_preferences WHERE notification_preferences.user_id = v_user_id;
+  -- Supprimer les préférences de notifications (si table existe)
+  BEGIN
+    DELETE FROM public.notification_preferences WHERE notification_preferences.user_id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
   
-  -- Supprimer le profil
-  DELETE FROM public.user_profiles WHERE user_profiles.id = v_user_id;
+  -- Supprimer les likes (si table existe)
+  BEGIN
+    DELETE FROM public.likes WHERE likes.user_id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
+  
+  -- Supprimer les favoris (si table existe)
+  BEGIN
+    DELETE FROM public.favorites WHERE favorites.user_id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
+  
+  -- Supprimer les abonnements Stripe (si table existe)
+  BEGIN
+    DELETE FROM public.subscriptions WHERE subscriptions.user_id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
+  
+  -- Supprimer le profil (si table existe)
+  BEGIN
+    DELETE FROM public.user_profiles WHERE user_profiles.id = v_user_id;
+  EXCEPTION
+    WHEN undefined_table THEN
+      -- Table n'existe pas, ignorer
+      NULL;
+  END;
   
   -- Supprimer l'utilisateur de auth.users (cascade sur les autres tables)
   DELETE FROM auth.users WHERE auth.users.id = v_user_id;
