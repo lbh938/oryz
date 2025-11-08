@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { channels } from '@/lib/channels';
-import { movies } from '@/lib/movies';
+import { channels, Channel } from '@/lib/channels';
+import { movies, Movie } from '@/lib/movies';
 import { IframePlayer } from '@/components/iframe-player';
 import { VideoPlayer } from '@/components/video-player';
 import { useSourceDetection } from '@/hooks/use-source-detection';
-import { Play, Tv, Film } from 'lucide-react';
+import { Play, Tv, Film, ChevronDown } from 'lucide-react';
 
 type ContentType = 'channel' | 'movie';
 
@@ -16,27 +16,49 @@ interface ContentItem {
   url: string;
   type: ContentType;
   thumbnail?: string;
+  allSources?: Array<{ name: string; url: string; language?: string }>;
 }
 
 export default function TVPage() {
   const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [contentList, setContentList] = useState<ContentItem[]>([]);
   const [activeTab, setActiveTab] = useState<'channels' | 'movies' | 'series' | 'documentaries'>('channels');
+  const [currentSourceIndex, setCurrentSourceIndex] = useState(0);
+  const [showSourceDropdown, setShowSourceDropdown] = useState(false);
 
+  // URL actuelle basée sur la source sélectionnée
+  const currentUrl = selectedContent?.allSources?.[currentSourceIndex]?.url || selectedContent?.url || '';
+  
   // Détecter le type de source
-  const sourceDetection = useSourceDetection(selectedContent?.url || '');
+  const sourceDetection = useSourceDetection(currentUrl);
   const useHLS = sourceDetection.type === 'hls' && !sourceDetection.isLoading && !sourceDetection.error;
+
+  // Réinitialiser l'index de source quand on change de contenu
+  useEffect(() => {
+    setCurrentSourceIndex(0);
+    setShowSourceDropdown(false);
+  }, [selectedContent?.id]);
 
   useEffect(() => {
     // Préparer la liste de contenu
     if (activeTab === 'channels') {
-      const channelList: ContentItem[] = channels.map(ch => ({
-        id: ch.id,
-        name: ch.name,
-        url: ch.url,
-        type: 'channel' as ContentType,
-        thumbnail: ch.thumbnail
-      }));
+      const channelList: ContentItem[] = channels.map(ch => {
+        // Récupérer toutes les sources de la chaîne
+        const allSources = ch.sources?.map(s => ({
+          name: s.name || 'Source',
+          url: s.url,
+          language: s.provider // Utiliser provider comme langue pour les chaînes
+        })) || [];
+        
+        return {
+          id: ch.id,
+          name: ch.name,
+          url: allSources[0]?.url || ch.url,
+          type: 'channel' as ContentType,
+          thumbnail: ch.thumbnail,
+          allSources: allSources.length > 0 ? allSources : undefined
+        };
+      });
       setContentList(channelList);
       // Sélectionner la première chaîne par défaut
       if (!selectedContent || selectedContent.type !== 'channel') {
@@ -44,14 +66,19 @@ export default function TVPage() {
       }
     } else if (activeTab === 'movies') {
       const movieList: ContentItem[] = movies
-        .filter(m => m.category === 'film' && m.sources && m.sources.length > 0)
+        .filter(m => m.category === 'Movies' && m.sources && m.sources.length > 0)
         .slice(0, 50) // Limiter à 50 films pour performance
         .map(m => ({
           id: m.id,
           name: m.title,
           url: m.sources[0].url,
           type: 'movie' as ContentType,
-          thumbnail: m.thumbnail
+          thumbnail: m.thumbnail,
+          allSources: m.sources.map(s => ({
+            name: s.name || 'Source',
+            url: s.url,
+            language: s.language
+          }))
         }));
       setContentList(movieList);
       // Sélectionner le premier film par défaut
@@ -59,30 +86,24 @@ export default function TVPage() {
         setSelectedContent(movieList[0]);
       }
     } else if (activeTab === 'series') {
-      const seriesList: ContentItem[] = movies
-        .filter(m => m.category === 'series' && m.sources && m.sources.length > 0)
-        .slice(0, 50)
-        .map(m => ({
-          id: m.id,
-          name: m.title,
-          url: m.sources[0].url,
-          type: 'movie' as ContentType,
-          thumbnail: m.thumbnail
-        }));
-      setContentList(seriesList);
-      if (!selectedContent || selectedContent.type !== 'movie') {
-        setSelectedContent(seriesList[0]);
-      }
+      // Les séries n'existent pas dans le système actuel, on affiche un message
+      setContentList([]);
+      setSelectedContent(null);
     } else if (activeTab === 'documentaries') {
       const docList: ContentItem[] = movies
-        .filter(m => m.category === 'documentary' && m.sources && m.sources.length > 0)
+        .filter(m => m.category === 'Documentaries' && m.sources && m.sources.length > 0)
         .slice(0, 50)
         .map(m => ({
           id: m.id,
           name: m.title,
           url: m.sources[0].url,
           type: 'movie' as ContentType,
-          thumbnail: m.thumbnail
+          thumbnail: m.thumbnail,
+          allSources: m.sources.map(s => ({
+            name: s.name || 'Source',
+            url: s.url,
+            language: s.language
+          }))
         }));
       setContentList(docList);
       if (!selectedContent || selectedContent.type !== 'movie') {
@@ -214,14 +235,59 @@ export default function TVPage() {
         <main className="flex-1 bg-black flex flex-col">
           {selectedContent ? (
             <>
-              {/* Titre du contenu */}
+              {/* Titre du contenu et sélecteur de source */}
               <div className="bg-[#1a1a1a] p-6 border-b border-[#333333] flex-shrink-0">
-                <h2 className="text-white text-2xl font-display font-bold">
-                  {selectedContent.name}
-                </h2>
-                <p className="text-white/60 text-lg mt-1">
-                  {selectedContent.type === 'channel' ? 'En direct' : 'À la demande'}
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-white text-2xl font-display font-bold">
+                      {selectedContent.name}
+                    </h2>
+                    <p className="text-white/60 text-lg mt-1">
+                      {selectedContent.type === 'channel' ? 'En direct' : 'À la demande'}
+                    </p>
+                  </div>
+                  
+                  {/* Sélecteur de sources */}
+                  {selectedContent.allSources && selectedContent.allSources.length > 1 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowSourceDropdown(!showSourceDropdown)}
+                        className="flex items-center gap-2 px-6 py-3 bg-[#2a2a2a] hover:bg-[#3a3a3a] text-white rounded-lg transition-all text-lg font-label"
+                      >
+                        <span>
+                          {selectedContent.allSources[currentSourceIndex]?.name || `Source ${currentSourceIndex + 1}`}
+                        </span>
+                        <ChevronDown className={`h-5 w-5 transition-transform ${showSourceDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {showSourceDropdown && (
+                        <div className="absolute right-0 mt-2 w-64 bg-[#2a2a2a] rounded-lg shadow-xl border border-[#3a3a3a] overflow-hidden z-50">
+                          {selectedContent.allSources.map((source, index) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                setCurrentSourceIndex(index);
+                                setShowSourceDropdown(false);
+                              }}
+                              className={`w-full text-left px-4 py-3 text-white hover:bg-[#3a3a3a] transition-all text-lg ${
+                                index === currentSourceIndex ? 'bg-[#0F4C81]' : ''
+                              }`}
+                            >
+                              <div className="font-label font-semibold">
+                                {source.name || `Source ${index + 1}`}
+                              </div>
+                              {source.language && (
+                                <div className="text-sm text-white/60 mt-1">
+                                  {source.language}
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Player */}
@@ -241,7 +307,7 @@ export default function TVPage() {
                         channelId={selectedContent.id}
                       />
                     ) : (
-                      <IframePlayer src={selectedContent.url} />
+                      <IframePlayer src={currentUrl} />
                     )}
                   </div>
                 </div>

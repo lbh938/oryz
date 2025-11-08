@@ -56,9 +56,9 @@ export async function updateSession(request: NextRequest) {
   // Protéger /protected
   if (request.nextUrl.pathname.startsWith("/protected")) {
     if (!user) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
-      return NextResponse.redirect(url);
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    return NextResponse.redirect(url);
     }
     
     // SÉCURITÉ: Protéger /protected/panel avec vérification admin
