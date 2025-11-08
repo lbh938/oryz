@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 /**
  * API Route pour supprimer le compte utilisateur
@@ -93,7 +94,7 @@ export async function POST() {
       console.warn('Erreur suppression notification preferences:', error);
     }
 
-    // 5. Supprimer les likes (si table existe)
+    // 5. Supprimer les likes (si table existe) - Ignorer si table n'existe pas
     try {
       const { error: likesError } = await supabase
         .from('likes')
@@ -101,15 +102,21 @@ export async function POST() {
         .eq('user_id', user.id);
       
       if (likesError) {
-        console.warn('Erreur suppression likes:', likesError);
+        // Ignorer l'erreur si la table n'existe pas (code PGRST205)
+        if (likesError.code !== 'PGRST205') {
+          console.warn('Erreur suppression likes:', likesError);
+        }
       } else {
         console.log('Likes supprimés');
       }
-    } catch (error) {
-      console.warn('Erreur suppression likes:', error);
+    } catch (error: any) {
+      // Ignorer si la table n'existe pas
+      if (error?.code !== 'PGRST205') {
+        console.warn('Erreur suppression likes:', error);
+      }
     }
 
-    // 6. Supprimer les favoris (si table existe)
+    // 6. Supprimer les favoris (si table existe) - Ignorer si table n'existe pas
     try {
       const { error: favError } = await supabase
         .from('favorites')
@@ -117,12 +124,18 @@ export async function POST() {
         .eq('user_id', user.id);
       
       if (favError) {
-        console.warn('Erreur suppression favorites:', favError);
+        // Ignorer l'erreur si la table n'existe pas (code PGRST205)
+        if (favError.code !== 'PGRST205') {
+          console.warn('Erreur suppression favorites:', favError);
+        }
       } else {
         console.log('Favorites supprimés');
       }
-    } catch (error) {
-      console.warn('Erreur suppression favorites:', error);
+    } catch (error: any) {
+      // Ignorer si la table n'existe pas
+      if (error?.code !== 'PGRST205') {
+        console.warn('Erreur suppression favorites:', error);
+      }
     }
 
     // 7. Supprimer le profil utilisateur
@@ -141,29 +154,63 @@ export async function POST() {
       console.warn('Erreur suppression profil:', error);
     }
 
-    // 8. Essayer d'utiliser la fonction RPC si elle existe
+    // 8. Supprimer l'utilisateur auth avec le service role key
     try {
-      const { error: rpcError } = await supabase.rpc('delete_user');
+      // Utiliser le service role key pour avoir les permissions admin
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       
-      if (rpcError) {
-        console.warn('Fonction RPC delete_user non disponible:', rpcError);
+      if (!serviceRoleKey || !supabaseUrl) {
+        console.warn('Service role key non disponible, tentative avec RPC');
         
-        // Fallback: Supprimer via l'API admin
-        const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(user.id);
+        // Essayer d'utiliser la fonction RPC si elle existe
+        const { error: rpcError } = await supabase.rpc('delete_user');
         
-        if (deleteAuthError) {
-          console.error('Erreur suppression compte auth:', deleteAuthError);
+        if (rpcError) {
+          console.error('Erreur RPC delete_user:', rpcError);
           return NextResponse.json(
             { 
-              error: 'Impossible de supprimer le compte. Veuillez contacter le support.',
-              details: deleteAuthError.message
+              error: 'Impossible de supprimer le compte. Service role key requis.',
+              details: 'SUPABASE_SERVICE_ROLE_KEY non configuré'
             },
             { status: 500 }
           );
         }
+        
+        console.log('Compte auth supprimé via RPC');
+      } else {
+        // Créer un client admin avec le service role key
+        const supabaseAdmin = createAdminClient(supabaseUrl, serviceRoleKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        });
+        
+        // Supprimer l'utilisateur avec les permissions admin
+        const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+        
+        if (deleteAuthError) {
+          console.error('Erreur suppression compte auth:', deleteAuthError);
+          
+          // Fallback: Essayer la fonction RPC
+          const { error: rpcError } = await supabase.rpc('delete_user');
+          
+          if (rpcError) {
+            return NextResponse.json(
+              { 
+                error: 'Impossible de supprimer le compte. Veuillez contacter le support.',
+                details: deleteAuthError.message
+              },
+              { status: 500 }
+            );
+          }
+          
+          console.log('Compte auth supprimé via RPC (fallback)');
+        } else {
+          console.log('Compte auth supprimé avec succès via admin API');
+        }
       }
-      
-      console.log('Compte auth supprimé avec succès');
     } catch (error) {
       console.error('Erreur lors de la suppression du compte auth:', error);
       return NextResponse.json(
