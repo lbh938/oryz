@@ -66,33 +66,27 @@ export function MainLayout({ children }: MainLayoutProps) {
     
     loadUser();
     
-    // Écouter les changements d'auth (le UserProfileContext gère déjà le profil)
-    // OPTIMISATION: Ne pas recharger pendant le visionnage SAUF pour SIGNED_IN et SIGNED_OUT
-    const supabase = createClient();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
-      // Vérifier si on est sur une page de visionnage
+    // NE PLUS ÉCOUTER onAuthStateChange - Cela causait des déconnexions
+    // Le UserProfileContext gère déjà les changements d'auth
+    // Le middleware vérifie la session sur chaque navigation
+    // Supabase gère automatiquement le refresh de session
+    
+    // Écouter uniquement les événements de navigation pour recharger l'utilisateur
+    const handleNavigation = async () => {
+      // Recharger l'utilisateur uniquement lors de la navigation
+      // Pas pendant le visionnage pour éviter les déconnexions
       const isWatchPage = window.location.pathname.includes('/watch/');
-      
-      if (event === 'SIGNED_IN') {
-        // TOUJOURS recharger lors de la connexion (même en visionnage)
-        // pour mettre à jour l'UI immédiatement
+      if (!isWatchPage) {
         const cachedUser = await getCachedUser();
         setUser(cachedUser);
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Ne recharger que si on n'est PAS en visionnage
-        if (!isWatchPage) {
-          const cachedUser = await getCachedUser();
-          setUser(cachedUser);
-        }
-        // Si on est en visionnage, l'utilisateur sera rechargé à la prochaine navigation
-      } else if (event === 'SIGNED_OUT') {
-        // TOUJOURS recharger lors de la déconnexion (même en visionnage)
-        setUser(null);
       }
-    });
+    };
+    
+    // Écouter les événements de navigation Next.js
+    window.addEventListener('popstate', handleNavigation);
 
     return () => {
-      subscription.unsubscribe();
+      window.removeEventListener('popstate', handleNavigation);
     };
   }, []);
 

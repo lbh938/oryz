@@ -32,7 +32,7 @@ export function SiteStats() {
       {
         icon: Zap,
         value: `${liveChannels}`,
-        label: 'En direct maintenant',
+        label: 'Chaînes TV en direct',
         color: 'text-red-500'
       },
       {

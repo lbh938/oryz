@@ -29,7 +29,7 @@ export default async function Home() {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#3498DB] transition-all duration-200 group-hover:w-full"></span>
             </Link>
             <Link href="/category/foot" className="group relative text-white text-base xl:text-lg font-display font-bold transition-colors duration-200 hover:text-[#3498DB] uppercase">
-              FOOT EN DIRECTE
+              📺 CHAÎNES FOOT
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#3498DB] transition-all duration-200 group-hover:w-full"></span>
             </Link>
             <Link href="/category/series" className="group relative text-white text-base xl:text-lg font-display font-bold transition-colors duration-200 hover:text-[#3498DB] uppercase">

@@ -152,8 +152,11 @@ export default function SportsPage() {
         <div className="container max-w-7xl mx-auto px-4 sm:px-6">
           {/* Titre */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-10 bg-gradient-to-r from-[#0F4C81] to-[#3498DB] bg-clip-text text-transparent">
-            Matches Sportifs en Direct
+            📅 Programme des Matchs Sportifs
           </h1>
+          <p className="text-center text-white/70 text-sm sm:text-base mb-6">
+            Tous les matchs de la semaine • Planning complet par jour
+          </p>
 
           {/* Navigation par jour */}
           <div className="mb-8">
