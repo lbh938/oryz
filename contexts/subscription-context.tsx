@@ -7,6 +7,7 @@ interface SubscriptionContextType {
   subscription: any;
   status: UserStatus;
   isAdmin: boolean;
+  hasPremiumAccess: boolean;
   isSyncing: boolean;
   lastSync: Date | null;
   syncSubscription: () => void;
@@ -19,14 +20,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   // OPTIMISATION: Stabiliser la valeur du contexte avec useMemo pour éviter les re-renders inutiles
   // Ne recréer l'objet que si les valeurs critiques changent
-  const value = useMemo(() => ({
-    subscription,
-    status,
-    isAdmin,
-    isSyncing,
-    lastSync,
-    syncSubscription,
-  }), [
+  const value = useMemo(() => {
+    // Calculer hasPremiumAccess: admin OU statut premium
+    const hasPremiumAccess = isAdmin || ['trial', 'kickoff', 'pro_league', 'vip', 'admin'].includes(status);
+    
+    return {
+      subscription,
+      status,
+      isAdmin,
+      hasPremiumAccess,
+      isSyncing,
+      lastSync,
+      syncSubscription,
+    };
+  }, [
     subscription?.id, // ID de l'abonnement (change rarement)
     subscription?.status, // Statut de l'abonnement
     subscription?.plan_type, // Type de plan
