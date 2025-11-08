@@ -220,8 +220,11 @@ function SubscriptionPageContent() {
           </p>
           {!isAuthenticated && (
             <Card className="bg-gradient-to-r from-[#3498DB]/20 to-[#0F4C81]/20 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
-              <p className="text-white/90 text-sm sm:text-base font-label font-semibold text-center">
-                🎁 Cliquez sur "Essai gratuit" pour commencer votre essai de 7 jours (0€). Une carte de paiement est requise pour facturer automatiquement à la fin de l'essai.
+              <p className="text-white/90 text-sm sm:text-base font-label font-semibold text-center mb-2">
+                🎁 Essai gratuit de 7 jours (0€)
+              </p>
+              <p className="text-white/70 text-xs sm:text-sm text-center">
+                Une carte bancaire est requise. Vous serez automatiquement débité de 9,99€/mois à la fin de votre période d'essai. Résiliez à tout moment.
               </p>
             </Card>
           )}
@@ -250,7 +253,7 @@ function SubscriptionPageContent() {
                       ⚠️ Votre abonnement n'est pas encore activé
                     </p>
                     <p className="text-white/80 mb-4">
-                      Complétez le processus de paiement pour activer votre essai gratuit de 7 jours.
+                      Complétez le processus de paiement pour activer votre essai gratuit de 7 jours. Vous serez débité automatiquement à la fin de la période d'essai.
                     </p>
                     <Button
                       onClick={async () => {
@@ -379,9 +382,9 @@ function SubscriptionPageContent() {
                             </div>
                             {plan.trialDays && (
                               <div className="text-[#3498DB] text-[10px] sm:text-xs font-semibold text-center">
-                                <p>🎁 {plan.trialDays} jours d'essai gratuit (0€)</p>
+                                <p>🎁 {plan.trialDays} jours d'essai gratuit</p>
                                 <p className="text-white/60 text-[9px] sm:text-[10px] font-normal mt-0.5">
-                                  Carte requise, aucun débit pendant l'essai
+                                  Puis {plan.price.toFixed(2)}€/mois
                                 </p>
                               </div>
                             )}
@@ -699,9 +702,12 @@ function SubscriptionPageContent() {
         </div>
 
         {/* Info */}
-        <div className="mt-8 sm:mt-12 text-center">
+        <div className="mt-8 sm:mt-12 text-center space-y-2">
+          <p className="text-white/90 text-sm sm:text-base font-semibold">
+            💳 Débit automatique après l'essai gratuit
+          </p>
           <p className="text-white/60 text-xs sm:text-sm">
-            Sans engagement • Résiliez à tout moment • Paiement sécurisé par Stripe
+            Résiliez à tout moment • Paiement sécurisé par Stripe
           </p>
         </div>
       </div>

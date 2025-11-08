@@ -50,7 +50,7 @@ export const PLANS: Plan[] = [
       'Streaming illimité',
       'Multi-écrans (2 appareils)',
       'Support 24/7',
-      'Sans engagement'
+      'Résiliable à tout moment'
     ],
     isPopular: true,
     trialDays: 7
