@@ -11,6 +11,11 @@
   .pwa-hidden {
     display: none !important;
   }
+  
+  /* Padding top pour les pages sans MainLayout en mode PWA */
+  .pwa-pt {
+    padding-top: 5rem !important;
+  }
 }
 
 /* ===================================

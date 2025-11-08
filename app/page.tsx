@@ -10,7 +10,6 @@ import { getActiveHeroes } from "@/lib/admin-api";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
 import { channels } from "@/lib/channels";
-import { PWAFooter } from "@/components/pwa-footer";
 
 export const dynamic = 'force-dynamic';
 
@@ -70,9 +69,6 @@ export default async function Home() {
 
       {/* Site Statistics */}
       <SiteStats />
-
-      {/* Footer PWA uniquement - Petit footer compact */}
-      <PWAFooter />
     </MainLayout>
   );
 }

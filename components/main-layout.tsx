@@ -6,6 +6,7 @@ import { LogIn, Heart, User, Crown } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
 import { MobileMenu } from "@/components/mobile-menu";
 import { Footer } from "@/components/footer";
+import { PWAFooter } from "@/components/pwa-footer";
 import { SearchDropdown } from "@/components/search-dropdown";
 import { getFavoritesCount } from "@/lib/favorites";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -206,10 +207,13 @@ export function MainLayout({ children }: MainLayoutProps) {
         {children}
       </div>
 
-      {/* Footer - Caché en PWA */}
+      {/* Footer Web - Caché en PWA */}
       <div className="pwa-hidden">
         <Footer />
       </div>
+
+      {/* Footer PWA - Visible uniquement en PWA */}
+      <PWAFooter />
 
       {/* Notification Prompt - Chargé uniquement côté client */}
       <NotificationPrompt />

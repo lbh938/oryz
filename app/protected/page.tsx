@@ -29,8 +29,8 @@ export default async function ProtectedPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation simple */}
-      <nav className="border-b border-border bg-background/95 backdrop-blur-xl">
+      {/* Navigation simple - Caché en PWA car déjà dans MainLayout */}
+      <nav className="border-b border-border bg-background/95 backdrop-blur-xl pwa-hidden">
         <div className="container max-w-4xl mx-auto px-4 py-4">
           <Link href="/" className="inline-flex items-center gap-2 text-white hover:text-[#3498DB] transition-colors">
             <Home className="h-5 w-5" />
@@ -39,7 +39,7 @@ export default async function ProtectedPage() {
         </div>
       </nav>
 
-      <div className="container max-w-4xl mx-auto px-4 py-12">
+      <div className="container max-w-4xl mx-auto px-4 py-12 pwa-pt">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#0F4C81] to-[#3498DB] mb-4 shadow-lg">

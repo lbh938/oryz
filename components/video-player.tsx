@@ -22,10 +22,22 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
   const [error, setError] = useState<string | null>(null);
   const [streamUrl, setStreamUrl] = useState<string>(src);
   const [isLoading, setIsLoading] = useState(true);
+  const [isPWA, setIsPWA] = useState(false);
   
   // Activer le bloqueur de pop-ups et de publicités pendant la lecture
   usePopupBlocker(true);
   useAdBlocker(true);
+
+  // Détecter le mode PWA
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          (window.navigator as any).standalone === true ||
+                          document.referrer.includes('android-app://');
+      setIsPWA(isStandalone);
+    };
+    checkPWA();
+  }, []);
 
   // Fetch the actual stream URL if channelId is provided
   useEffect(() => {
@@ -68,8 +80,8 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
 
       const player = videojs(videoElement, {
         ...options,
-        autoplay: 'muted', // Commencer muet pour contourner les restrictions navigateur
-        muted: true, // Commencer muet
+        autoplay: isPWA ? true : 'muted', // Autoplay direct en PWA
+        muted: !isPWA, // Ne pas muter en PWA
         controls: true,
         fluid: true,
         responsive: true,
@@ -78,11 +90,14 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
         playsinline: true, // Important pour mobile
         html5: {
           vhs: {
-            overrideNative: true,
+            overrideNative: !isPWA, // Utiliser natif en PWA pour meilleures performances
             withCredentials: false,
+            enableLowInitialPlaylist: isPWA, // Démarrage plus rapide en PWA
+            smoothQualityChange: isPWA, // Transitions fluides en PWA
+            bandwidth: isPWA ? 5000000 : undefined, // Bande passante optimisée en PWA
           },
-          nativeVideoTracks: false,
-          nativeAudioTracks: false,
+          nativeVideoTracks: isPWA, // Utiliser natif en PWA
+          nativeAudioTracks: isPWA,
           nativeTextTracks: false,
         },
         sources: [
@@ -112,58 +127,64 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
         setError(null);
       });
 
-      // Démuter automatiquement après le premier play (meilleure stratégie)
-      let hasUnmuted = false;
-      
-      // Méthode 1: Démuter au premier clic utilisateur sur le lecteur (plus fiable)
-      const unmuteOnInteraction = () => {
-        if (!hasUnmuted && player.muted()) {
-          try {
-            player.muted(false);
-            hasUnmuted = true;
-            logger.debug('Video unmuted on user interaction');
-          } catch (e) {
-            logger.debug('Could not unmute on interaction');
-          }
-        }
-      };
-
-      // Écouter les interactions utilisateur
-      player.on('click', unmuteOnInteraction);
-      player.on('useractive', unmuteOnInteraction);
-      player.on('play', () => {
-        logger.debug('Video is playing');
-        // Démuter automatiquement après la lecture commence
-        if (!hasUnmuted && player.muted()) {
-          setTimeout(() => {
+      // Gestion du son différente selon le mode
+      if (!isPWA) {
+        // Mode Web: Démuter automatiquement après le premier play
+        let hasUnmuted = false;
+        
+        // Méthode 1: Démuter au premier clic utilisateur sur le lecteur (plus fiable)
+        const unmuteOnInteraction = () => {
+          if (!hasUnmuted && player.muted()) {
             try {
               player.muted(false);
               hasUnmuted = true;
-              logger.debug('Video automatically unmuted');
+              logger.debug('Video unmuted on user interaction');
             } catch (e) {
-              logger.debug('Could not unmute automatically');
+              logger.debug('Could not unmute on interaction');
             }
-          }, 1000);
-        }
-      });
+          }
+        };
 
-      // Méthode 2: Essayer de démuter quand la vidéo est prête (fallback)
-      player.ready(() => {
-        // Attendre que la vidéo soit vraiment prête
-        player.one('canplay', () => {
-          setTimeout(() => {
-            if (player.muted() && !hasUnmuted) {
+        // Écouter les interactions utilisateur
+        player.on('click', unmuteOnInteraction);
+        player.on('useractive', unmuteOnInteraction);
+        player.on('play', () => {
+          logger.debug('Video is playing');
+          // Démuter automatiquement après la lecture commence
+          if (!hasUnmuted && player.muted()) {
+            setTimeout(() => {
               try {
                 player.muted(false);
                 hasUnmuted = true;
-                logger.debug('Video unmuted on ready');
+                logger.debug('Video automatically unmuted');
               } catch (e) {
-                logger.debug('Could not unmute on ready');
+                logger.debug('Could not unmute automatically');
               }
-            }
-          }, 1500);
+            }, 1000);
+          }
         });
-      });
+
+        // Méthode 2: Essayer de démuter quand la vidéo est prête (fallback)
+        player.ready(() => {
+          // Attendre que la vidéo soit vraiment prête
+          player.one('canplay', () => {
+            setTimeout(() => {
+              if (player.muted() && !hasUnmuted) {
+                try {
+                  player.muted(false);
+                  hasUnmuted = true;
+                  logger.debug('Video unmuted on ready');
+                } catch (e) {
+                  logger.debug('Could not unmute on ready');
+                }
+              }
+            }, 1500);
+          });
+        });
+      } else {
+        // Mode PWA: Le son est déjà activé dès le départ
+        logger.debug('PWA mode: Audio enabled by default');
+      }
     }
 
     // Cleanup function
@@ -175,7 +196,7 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
         playerRef.current = null;
       }
     };
-  }, [streamUrl, options, isLoading]);
+  }, [streamUrl, options, isLoading, isPWA]);
 
   if (error) {
     return (

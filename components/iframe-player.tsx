@@ -34,22 +34,41 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
     proxyUrl = src;
   }
 
+  // Détecter le mode PWA
+  const [isPWA, setIsPWA] = useState(false);
+  
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          (window.navigator as any).standalone === true ||
+                          document.referrer.includes('android-app://');
+      setIsPWA(isStandalone);
+    };
+    checkPWA();
+  }, []);
+
   // Charger le paramètre sandbox depuis la base de données
-  // Par défaut, activer le sandbox pour la sécurité (même si le paramètre admin est désactivé)
+  // En mode PWA, désactiver le sandbox pour améliorer la compatibilité vidéo
   useEffect(() => {
     const loadSandboxSetting = async () => {
       try {
+        // En mode PWA, toujours désactiver le sandbox pour la fluidité vidéo
+        if (isPWA) {
+          setSandboxEnabled(false);
+          return;
+        }
+        
         const setting = await getAppSetting('iframe_sandbox_enabled');
         // Si le paramètre existe et est explicitement désactivé, respecter le choix
         // Sinon, activer par défaut pour la sécurité
         setSandboxEnabled(setting !== 'false'); // Actif par défaut, désactivé seulement si 'false'
       } catch (error) {
-        // En cas d'erreur, activer par défaut pour la sécurité
-        setSandboxEnabled(true);
+        // En cas d'erreur, désactiver en PWA, activer sinon
+        setSandboxEnabled(!isPWA);
       }
     };
     loadSandboxSetting();
-  }, []);
+  }, [isPWA]);
 
   // Bloqueur renforcé pour les iframes sans sandbox - intercepte tous les messages
   useEffect(() => {
@@ -163,6 +182,7 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             scrolling="no"
             frameBorder="0"
             allowFullScreen
+            allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
             style={{ border: 'none' }}
             referrerPolicy="no-referrer-when-downgrade"
             {...(sandboxEnabled ? {

@@ -1,5 +1,5 @@
 // Service Worker pour ORYZ STREAM PWA
-const CACHE_NAME = 'oryz-stream-v2'; // Incrémenté pour forcer la mise à jour
+const CACHE_NAME = 'oryz-stream-v3'; // Incrémenté pour forcer la mise à jour - Optimisation vidéo PWA
 const urlsToCache = [
   '/',
   '/manifest.json'
@@ -46,13 +46,45 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Interception des requêtes - simplifié pour éviter les erreurs
+// Interception des requêtes - optimisé pour la vidéo
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
   // Pour les requêtes GET seulement
   if (event.request.method !== 'GET') {
     return;
   }
   
+  // NE PAS intercepter les flux vidéo, streaming, ou iframes externes
+  // Cela permet une lecture fluide sans cache
+  const isVideoRequest = 
+    event.request.url.includes('.m3u8') || // HLS
+    event.request.url.includes('.ts') || // HLS segments
+    event.request.url.includes('.mp4') || // MP4
+    event.request.url.includes('.webm') || // WebM
+    event.request.url.includes('/stream/') || // API stream
+    event.request.url.includes('/api/proxy/') || // Proxies
+    event.request.url.includes('sharecloudy.com') ||
+    event.request.url.includes('score808') ||
+    event.request.url.includes('href.li') ||
+    event.request.url.includes('directfr.sbs') ||
+    event.request.url.includes('tutvlive.ru') ||
+    event.request.url.includes('kakaflix') ||
+    event.request.url.includes('supervideo') ||
+    event.request.url.includes('uqload') ||
+    event.request.url.includes('vidzy') ||
+    event.request.url.includes('dood') ||
+    event.request.url.includes('voe') ||
+    event.request.url.includes('filemoon') ||
+    event.request.destination === 'video' ||
+    event.request.destination === 'audio';
+  
+  // Laisser passer les requêtes vidéo sans interception
+  if (isVideoRequest) {
+    return;
+  }
+  
+  // Pour les autres requêtes, utiliser le réseau en priorité
   event.respondWith(
     fetch(event.request).catch(() => {
       // Si le réseau échoue, essayer le cache
