@@ -211,7 +211,8 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
       'Toutes vos données seront supprimées définitivement :\n' +
       '- Votre profil et avatar\n' +
       '- Vos préférences de notifications\n' +
-      '- Vos favoris et historique\n\n' +
+      '- Vos favoris et historique\n' +
+      '- Votre abonnement\n\n' +
       'Pour confirmer, tapez "SUPPRIMER" (en majuscules) :'
     );
 
@@ -227,11 +228,26 @@ export function UserProfileEditor({ userEmail }: { userEmail: string }) {
     setIsDeleting(true);
     setStatus('idle');
 
+    // Invalider le cache avant la suppression
+    invalidateUserCache();
+
     const result = await deleteUserAccount();
 
     if (result.success) {
-      // Redirection vers la page d'accueil
-      window.location.href = '/?message=' + encodeURIComponent('Votre compte a été supprimé avec succès');
+      // Forcer la déconnexion côté client
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      
+      // Nettoyer complètement le localStorage et sessionStorage
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (e) {
+        console.warn('Erreur nettoyage storage:', e);
+      }
+      
+      // Redirection forcée vers la page d'accueil avec rechargement complet
+      window.location.replace('/?message=' + encodeURIComponent('Votre compte a été supprimé avec succès'));
     } else {
       setStatus('error');
       setErrorMessage(result.error || 'Erreur lors de la suppression du compte');

@@ -175,10 +175,10 @@ export async function POST() {
       );
     }
 
-    // 9. Déconnecter l'utilisateur
-    await supabase.auth.signOut();
-    
     console.log(`Compte supprimé avec succès pour l'utilisateur: ${user.id}`);
+    
+    // Note: La déconnexion sera gérée côté client pour garantir
+    // que tous les états et caches sont correctement nettoyés
     
     return NextResponse.json({ 
       success: true,
