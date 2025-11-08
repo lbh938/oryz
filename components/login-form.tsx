@@ -40,6 +40,55 @@ function LoginFormContent({
     }
   }, [searchParams]);
 
+  // Fonction pour analyser l'erreur et retourner un message précis
+  const getErrorMessage = (error: any): string => {
+    if (!error) return "Une erreur est survenue";
+    
+    const errorCode = error.code || error.status;
+    const errorMessage = error.message || "";
+    
+    // Vérifier si c'est un problème d'email (format invalide)
+    if (errorCode === 'validation_failed' || errorMessage.toLowerCase().includes('email')) {
+      return "L'adresse email n'est pas valide. Veuillez vérifier votre email.";
+    }
+    
+    // Vérifier si c'est un problème de mot de passe
+    if (errorCode === 'invalid_credentials' || errorMessage.toLowerCase().includes('password') || errorMessage.toLowerCase().includes('mot de passe')) {
+      // Essayer de déterminer si c'est l'email ou le mot de passe
+      // Si l'email semble valide (format), c'est probablement le mot de passe
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(email)) {
+        return "Le mot de passe est incorrect. Veuillez réessayer ou utiliser 'Mot de passe oublié ?'";
+      } else {
+        return "L'adresse email ou le mot de passe est incorrect. Vérifiez vos identifiants.";
+      }
+    }
+    
+    // Email non confirmé
+    if (errorCode === 'email_not_confirmed' || errorMessage.toLowerCase().includes('email not confirmed')) {
+      return "Votre email n'a pas été confirmé. Vérifiez votre boîte de réception pour le lien de confirmation.";
+    }
+    
+    // Trop de tentatives
+    if (errorCode === 'too_many_requests' || errorMessage.toLowerCase().includes('too many')) {
+      return "Trop de tentatives de connexion. Veuillez patienter quelques minutes avant de réessayer.";
+    }
+    
+    // Erreur générique avec le message original
+    if (errorMessage.toLowerCase().includes('invalid login credentials') || errorMessage.toLowerCase().includes('invalid credentials')) {
+      // Essayer de déterminer si c'est l'email ou le mot de passe
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (emailRegex.test(email)) {
+        return "Le mot de passe est incorrect. Veuillez réessayer ou utiliser 'Mot de passe oublié ?'";
+      } else {
+        return "L'adresse email est incorrecte ou n'existe pas. Vérifiez votre email.";
+      }
+    }
+    
+    // Message d'erreur par défaut
+    return errorMessage || "Une erreur est survenue lors de la connexion. Veuillez réessayer.";
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const supabase = createClient();
@@ -47,14 +96,33 @@ function LoginFormContent({
     setError(null);
 
     try {
+      // Validation basique de l'email avant l'envoi
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("L'adresse email n'est pas valide. Veuillez vérifier votre email.");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!password || password.length < 6) {
+        setError("Le mot de passe doit contenir au moins 6 caractères.");
+        setIsLoading(false);
+        return;
+      }
+      
       // Supabase persiste la session par défaut, mais on peut contrôler la durée
       // L'option persistSession est true par défaut, mais on peut la forcer
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim(),
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        // Utiliser la fonction pour obtenir un message d'erreur précis
+        setError(getErrorMessage(error));
+        setIsLoading(false);
+        return;
+      }
       
       // Invalider le cache pour forcer le rechargement des données utilisateur
       invalidateUserCache();
@@ -73,8 +141,7 @@ function LoginFormContent({
       // Rediriger immédiatement vers la page d'accueil après connexion réussie
       router.push("/");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
-    } finally {
+      setError(getErrorMessage(error));
       setIsLoading(false);
     }
   };

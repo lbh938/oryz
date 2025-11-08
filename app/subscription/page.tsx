@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { MainLayout } from '@/components/main-layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { PLANS, Plan } from '@/lib/subscriptions';
 import { Check, Crown, X, Monitor, Smartphone, Tablet, Loader2 } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -17,6 +19,7 @@ function SubscriptionPageContent() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [promoCode, setPromoCode] = useState<string>('');
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -165,6 +168,7 @@ function SubscriptionPageContent() {
         body: JSON.stringify({
           priceId: plan.priceId,
           planId: plan.id,
+          promoCode: promoCode.trim() || undefined,
         }),
       });
 
@@ -701,8 +705,34 @@ function SubscriptionPageContent() {
           </div>
         </div>
 
+        {/* Code promo */}
+        <div className="mt-8 sm:mt-12">
+          <Card className="bg-gradient-to-r from-[#3498DB]/10 to-[#0F4C81]/10 border-[#3498DB]/30 p-4 sm:p-6 max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center">
+              <div className="flex-1 w-full sm:w-auto">
+                <Label htmlFor="promoCode" className="text-white/80 text-sm mb-2 block">
+                  Code promo
+                </Label>
+                <Input
+                  id="promoCode"
+                  type="text"
+                  placeholder="Entrez votre code promo (ex: LAUNCH50)"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  className="bg-[#1a1a1a] border-[#3498DB]/30 text-white placeholder:text-white/40"
+                />
+              </div>
+              <div className="w-full sm:w-auto pt-6 sm:pt-0">
+                <p className="text-white/60 text-xs text-center sm:text-left mb-2">
+                  💰 Réduction appliquée lors du paiement
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
         {/* Info */}
-        <div className="mt-8 sm:mt-12 text-center space-y-2">
+        <div className="mt-6 sm:mt-8 text-center space-y-2">
           <p className="text-white/90 text-sm sm:text-base font-semibold">
             💳 Débit automatique après l'essai gratuit
           </p>

@@ -15,7 +15,7 @@ const stripe = new Stripe(stripeSecretKey, {
 export async function POST(request: NextRequest) {
   // Récupérer les paramètres de la requête en premier pour les utiliser dans le catch si nécessaire
   const body = await request.json();
-  const { priceId, planId } = body;
+  const { priceId, planId, promoCode } = body;
   
   try {
     const supabase = await createClient();
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     // Créer la session Checkout de Stripe avec essai gratuit de 7 jours
     // Une carte de paiement est REQUISE pour facturer automatiquement à la fin de l'essai
     // Le paiement sera collecté seulement à la fin de l'essai (0€ pendant 7 jours)
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const sessionConfig: any = {
       customer: customerId,
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -195,7 +195,37 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         plan_id: planId,
       },
-    });
+      // Permettre les codes promo dans le checkout
+      allow_promotion_codes: true,
+    };
+
+    // Si un code promo est fourni, l'appliquer directement
+    if (promoCode && promoCode.trim()) {
+      try {
+        // Vérifier que le code promo existe dans Stripe
+        const promotionCode = await stripe.promotionCodes.list({
+          code: promoCode.trim(),
+          active: true,
+          limit: 1,
+        });
+
+        if (promotionCode.data.length > 0) {
+          // Appliquer le code promo directement
+          sessionConfig.discounts = [{
+            promotion_code: promotionCode.data[0].id,
+          }];
+        } else {
+          // Code promo invalide, mais on continue quand même
+          // L'utilisateur pourra entrer un autre code dans Stripe
+          console.warn(`Code promo invalide: ${promoCode}`);
+        }
+      } catch (error) {
+        // Erreur lors de la vérification du code promo, continuer sans
+        console.warn('Erreur lors de la vérification du code promo:', error);
+      }
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({ sessionId: checkoutSession.id, url: checkoutSession.url });
   } catch (error: any) {
@@ -240,7 +270,7 @@ export async function POST(request: NextRequest) {
         
         // Réessayer de créer la session avec le nouveau customer
         // Utiliser les variables priceId et planId du scope principal
-        const retrySession = await stripe.checkout.sessions.create({
+        const retrySessionConfig: any = {
           customer: newCustomer.id,
           payment_method_types: ['card'],
           mode: 'subscription',
@@ -264,7 +294,29 @@ export async function POST(request: NextRequest) {
             user_id: userRecovery.id,
             plan_id: planId,
           },
-        });
+          allow_promotion_codes: true,
+        };
+
+        // Appliquer le code promo si fourni
+        if (promoCode && promoCode.trim()) {
+          try {
+            const promotionCode = await stripe.promotionCodes.list({
+              code: promoCode.trim(),
+              active: true,
+              limit: 1,
+            });
+
+            if (promotionCode.data.length > 0) {
+              retrySessionConfig.discounts = [{
+                promotion_code: promotionCode.data[0].id,
+              }];
+            }
+          } catch (error) {
+            console.warn('Erreur lors de la vérification du code promo (retry):', error);
+          }
+        }
+
+        const retrySession = await stripe.checkout.sessions.create(retrySessionConfig);
         
         console.log('Session créée avec succès après correction du customer');
         return NextResponse.json({ sessionId: retrySession.id, url: retrySession.url });
