@@ -79,43 +79,52 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
 
   useEffect(() => {
     // Make sure Video.js player is only initialized once
+    // En PWA, attendre un peu plus pour éviter les conflits de montage
     if (!isLoading && !playerRef.current && videoRef.current) {
-      const videoElement = document.createElement('video-js');
-      videoElement.classList.add('vjs-big-play-centered');
-      videoElement.classList.add('vjs-default-skin');
-      videoRef.current.appendChild(videoElement);
+      // En PWA, ajouter un petit délai pour stabiliser le DOM
+      const initDelay = isPWA ? 100 : 0;
+      
+      const initTimer = setTimeout(() => {
+        if (!videoRef.current || playerRef.current) return;
+        
+        const videoElement = document.createElement('video-js');
+        videoElement.classList.add('vjs-big-play-centered');
+        videoElement.classList.add('vjs-default-skin');
+        videoRef.current.appendChild(videoElement);
 
-      const player = videojs(videoElement, {
-        ...options,
-        autoplay: isPWA ? true : 'muted', // Autoplay direct en PWA
-        muted: !isPWA, // Ne pas muter en PWA
-        controls: true,
-        fluid: true,
-        responsive: true,
-        preload: 'auto',
-        liveui: true,
-        playsinline: true, // Important pour mobile
-        html5: {
-          vhs: {
-            overrideNative: !isPWA, // Utiliser natif en PWA pour meilleures performances
-            withCredentials: false,
-            enableLowInitialPlaylist: isPWA, // Démarrage plus rapide en PWA
-            smoothQualityChange: isPWA, // Transitions fluides en PWA
-            bandwidth: isPWA ? 5000000 : undefined, // Bande passante optimisée en PWA
+        const player = videojs(videoElement, {
+          ...options,
+          autoplay: isPWA ? true : 'muted', // Autoplay direct en PWA
+          muted: !isPWA, // Ne pas muter en PWA
+          controls: true,
+          fluid: true,
+          responsive: true,
+          preload: 'auto',
+          liveui: true,
+          playsinline: true, // Important pour mobile
+          // En PWA, désactiver certaines optimisations qui peuvent causer des bugs
+          techOrder: isPWA ? ['html5'] : undefined, // Forcer HTML5 en PWA
+          html5: {
+            vhs: {
+              overrideNative: !isPWA, // Utiliser natif en PWA pour meilleures performances
+              withCredentials: false,
+              enableLowInitialPlaylist: isPWA, // Démarrage plus rapide en PWA
+              smoothQualityChange: isPWA, // Transitions fluides en PWA
+              bandwidth: isPWA ? 5000000 : undefined, // Bande passante optimisée en PWA
+            },
+            nativeVideoTracks: isPWA, // Utiliser natif en PWA
+            nativeAudioTracks: isPWA,
+            nativeTextTracks: false,
           },
-          nativeVideoTracks: isPWA, // Utiliser natif en PWA
-          nativeAudioTracks: isPWA,
-          nativeTextTracks: false,
-        },
-        sources: [
-          {
-            src: streamUrl,
-            type: 'application/x-mpegURL',
-          },
-        ],
-      });
+          sources: [
+            {
+              src: streamUrl,
+              type: 'application/x-mpegURL',
+            },
+          ],
+        });
 
-      playerRef.current = player;
+        playerRef.current = player;
 
       // Error handling
       player.on('error', () => {
@@ -134,8 +143,8 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
         setError(null);
       });
 
-      // Gestion du son différente selon le mode
-      if (!isPWA) {
+        // Gestion du son différente selon le mode
+        if (!isPWA) {
         // Mode Web: Démuter automatiquement après le premier play
         let hasUnmuted = false;
         
@@ -188,21 +197,23 @@ export function VideoPlayer({ src, channelId, options, className }: VideoPlayerP
             }, 1500);
           });
         });
-      } else {
-        // Mode PWA: Le son est déjà activé dès le départ
-        logger.debug('PWA mode: Audio enabled by default');
-      }
-    }
-
-    // Cleanup function
-    return () => {
-      if (playerRef.current) {
-        if (!playerRef.current.isDisposed()) {
-          playerRef.current.dispose();
+        } else {
+          // Mode PWA: Le son est déjà activé dès le départ
+          logger.debug('PWA mode: Audio enabled by default');
         }
-        playerRef.current = null;
-      }
-    };
+      }, initDelay);
+
+      // Cleanup function
+      return () => {
+        clearTimeout(initTimer);
+        if (playerRef.current) {
+          if (!playerRef.current.isDisposed()) {
+            playerRef.current.dispose();
+          }
+          playerRef.current = null;
+        }
+      };
+    }
   }, [streamUrl, options, isLoading, isPWA]);
 
   if (error) {

@@ -54,17 +54,19 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
   }, []);
 
   // Charger le paramètre sandbox depuis la base de données
-  // Le sandbox reste activé pour bloquer les pubs, mais avec plus de permissions en PWA
+  // Le sandbox peut être activé/désactivé depuis le panel admin
   useEffect(() => {
     const loadSandboxSetting = async () => {
       try {
         const setting = await getAppSetting('iframe_sandbox_enabled');
-        // Si le paramètre existe et est explicitement désactivé, respecter le choix
-        // Sinon, activer par défaut pour la sécurité et bloquer les pubs
-        setSandboxEnabled(setting !== 'false'); // Actif par défaut, désactivé seulement si 'false'
+        // Le paramètre est 'true' ou 'false' (string)
+        // Par défaut dans la migration SQL, c'est 'false' (désactivé)
+        // Activer seulement si explicitement 'true'
+        setSandboxEnabled(setting === 'true');
       } catch (error) {
-        // En cas d'erreur, activer par défaut pour bloquer les pubs
-        setSandboxEnabled(true);
+        console.error('Erreur lors du chargement du paramètre sandbox:', error);
+        // En cas d'erreur, désactiver par défaut (comme dans la migration SQL)
+        setSandboxEnabled(false);
       }
     };
     loadSandboxSetting();
@@ -149,13 +151,22 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
     setError(false);
     setLoading(true);
     
-    // Timeout pour détecter si l'iframe ne charge pas
-    const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
+    // En PWA, attendre un peu plus pour éviter les conflits de montage
+    const initDelay = isPWA ? 150 : 0;
+    
+    const initTimer = setTimeout(() => {
+      // Timeout pour détecter si l'iframe ne charge pas
+      const timeout = setTimeout(() => {
+        setLoading(false);
+      }, isPWA ? 8000 : 5000); // Plus de temps en PWA
 
-    return () => clearTimeout(timeout);
-  }, [src]);
+      return () => clearTimeout(timeout);
+    }, initDelay);
+
+    return () => {
+      clearTimeout(initTimer);
+    };
+  }, [src, isPWA]);
 
   if (!src) {
     return (
@@ -194,18 +205,38 @@ export function IframePlayer({ src, className }: IframePlayerProps) {
             scrolling="no"
             frameBorder="0"
             allowFullScreen
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
-            style={{ border: 'none' }}
+            // Permissions étendues en PWA pour une meilleure compatibilité vidéo
+            allow={isPWA 
+              ? "autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope; microphone; camera; display-capture; web-share"
+              : "autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope"
+            }
+            style={{ 
+              border: 'none',
+              // En PWA, s'assurer que l'iframe prend tout l'espace disponible
+              width: '100%',
+              height: '100%',
+              minHeight: isPWA ? '100%' : undefined,
+            }}
             referrerPolicy="no-referrer-when-downgrade"
             {...(sandboxEnabled ? {
               // Sandbox avec permissions étendues en PWA pour la vidéo tout en bloquant les pubs
               sandbox: isPWA 
-                ? "allow-scripts allow-same-origin allow-presentation allow-forms allow-modals allow-popups-to-escape-sandbox"
+                ? "allow-scripts allow-same-origin allow-presentation allow-forms allow-modals allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
                 : "allow-scripts allow-same-origin allow-presentation allow-forms"
             } : {})}
-            // Retirer loading="lazy" pour les TV - charger immédiatement
+            // Retirer loading="lazy" pour les TV et PWA - charger immédiatement
+            loading={isPWA ? "eager" : undefined}
             onLoad={() => {
               setLoading(false);
+              // En PWA, forcer le focus sur l'iframe pour améliorer l'autoplay
+              if (isPWA && iframeRef.current) {
+                try {
+                  // Ne pas forcer le focus automatiquement, mais s'assurer que l'iframe est prête
+                  console.log('🎬 Iframe chargée en mode PWA');
+                } catch (e) {
+                  // Ignorer les erreurs de focus
+                }
+              }
             }}
             onError={() => {
               setError(true);

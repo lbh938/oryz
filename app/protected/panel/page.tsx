@@ -184,8 +184,10 @@ export default function AdminPage() {
       setTopPages24h(pages24h);
       setTopPages7d(pages7d);
       setGlobalStats(stats);
-      setIframeSandboxEnabled(sandboxSetting !== 'false');
-      setFreePreviewEnabled(freePreviewSetting !== 'false');
+      // Le paramètre est 'true' ou 'false' (string)
+      // Par défaut dans la migration SQL, c'est 'false' (désactivé)
+      setIframeSandboxEnabled(sandboxSetting === 'true');
+      setFreePreviewEnabled(freePreviewSetting === 'true');
       
       // Charger les abonnements actifs
       await loadSubscriptions();

@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log('Proxying ShareCloudy URL:', decodedUrl);
 
-    // Récupérer le contenu de l'iframe
+    // Récupérer le contenu de l'iframe avec timeout pour PWA
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 secondes max pour PWA
+    
     const response = await fetch(decodedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -32,7 +35,10 @@ export async function GET(request: NextRequest) {
         'Sec-Fetch-Site': 'same-origin',
       },
       cache: 'no-store',
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch: ${response.status}`);
@@ -56,20 +62,64 @@ export async function GET(request: NextRequest) {
       return `src="${baseUrl}${url.startsWith('/') ? url : '/' + url}"`;
     });
 
-    // Retourner le HTML avec les bons headers
+    // Retourner le HTML avec les bons headers optimisés pour PWA
     return new NextResponse(html, {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Content-Security-Policy': "frame-ancestors *;",
+        // Headers PWA : ne pas mettre en cache pour avoir toujours du contenu frais
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        // Headers pour permettre l'embed en PWA
+        'X-Frame-Options': 'ALLOWALL',
+        'X-Content-Type-Options': 'nosniff',
+        // Headers pour améliorer la compatibilité PWA
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
       },
     });
 
   } catch (error) {
     console.error('Error proxying ShareCloudy:', error);
-    return new NextResponse(
-      `Error proxying ShareCloudy: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      { status: 500 }
-    );
+    
+    // En cas d'erreur, retourner un HTML minimal pour PWA
+    const errorHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShareCloudy Player</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #000; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      height: 100vh; 
+      color: #fff; 
+      font-family: Arial, sans-serif;
+    }
+    .error { text-align: center; padding: 20px; }
+  </style>
+</head>
+<body>
+  <div class="error">
+    <p>Erreur de chargement du lecteur</p>
+    <p style="font-size: 0.8em; margin-top: 10px; opacity: 0.7;">${error instanceof Error ? error.message : 'Erreur inconnue'}</p>
+  </div>
+</body>
+</html>`;
+    
+    return new NextResponse(errorHtml, {
+      status: 500,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
   }
 }
 

@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
 
   // Utiliser directement l'URL fournie (sans API externe movix)
   try {
-    // Récupérer la page depuis l'URL fournie
+    // Récupérer la page depuis l'URL fournie avec timeout adapté pour PWA
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 secondes max pour PWA
+    
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -26,8 +29,11 @@ export async function GET(request: NextRequest) {
         'Referer': url,
       },
       redirect: 'follow',
-      signal: AbortSignal.timeout(15000),
+      cache: 'no-store', // Ne pas mettre en cache pour PWA
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       // Si l'API Omega ne fonctionne pas, retourner un HTML simple avec iframe
@@ -63,6 +69,9 @@ export async function GET(request: NextRequest) {
             'Content-Type': 'text/html; charset=utf-8',
             'X-Frame-Options': 'SAMEORIGIN',
             'X-Content-Type-Options': 'nosniff',
+            // Headers PWA
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+            'Pragma': 'no-cache',
           },
         }
       );
@@ -122,6 +131,14 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'X-Frame-Options': 'SAMEORIGIN',
+        // Headers PWA : ne pas mettre en cache pour avoir toujours du contenu frais
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+        'X-Content-Type-Options': 'nosniff',
+        // Headers pour améliorer la compatibilité PWA
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       },
     });
   } catch (error: any) {
@@ -142,7 +159,12 @@ export async function GET(request: NextRequest) {
 </html>`,
       {
         status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        headers: { 
+          'Content-Type': 'text/html; charset=utf-8',
+          // Headers PWA
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+        },
       }
     );
   }
